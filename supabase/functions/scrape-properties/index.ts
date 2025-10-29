@@ -124,27 +124,36 @@ serve(async (req) => {
     const properties: PropertyData[] = await response.json();
     console.log(`Found ${properties.length} raw properties`);
 
-    // Aggregate properties by building address
-    const buildingMap = new Map<string, { units: PropertyData[], count: number }>();
+    // Filter for properties that are part of buildings with 50+ units
+    // RentCast returns individual units, but each has features.unitCount indicating building size
+    const qualifiedUnits = properties.filter(property => {
+      const unitCount = property.features?.unitCount || 0;
+      return unitCount >= minUnits;
+    });
+
+    console.log(`Found ${qualifiedUnits.length} units in buildings with ${minUnits}+ total units`);
+
+    // Aggregate by building address to group all units from the same building
+    const buildingMap = new Map<string, { units: PropertyData[], unitCount: number }>();
     
-    for (const property of properties) {
+    for (const property of qualifiedUnits) {
       const baseAddress = normalizeAddress(property.formattedAddress || property.address);
       const key = `${baseAddress}|${property.city}|${property.state}`;
       
       if (!buildingMap.has(key)) {
-        buildingMap.set(key, { units: [], count: 0 });
+        buildingMap.set(key, { 
+          units: [], 
+          unitCount: property.features?.unitCount || 0 
+        });
       }
       
       const building = buildingMap.get(key)!;
       building.units.push(property);
-      building.count++;
     }
 
-    console.log(`Aggregated into ${buildingMap.size} buildings`);
+    console.log(`Aggregated into ${buildingMap.size} buildings with ${minUnits}+ units`);
 
-    // Filter for buildings with minimum units
-    const qualifiedBuildings = Array.from(buildingMap.entries())
-      .filter(([_, building]) => building.count >= minUnits);
+    const qualifiedBuildings = Array.from(buildingMap.entries());
 
     console.log(`Found ${qualifiedBuildings.length} buildings with ${minUnits}+ units`);
 
@@ -173,17 +182,18 @@ serve(async (req) => {
           continue;
         }
 
-        // Calculate average values from all units
+        // Calculate average values from all units we captured for this building
+        const capturedUnitCount = building.units.length;
         const avgBeds = Math.round(
-          building.units.reduce((sum, u) => sum + (u.bedrooms || 0), 0) / building.count
+          building.units.reduce((sum, u) => sum + (u.bedrooms || 0), 0) / capturedUnitCount
         );
         const avgBaths = 
-          building.units.reduce((sum, u) => sum + (u.bathrooms || 0), 0) / building.count;
+          building.units.reduce((sum, u) => sum + (u.bathrooms || 0), 0) / capturedUnitCount;
         const avgSqft = Math.round(
-          building.units.reduce((sum, u) => sum + (u.squareFootage || 0), 0) / building.count
+          building.units.reduce((sum, u) => sum + (u.squareFootage || 0), 0) / capturedUnitCount
         );
         const avgRent = 
-          building.units.reduce((sum, u) => sum + (u.lastSalePrice || 0), 0) / building.count;
+          building.units.reduce((sum, u) => sum + (u.lastSalePrice || 0), 0) / capturedUnitCount;
 
         // Create a proper building name from addressLine1 or fallback to base address
         const buildingName = representative.addressLine1 
@@ -228,7 +238,7 @@ serve(async (req) => {
             property_taxes: representative.propertyTaxes || null,
             history: representative.history || null,
             owner: representative.owner || null,
-            units_count: building.count,
+            units_count: building.unitCount, // Use the actual unitCount from RentCast features
             status: 'approved',
             is_verified: false,
             verification_required: false,
