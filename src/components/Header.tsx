@@ -1,9 +1,12 @@
 import { Button } from "@/components/ui/button";
-import { Video, Search, User, Menu } from "lucide-react";
+import { Video, Search, User, Menu, Shield } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { useAdmin } from "@/hooks/useAdmin";
 
 export const Header = () => {
+  const { isAdmin } = useAdmin();
+  
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between px-4">
@@ -32,6 +35,12 @@ export const Header = () => {
           <Link to="/help" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
             Help Center
           </Link>
+          {isAdmin && (
+            <Link to="/admin/settings" className="text-sm font-medium text-foreground hover:text-primary transition-colors flex items-center gap-1">
+              <Shield className="w-4 h-4" />
+              Admin
+            </Link>
+          )}
         </nav>
 
         <div className="flex items-center gap-2">
