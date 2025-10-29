@@ -10,14 +10,15 @@ import { Search, Filter, SlidersHorizontal, Smile } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 const Reviews = () => {
-  const [seededVideos, setSeededVideos] = useState<any[]>([]);
+  const [seededReviews, setSeededReviews] = useState<any[]>([]);
   const [positiveOnly, setPositiveOnly] = useState(false);
   
   useEffect(() => {
-    const fetchSeededVideos = async () => {
+    const fetchSeededReviews = async () => {
       let query = supabase
-        .from('seeded_videos')
+        .from('reviews')
         .select('*')
+        .eq('source', 'seeded')
         .eq('moderation_status', 'approved');
       
       if (positiveOnly) {
@@ -30,11 +31,11 @@ const Reviews = () => {
         .limit(6);
       
       if (data) {
-        setSeededVideos(data);
+        setSeededReviews(data);
       }
     };
     
-    fetchSeededVideos();
+    fetchSeededReviews();
   }, [positiveOnly]);
 
   // Mock user-submitted data - would be fetched from API
@@ -134,18 +135,27 @@ const Reviews = () => {
           </Button>
         </div>
 
-        {/* Seeded Videos Section */}
-        {seededVideos.length > 0 && (
+        {/* Seeded Reviews Section */}
+        {seededReviews.length > 0 && (
           <div className="mb-12">
             <h2 className="text-2xl font-bold text-foreground mb-4">
-              Community Sample Reviews
+              Real Renter Videos
             </h2>
             <p className="text-muted-foreground mb-6">
-              Featured videos from the community to inspire your own reviews
+              Viral from TikTok – Add Your Story!
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {seededVideos.map((video) => (
-                <SeededVideoCard key={video.id} {...video} />
+              {seededReviews.map((review) => (
+                <SeededVideoCard 
+                  key={review.id} 
+                  id={review.id}
+                  title={review.title}
+                  embed_url={review.video_url}
+                  caption={review.caption}
+                  hashtags={review.tags}
+                  city={review.city}
+                  is_positive={review.is_positive}
+                />
               ))}
             </div>
           </div>

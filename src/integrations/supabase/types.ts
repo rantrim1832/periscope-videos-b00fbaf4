@@ -56,8 +56,10 @@ export type Database = {
           id: string
           is_positive: boolean | null
           likes: number | null
+          moderation_status: string | null
           property_id: string | null
           rating: number | null
+          source: string | null
           tags: string[] | null
           title: string
           updated_at: string
@@ -73,8 +75,10 @@ export type Database = {
           id?: string
           is_positive?: boolean | null
           likes?: number | null
+          moderation_status?: string | null
           property_id?: string | null
           rating?: number | null
+          source?: string | null
           tags?: string[] | null
           title: string
           updated_at?: string
@@ -90,8 +94,10 @@ export type Database = {
           id?: string
           is_positive?: boolean | null
           likes?: number | null
+          moderation_status?: string | null
           property_id?: string | null
           rating?: number | null
+          source?: string | null
           tags?: string[] | null
           title?: string
           updated_at?: string

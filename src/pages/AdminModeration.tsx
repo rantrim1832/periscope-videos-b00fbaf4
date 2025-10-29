@@ -7,56 +7,59 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { CheckCircle, XCircle, Clock, MapPin } from "lucide-react";
 
-interface SeededVideo {
+interface SeededReview {
   id: string;
   title: string;
-  embed_url: string;
+  video_url: string;
+  embed_code: string;
   caption: string;
-  hashtags: string[];
+  tags: string[];
   city: string;
+  rating: number;
   moderation_status: string;
   is_positive: boolean;
   created_at: string;
 }
 
 const AdminModeration = () => {
-  const [videos, setVideos] = useState<SeededVideo[]>([]);
+  const [reviews, setReviews] = useState<SeededReview[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'pending' | 'approved' | 'rejected'>('pending');
 
-  const fetchVideos = async () => {
+  const fetchReviews = async () => {
     setLoading(true);
     const { data, error } = await supabase
-      .from('seeded_videos')
+      .from('reviews')
       .select('*')
+      .eq('source', 'seeded')
       .eq('moderation_status', filter)
       .order('created_at', { ascending: false });
 
     if (error) {
-      toast.error('Failed to load videos');
+      toast.error('Failed to load reviews');
       console.error(error);
     } else {
-      setVideos(data || []);
+      setReviews(data || []);
     }
     setLoading(false);
   };
 
   useEffect(() => {
-    fetchVideos();
+    fetchReviews();
   }, [filter]);
 
   const updateStatus = async (id: string, status: 'approved' | 'rejected') => {
     const { error } = await supabase
-      .from('seeded_videos')
+      .from('reviews')
       .update({ moderation_status: status })
       .eq('id', id);
 
     if (error) {
-      toast.error(`Failed to ${status} video`);
+      toast.error(`Failed to ${status} review`);
       console.error(error);
     } else {
-      toast.success(`Video ${status}!`);
-      fetchVideos();
+      toast.success(`Review ${status}!`);
+      fetchReviews();
     }
   };
 
@@ -66,8 +69,8 @@ const AdminModeration = () => {
       
       <div className="container mx-auto px-4 py-8">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-foreground mb-2">Video Moderation</h1>
-          <p className="text-muted-foreground">Review and approve imported videos from Taggbox</p>
+          <h1 className="text-3xl font-bold text-foreground mb-2">Review Moderation</h1>
+          <p className="text-muted-foreground">Review and approve seeded reviews from Taggbox</p>
         </div>
 
         {/* Filter Tabs */}
@@ -77,7 +80,7 @@ const AdminModeration = () => {
             onClick={() => setFilter('pending')}
           >
             <Clock className="w-4 h-4 mr-2" />
-            Pending ({videos.length})
+            Pending ({reviews.length})
           </Button>
           <Button
             variant={filter === 'approved' ? 'default' : 'outline'}
@@ -95,49 +98,50 @@ const AdminModeration = () => {
           </Button>
         </div>
 
-        {/* Videos Grid */}
+        {/* Reviews Grid */}
         {loading ? (
-          <p className="text-center text-muted-foreground">Loading videos...</p>
-        ) : videos.length === 0 ? (
+          <p className="text-center text-muted-foreground">Loading reviews...</p>
+        ) : reviews.length === 0 ? (
           <Card>
             <CardContent className="p-12 text-center">
-              <p className="text-muted-foreground">No {filter} videos found</p>
+              <p className="text-muted-foreground">No {filter} reviews found</p>
             </CardContent>
           </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {videos.map((video) => (
-              <Card key={video.id} className="overflow-hidden">
+            {reviews.map((review) => (
+              <Card key={review.id} className="overflow-hidden">
                 <CardHeader>
-                  <CardTitle className="text-lg line-clamp-2">{video.title}</CardTitle>
+                  <CardTitle className="text-lg line-clamp-2">{review.title}</CardTitle>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <MapPin className="w-4 h-4" />
-                    {video.city || 'Unknown'}
+                    {review.city || 'Unknown'}
+                  </div>
+                  <div className="flex gap-2 mt-2">
+                    <Badge variant="outline">⭐ {review.rating}/5</Badge>
+                    {review.is_positive && (
+                      <Badge className="bg-green-500">Positive</Badge>
+                    )}
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {/* Video Embed Placeholder */}
                   <div className="aspect-[9/16] bg-muted rounded-lg flex items-center justify-center">
-                    <p className="text-xs text-muted-foreground">Video: {video.embed_url.substring(0, 30)}...</p>
+                    <p className="text-xs text-muted-foreground">Video: {review.video_url.substring(0, 30)}...</p>
                   </div>
 
                   {/* Caption */}
-                  {video.caption && (
-                    <p className="text-sm text-muted-foreground line-clamp-3">{video.caption}</p>
+                  {review.caption && (
+                    <p className="text-sm text-muted-foreground line-clamp-3">{review.caption}</p>
                   )}
 
-                  {/* Hashtags */}
+                  {/* Tags */}
                   <div className="flex flex-wrap gap-1">
-                    {video.hashtags.slice(0, 5).map((tag, idx) => (
-                      <Badge key={idx} variant="muted" className="text-xs">
+                    {review.tags.slice(0, 5).map((tag, idx) => (
+                      <Badge key={idx} variant="outline" className="text-xs">
                         {tag}
                       </Badge>
                     ))}
-                    {video.is_positive && (
-                      <Badge variant="success" className="text-xs">
-                        Positive
-                      </Badge>
-                    )}
                   </div>
 
                   {/* Actions */}
@@ -147,7 +151,7 @@ const AdminModeration = () => {
                         variant="default"
                         size="sm"
                         className="flex-1"
-                        onClick={() => updateStatus(video.id, 'approved')}
+                        onClick={() => updateStatus(review.id, 'approved')}
                       >
                         <CheckCircle className="w-4 h-4 mr-1" />
                         Approve
@@ -156,7 +160,7 @@ const AdminModeration = () => {
                         variant="destructive"
                         size="sm"
                         className="flex-1"
-                        onClick={() => updateStatus(video.id, 'rejected')}
+                        onClick={() => updateStatus(review.id, 'rejected')}
                       >
                         <XCircle className="w-4 h-4 mr-1" />
                         Reject
