@@ -25,13 +25,46 @@ serve(async (req) => {
       throw new Error('RENTCAST_API_KEY not configured');
     }
 
-    // Get properties within radius - requires address parameter when using radius
+    // First, get a property from the city to obtain coordinates
+    console.log(`Getting coordinates for ${city}, ${state}`);
+    const coordUrl = new URL('https://api.rentcast.io/v1/properties');
+    coordUrl.searchParams.append('city', city);
+    coordUrl.searchParams.append('state', state);
+    coordUrl.searchParams.append('limit', '1');
+
+    const coordResponse = await fetch(coordUrl.toString(), {
+      headers: {
+        'Accept': 'application/json',
+        'X-Api-Key': RENTCAST_API_KEY,
+      },
+    });
+
+    if (!coordResponse.ok) {
+      const errorText = await coordResponse.text();
+      console.error(`RentCast API error ${coordResponse.status}:`, errorText);
+      throw new Error(`RentCast API error: ${coordResponse.status} - ${errorText}`);
+    }
+
+    const coordProperties = await coordResponse.json();
+    if (!coordProperties || coordProperties.length === 0) {
+      throw new Error(`No properties found in ${city}, ${state} to determine coordinates`);
+    }
+
+    const { latitude, longitude } = coordProperties[0];
+    if (!latitude || !longitude) {
+      throw new Error(`Could not determine coordinates for ${city}, ${state}`);
+    }
+
+    console.log(`Found coordinates: ${latitude}, ${longitude}`);
+    
+    // Now get properties within radius using the coordinates
     const url = new URL('https://api.rentcast.io/v1/properties');
-    url.searchParams.append('address', `${city}, ${state}`);
+    url.searchParams.append('latitude', latitude.toString());
+    url.searchParams.append('longitude', longitude.toString());
     url.searchParams.append('radius', radius.toString());
     url.searchParams.append('limit', '500');
 
-    console.log(`Fetching properties within ${radius} miles of ${city}, ${state}`);
+    console.log(`Fetching properties within ${radius} miles of coordinates`);
     console.log(`API URL: ${url.toString()}`);
 
     const response = await fetch(url.toString(), {
