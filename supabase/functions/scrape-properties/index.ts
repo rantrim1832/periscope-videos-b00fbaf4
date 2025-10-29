@@ -1,0 +1,151 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+interface PropertyData {
+  address: string;
+  city: string;
+  state: string;
+  zipCode?: string;
+  propertyType?: string;
+  bedrooms?: number;
+  bathrooms?: number;
+  squareFootage?: number;
+  price?: number;
+  formattedAddress?: string;
+  latitude?: number;
+  longitude?: number;
+}
+
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const { city, state, limit = 500 } = await req.json();
+
+    if (!city || !state) {
+      return new Response(
+        JSON.stringify({ error: 'City and state are required' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const RENTCAST_API_KEY = Deno.env.get('RENTCAST_API_KEY');
+    if (!RENTCAST_API_KEY) {
+      throw new Error('RENTCAST_API_KEY not configured');
+    }
+
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    console.log(`Fetching properties for ${city}, ${state}...`);
+
+    // Fetch properties from RentCast
+    const url = new URL('https://api.rentcast.io/v1/properties');
+    url.searchParams.append('city', city);
+    url.searchParams.append('state', state);
+    url.searchParams.append('limit', limit.toString());
+
+    const response = await fetch(url.toString(), {
+      headers: {
+        'Accept': 'application/json',
+        'X-Api-Key': RENTCAST_API_KEY,
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('RentCast API error:', response.status, errorText);
+      return new Response(
+        JSON.stringify({ error: 'Failed to fetch from RentCast', details: errorText }),
+        { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const properties: PropertyData[] = await response.json();
+    console.log(`Found ${properties.length} properties`);
+
+    let inserted = 0;
+    let skipped = 0;
+    const errors = [];
+
+    // Insert properties into database
+    for (const property of properties) {
+      try {
+        const address = property.formattedAddress || property.address;
+        
+        // Check if property already exists
+        const { data: existing } = await supabase
+          .from('properties')
+          .select('id')
+          .eq('address', address)
+          .eq('city', property.city)
+          .eq('state', property.state)
+          .single();
+
+        if (existing) {
+          skipped++;
+          continue;
+        }
+
+        // Insert new property
+        const { error } = await supabase
+          .from('properties')
+          .insert({
+            name: `${address}`,
+            address: address,
+            city: property.city,
+            state: property.state,
+            beds: property.bedrooms || null,
+            baths: property.bathrooms || null,
+            rent: property.price || null,
+            latitude: property.latitude || null,
+            longitude: property.longitude || null,
+            status: 'approved',
+            is_verified: false,
+            verification_required: false,
+            rentcast_data: property,
+          });
+
+        if (error) {
+          console.error('Error inserting property:', error);
+          errors.push({ address, error: error.message });
+        } else {
+          inserted++;
+        }
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+        console.error('Error processing property:', err);
+        errors.push({ address: property.address, error: errorMessage });
+      }
+    }
+
+    console.log(`Scraping complete: ${inserted} inserted, ${skipped} skipped, ${errors.length} errors`);
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        total: properties.length,
+        inserted,
+        skipped,
+        errors: errors.slice(0, 10), // Only return first 10 errors
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('Error in scrape-properties function:', error);
+    return new Response(
+      JSON.stringify({ error: errorMessage }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+});

@@ -12,6 +12,7 @@ import Help from "./pages/Help";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import AdminModeration from "./pages/AdminModeration";
+import PropertyScraper from "./pages/PropertyScraper";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +31,7 @@ const App = () => (
           <Route path="/help" element={<Help />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/admin/moderate" element={<AdminModeration />} />
+          <Route path="/admin/scraper" element={<PropertyScraper />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.enrich-property]
 verify_jwt = false
+
+[functions.scrape-properties]
+verify_jwt = false
