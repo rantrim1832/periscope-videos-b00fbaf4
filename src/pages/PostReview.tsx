@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { CreatePropertyDialog } from "@/components/CreatePropertyDialog";
 import { useState } from "react";
 import { Upload, Search, Check, MapPin, Home, Video, FileText, Award } from "lucide-react";
 
@@ -112,9 +113,13 @@ const PostReview = () => {
                 </div>
 
                 <div className="pt-4">
-                  <Button variant="outline" className="w-full">
-                    + Create New Property
-                  </Button>
+                  <CreatePropertyDialog 
+                    trigger={
+                      <Button variant="outline" className="w-full">
+                        + Create New Property
+                      </Button>
+                    }
+                  />
                 </div>
 
                 <div className="flex justify-end pt-4">
