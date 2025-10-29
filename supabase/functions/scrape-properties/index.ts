@@ -19,6 +19,8 @@ interface PropertyData {
   formattedAddress?: string;
   latitude?: number;
   longitude?: number;
+  managementCompany?: string;
+  amenities?: string[];
 }
 
 serve(async (req) => {
@@ -112,6 +114,8 @@ serve(async (req) => {
             rent: property.price || null,
             latitude: property.latitude || null,
             longitude: property.longitude || null,
+            management_company: property.managementCompany || null,
+            amenities: property.amenities || null,
             status: 'approved',
             is_verified: false,
             verification_required: false,

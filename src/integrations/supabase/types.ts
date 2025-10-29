@@ -17,6 +17,7 @@ export type Database = {
       properties: {
         Row: {
           address: string
+          amenities: string[] | null
           baths: number | null
           beds: number | null
           city: string
@@ -26,6 +27,7 @@ export type Database = {
           is_verified: boolean | null
           latitude: number | null
           longitude: number | null
+          management_company: string | null
           name: string
           rent: number | null
           rentcast_data: Json | null
@@ -36,6 +38,7 @@ export type Database = {
         }
         Insert: {
           address: string
+          amenities?: string[] | null
           baths?: number | null
           beds?: number | null
           city: string
@@ -45,6 +48,7 @@ export type Database = {
           is_verified?: boolean | null
           latitude?: number | null
           longitude?: number | null
+          management_company?: string | null
           name: string
           rent?: number | null
           rentcast_data?: Json | null
@@ -55,6 +59,7 @@ export type Database = {
         }
         Update: {
           address?: string
+          amenities?: string[] | null
           baths?: number | null
           beds?: number | null
           city?: string
@@ -64,6 +69,7 @@ export type Database = {
           is_verified?: boolean | null
           latitude?: number | null
           longitude?: number | null
+          management_company?: string | null
           name?: string
           rent?: number | null
           rentcast_data?: Json | null
