@@ -1,11 +1,41 @@
 import { Button } from "@/components/ui/button";
-import { Video, Search, User, Menu, Shield } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Video, Search, User, Menu, Shield, LogIn, LogOut } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAdmin } from "@/hooks/useAdmin";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { useState, useEffect } from "react";
+import { User as SupabaseUser } from "@supabase/supabase-js";
 
 export const Header = () => {
   const { isAdmin } = useAdmin();
+  const [user, setUser] = useState<SupabaseUser | null>(null);
+  const { toast } = useToast();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setUser(session?.user ?? null);
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    toast({
+      title: "Signed out",
+      description: "You've been signed out successfully",
+    });
+    navigate('/');
+  };
   
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -48,14 +78,28 @@ export const Header = () => {
           <Button variant="ghost" size="icon" className="hidden md:flex">
             <Search className="h-5 w-5" />
           </Button>
-          <Button variant="ghost" size="icon" asChild>
-            <Link to="/profile">
-              <User className="h-5 w-5" />
-            </Link>
-          </Button>
-          <Button variant="hero" size="sm" className="hidden sm:flex" asChild>
-            <Link to="/post">Post Review</Link>
-          </Button>
+          {user ? (
+            <>
+              <Button variant="ghost" size="icon" asChild>
+                <Link to="/profile">
+                  <User className="h-5 w-5" />
+                </Link>
+              </Button>
+              <Button variant="hero" size="sm" className="hidden sm:flex" asChild>
+                <Link to="/post">Post Review</Link>
+              </Button>
+              <Button variant="ghost" size="icon" onClick={handleSignOut}>
+                <LogOut className="h-5 w-5" />
+              </Button>
+            </>
+          ) : (
+            <Button variant="hero" size="sm" asChild>
+              <Link to="/auth">
+                <LogIn className="h-4 w-4 mr-2" />
+                Sign In
+              </Link>
+            </Button>
+          )}
           <Button variant="ghost" size="icon" className="md:hidden">
             <Menu className="h-5 w-5" />
           </Button>

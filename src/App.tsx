@@ -14,6 +14,7 @@ import NotFound from "./pages/NotFound";
 import AdminModeration from "./pages/AdminModeration";
 import PropertyScraper from "./pages/PropertyScraper";
 import AdminSettings from "./pages/AdminSettings";
+import Auth from "./pages/Auth";
 
 const queryClient = new QueryClient();
 
@@ -25,6 +26,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/auth" element={<Auth />} />
           <Route path="/reviews" element={<Reviews />} />
           <Route path="/shorts" element={<Shorts />} />
           <Route path="/post" element={<PostReview />} />
