@@ -97,13 +97,13 @@ const AdminSettings = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-20 md:pb-0">
       <Header />
-      <div className="container mx-auto px-4 py-12">
-        <div className="max-w-4xl mx-auto space-y-8">
+      <div className="container mx-auto px-4 py-6 md:py-12">
+        <div className="max-w-4xl mx-auto space-y-6 md:space-y-8">
           <div>
-            <h1 className="text-4xl font-bold mb-2">Admin Settings</h1>
-            <p className="text-muted-foreground">Manage your admin privileges and access</p>
+            <h1 className="text-2xl md:text-4xl font-bold mb-2">Admin Settings</h1>
+            <p className="text-sm md:text-base text-muted-foreground">Manage your admin privileges and access</p>
           </div>
 
           <Card>
@@ -117,22 +117,22 @@ const AdminSettings = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center justify-between p-4 border rounded-lg">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 border rounded-lg gap-4">
                 <div className="flex items-center gap-3">
-                  <Shield className={`w-8 h-8 ${isAdmin ? 'text-green-500' : 'text-muted-foreground'}`} />
+                  <Shield className={`w-6 h-6 md:w-8 md:h-8 ${isAdmin ? 'text-green-500' : 'text-muted-foreground'}`} />
                   <div>
-                    <p className="font-medium">Current Status</p>
-                    <p className={`text-sm ${isAdmin ? 'text-green-500' : 'text-muted-foreground'}`}>
+                    <p className="font-medium text-sm md:text-base">Current Status</p>
+                    <p className={`text-xs md:text-sm ${isAdmin ? 'text-green-500' : 'text-muted-foreground'}`}>
                       {isAdmin ? 'Admin Access Granted' : 'Standard User'}
                     </p>
                   </div>
                 </div>
                 {!isAdmin ? (
-                  <Button onClick={makeAdmin} disabled={loading}>
+                  <Button onClick={makeAdmin} disabled={loading} className="w-full sm:w-auto">
                     {loading ? 'Processing...' : 'Make Me Admin'}
                   </Button>
                 ) : (
-                  <Button onClick={removeAdmin} disabled={loading} variant="destructive">
+                  <Button onClick={removeAdmin} disabled={loading} variant="destructive" className="w-full sm:w-auto">
                     {loading ? 'Processing...' : 'Remove Admin'}
                   </Button>
                 )}
@@ -152,13 +152,13 @@ const AdminSettings = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Button asChild className="w-full justify-start" variant="outline">
+                <Button asChild className="w-full justify-start text-sm md:text-base" variant="outline">
                   <Link to="/admin/moderate">
                     <Shield className="w-4 h-4 mr-2" />
                     Moderate Content
                   </Link>
                 </Button>
-                <Button asChild className="w-full justify-start" variant="outline">
+                <Button asChild className="w-full justify-start text-sm md:text-base" variant="outline">
                   <Link to="/admin/scraper">
                     <Users className="w-4 h-4 mr-2" />
                     Property Scraper
