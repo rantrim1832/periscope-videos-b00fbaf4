@@ -49,6 +49,7 @@ export type Database = {
       }
       reviews: {
         Row: {
+          ai_flags: Json | null
           caption: string | null
           city: string | null
           created_at: string
@@ -56,6 +57,7 @@ export type Database = {
           id: string
           is_positive: boolean | null
           likes: number | null
+          moderation_score: number | null
           moderation_status: string | null
           property_id: string | null
           rating: number | null
@@ -68,6 +70,7 @@ export type Database = {
           views: number | null
         }
         Insert: {
+          ai_flags?: Json | null
           caption?: string | null
           city?: string | null
           created_at?: string
@@ -75,6 +78,7 @@ export type Database = {
           id?: string
           is_positive?: boolean | null
           likes?: number | null
+          moderation_score?: number | null
           moderation_status?: string | null
           property_id?: string | null
           rating?: number | null
@@ -87,6 +91,7 @@ export type Database = {
           views?: number | null
         }
         Update: {
+          ai_flags?: Json | null
           caption?: string | null
           city?: string | null
           created_at?: string
@@ -94,6 +99,7 @@ export type Database = {
           id?: string
           is_positive?: boolean | null
           likes?: number | null
+          moderation_score?: number | null
           moderation_status?: string | null
           property_id?: string | null
           rating?: number | null
@@ -159,11 +165,13 @@ export type Database = {
       }
       shorts: {
         Row: {
+          ai_flags: Json | null
           city: string | null
           created_at: string
           embed_url: string
           id: string
           likes: number | null
+          moderation_score: number | null
           moderation_status: string | null
           review_id: string | null
           source: string | null
@@ -173,11 +181,13 @@ export type Database = {
           views: number | null
         }
         Insert: {
+          ai_flags?: Json | null
           city?: string | null
           created_at?: string
           embed_url: string
           id?: string
           likes?: number | null
+          moderation_score?: number | null
           moderation_status?: string | null
           review_id?: string | null
           source?: string | null
@@ -187,11 +197,13 @@ export type Database = {
           views?: number | null
         }
         Update: {
+          ai_flags?: Json | null
           city?: string | null
           created_at?: string
           embed_url?: string
           id?: string
           likes?: number | null
+          moderation_score?: number | null
           moderation_status?: string | null
           review_id?: string | null
           source?: string | null

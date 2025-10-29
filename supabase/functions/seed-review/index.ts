@@ -1,3 +1,4 @@
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.77.0";
 
@@ -5,6 +6,90 @@ const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+interface ModerationResult {
+  approved: boolean;
+  score: number;
+  flags: string[];
+  reason?: string;
+}
+
+async function moderateContent(text: string): Promise<ModerationResult> {
+  const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+  
+  if (!LOVABLE_API_KEY) {
+    console.error('LOVABLE_API_KEY not found');
+    return { approved: true, score: 0, flags: [] };
+  }
+
+  try {
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          {
+            role: 'system',
+            content: `You are a content moderation AI for an apartment review platform. Analyze the content and return moderation assessment.`
+          },
+          {
+            role: 'user',
+            content: `Analyze this content for toxicity, hate speech, threats, explicit content:\n\n${text}`
+          }
+        ],
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "moderate_content",
+              description: "Return content moderation analysis",
+              parameters: {
+                type: "object",
+                properties: {
+                  toxicity_score: { type: "number", minimum: 0, maximum: 1 },
+                  flags: { type: "array", items: { type: "string" } },
+                  approved: { type: "boolean" },
+                  reason: { type: "string" }
+                },
+                required: ["toxicity_score", "flags", "approved"],
+                additionalProperties: false
+              }
+            }
+          }
+        ],
+        tool_choice: { type: "function", function: { name: "moderate_content" } }
+      }),
+    });
+
+    if (!response.ok) {
+      console.error('AI moderation error:', response.status);
+      return { approved: true, score: 0, flags: [] };
+    }
+
+    const data = await response.json();
+    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
+    
+    if (!toolCall?.function?.arguments) {
+      return { approved: true, score: 0, flags: [] };
+    }
+
+    const result = JSON.parse(toolCall.function.arguments);
+    return {
+      approved: result.approved,
+      score: result.toxicity_score,
+      flags: result.flags || [],
+      reason: result.reason
+    };
+
+  } catch (error) {
+    console.error('Moderation error:', error);
+    return { approved: true, score: 0, flags: [] };
+  }
+}
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -69,6 +154,16 @@ serve(async (req) => {
     const cityMatch = videoCaption.match(/\b([A-Z][a-z]+(?:\s[A-Z][a-z]+)*),?\s*([A-Z]{2})\b/);
     const detectedCity = cityMatch ? `${cityMatch[1]}, ${cityMatch[2]}` : 'General';
 
+    // AI Content Moderation
+    console.log('Running AI moderation...');
+    const contentToModerate = `${videoTitle}\n${videoCaption}\n${hashtagArray.join(' ')}`;
+    const moderation = await moderateContent(contentToModerate);
+    console.log('Moderation result:', moderation);
+
+    // Auto-reject if toxicity score > 0.7 or has severe flags
+    const shouldReject = !moderation.approved || moderation.score > 0.7;
+    const moderationStatus = shouldReject ? 'rejected' : 'approved';
+
     // Determine if this is a short (based on hashtags or likes threshold)
     const isShort = hashtagArray.some(tag => 
       tag.toLowerCase().includes('shorts') || 
@@ -85,7 +180,9 @@ serve(async (req) => {
           tags: hashtagArray,
           city: detectedCity,
           source: 'taggbox',
-          moderation_status: 'pending',
+          moderation_status: moderationStatus,
+          moderation_score: moderation.score,
+          ai_flags: moderation.flags,
           likes: likes || 0,
         })
         .select()
@@ -101,8 +198,14 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           success: true, 
-          message: 'Short imported successfully',
+          message: shouldReject ? 'Short rejected by AI moderation' : 'Short imported successfully',
           type: 'short',
+          moderation: {
+            approved: !shouldReject,
+            score: moderation.score,
+            flags: moderation.flags,
+            reason: moderation.reason
+          },
           data 
         }),
         { 
@@ -124,7 +227,9 @@ serve(async (req) => {
           rating: rating,
           is_positive: isPositive,
           source: 'seeded',
-          moderation_status: 'pending',
+          moderation_status: moderationStatus,
+          moderation_score: moderation.score,
+          ai_flags: moderation.flags,
           likes: likes || 0,
         })
         .select()
@@ -140,10 +245,16 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           success: true, 
-          message: 'Seeded review imported successfully',
+          message: shouldReject ? 'Review rejected by AI moderation' : 'Seeded review imported successfully',
           type: 'review',
           sentiment: isPositive ? 'positive' : 'negative',
           rating: rating,
+          moderation: {
+            approved: !shouldReject,
+            score: moderation.score,
+            flags: moderation.flags,
+            reason: moderation.reason
+          },
           data 
         }),
         { 

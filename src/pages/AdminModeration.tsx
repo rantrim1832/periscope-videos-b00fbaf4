@@ -17,6 +17,8 @@ interface SeededReview {
   city: string;
   rating: number;
   moderation_status: string;
+  moderation_score: number;
+  ai_flags: string[];
   is_positive: boolean;
   created_at: string;
 }
@@ -39,7 +41,13 @@ const AdminModeration = () => {
       toast.error('Failed to load reviews');
       console.error(error);
     } else {
-      setReviews(data || []);
+      // Transform data to match interface, ensuring ai_flags is string[]
+      const transformedData = (data || []).map(review => ({
+        ...review,
+        ai_flags: Array.isArray(review.ai_flags) ? review.ai_flags : [],
+        moderation_score: review.moderation_score || 0,
+      })) as SeededReview[];
+      setReviews(transformedData);
     }
     setLoading(false);
   };
@@ -117,12 +125,28 @@ const AdminModeration = () => {
                     <MapPin className="w-4 h-4" />
                     {review.city || 'Unknown'}
                   </div>
-                  <div className="flex gap-2 mt-2">
+                  <div className="flex gap-2 mt-2 flex-wrap">
                     <Badge variant="outline">⭐ {review.rating}/5</Badge>
                     {review.is_positive && (
                       <Badge className="bg-green-500">Positive</Badge>
                     )}
+                    {review.moderation_score > 0 && (
+                      <Badge 
+                        variant={review.moderation_score > 0.7 ? "destructive" : review.moderation_score > 0.4 ? "secondary" : "outline"}
+                      >
+                        AI: {(review.moderation_score * 100).toFixed(0)}%
+                      </Badge>
+                    )}
                   </div>
+                  {review.ai_flags && review.ai_flags.length > 0 && (
+                    <div className="flex gap-1 mt-2 flex-wrap">
+                      {review.ai_flags.map((flag, idx) => (
+                        <Badge key={idx} variant="destructive" className="text-xs">
+                          🚩 {flag}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {/* Video Embed Placeholder */}
