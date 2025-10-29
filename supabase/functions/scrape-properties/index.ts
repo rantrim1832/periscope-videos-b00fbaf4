@@ -49,6 +49,9 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const startTime = Date.now();
+  let logId: string | null = null;
+
   try {
     const { city, state, limit = 500 } = await req.json();
 
@@ -70,6 +73,19 @@ serve(async (req) => {
 
     const locationStr = city ? `${city}, ${state}` : state;
     console.log(`Fetching properties for ${locationStr}...`);
+
+    // Create initial log entry
+    const { data: logEntry } = await supabase
+      .from('scrape_logs')
+      .insert({
+        city,
+        state,
+        status: 'in_progress',
+      })
+      .select()
+      .single();
+    
+    logId = logEntry?.id || null;
 
     // Fetch properties from RentCast
     const url = new URL('https://api.rentcast.io/v1/properties');
@@ -181,6 +197,24 @@ serve(async (req) => {
 
     console.log(`Scraping complete: ${inserted} inserted, ${skipped} skipped, ${errors.length} errors`);
 
+    // Update log entry with results
+    const duration = Date.now() - startTime;
+    if (logId) {
+      await supabase
+        .from('scrape_logs')
+        .update({
+          total_properties: properties.length,
+          inserted_count: inserted,
+          skipped_count: skipped,
+          error_count: errors.length,
+          errors: errors,
+          status: 'success',
+          completed_at: new Date().toISOString(),
+          duration_ms: duration,
+        })
+        .eq('id', logId);
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
@@ -195,6 +229,26 @@ serve(async (req) => {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error('Error in scrape-properties function:', error);
+    
+    // Update log entry with error
+    const duration = Date.now() - startTime;
+    if (logId) {
+      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+      const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      await supabase
+        .from('scrape_logs')
+        .update({
+          status: 'failed',
+          errors: [{ error: errorMessage }],
+          error_count: 1,
+          completed_at: new Date().toISOString(),
+          duration_ms: duration,
+        })
+        .eq('id', logId);
+    }
+    
     return new Response(
       JSON.stringify({ error: errorMessage }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

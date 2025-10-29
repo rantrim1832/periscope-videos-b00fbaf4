@@ -223,6 +223,57 @@ export type Database = {
           },
         ]
       }
+      scrape_logs: {
+        Row: {
+          city: string | null
+          completed_at: string | null
+          created_at: string
+          created_by_user_id: string | null
+          duration_ms: number | null
+          error_count: number
+          errors: Json | null
+          id: string
+          inserted_count: number
+          skipped_count: number
+          started_at: string
+          state: string
+          status: string
+          total_properties: number
+        }
+        Insert: {
+          city?: string | null
+          completed_at?: string | null
+          created_at?: string
+          created_by_user_id?: string | null
+          duration_ms?: number | null
+          error_count?: number
+          errors?: Json | null
+          id?: string
+          inserted_count?: number
+          skipped_count?: number
+          started_at?: string
+          state: string
+          status?: string
+          total_properties?: number
+        }
+        Update: {
+          city?: string | null
+          completed_at?: string | null
+          created_at?: string
+          created_by_user_id?: string | null
+          duration_ms?: number | null
+          error_count?: number
+          errors?: Json | null
+          id?: string
+          inserted_count?: number
+          skipped_count?: number
+          started_at?: string
+          state?: string
+          status?: string
+          total_properties?: number
+        }
+        Relationships: []
+      }
       seeded_videos: {
         Row: {
           caption: string | null

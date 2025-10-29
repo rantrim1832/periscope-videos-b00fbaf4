@@ -74,10 +74,20 @@ export const Header = () => {
             Help Center
           </Link>
           {isAdmin && (
-            <Link to="/admin/settings" className="text-sm font-medium text-foreground hover:text-primary transition-colors flex items-center gap-1">
-              <Shield className="w-4 h-4" />
-              Admin
-            </Link>
+            <>
+              <Link to="/admin/settings" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
+                Admin Settings
+              </Link>
+              <Link to="/admin/scraper" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
+                Scraper
+              </Link>
+              <Link to="/admin/scrape-logs" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
+                Scrape Logs
+              </Link>
+              <Link to="/admin/properties" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
+                Properties
+              </Link>
+            </>
           )}
         </nav>
 
@@ -148,14 +158,36 @@ export const Header = () => {
                   Help Center
                 </Link>
                 {isAdmin && (
-                  <Link 
-                    to="/admin/settings" 
-                    className="text-lg font-medium hover:text-primary transition-colors flex items-center gap-2"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    <Shield className="w-4 h-4" />
-                    Admin
-                  </Link>
+                  <>
+                    <Link 
+                      to="/admin/settings" 
+                      className="text-lg font-medium hover:text-primary transition-colors"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Admin Settings
+                    </Link>
+                    <Link 
+                      to="/admin/scraper" 
+                      className="text-lg font-medium hover:text-primary transition-colors"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Scraper
+                    </Link>
+                    <Link 
+                      to="/admin/scrape-logs" 
+                      className="text-lg font-medium hover:text-primary transition-colors"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Scrape Logs
+                    </Link>
+                    <Link 
+                      to="/admin/properties" 
+                      className="text-lg font-medium hover:text-primary transition-colors"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Properties
+                    </Link>
+                  </>
                 )}
                 {user && (
                   <Link 
