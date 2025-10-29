@@ -7,20 +7,41 @@ const corsHeaders = {
 };
 
 interface PropertyData {
+  id: string;
   address: string;
   city: string;
   state: string;
+  addressLine1?: string;
+  addressLine2?: string;
   zipCode?: string;
+  county?: string;
+  countyFips?: string;
+  stateFips?: string;
   propertyType?: string;
   bedrooms?: number;
   bathrooms?: number;
   squareFootage?: number;
-  price?: number;
+  lotSize?: number;
+  yearBuilt?: number;
+  assessorID?: string;
+  legalDescription?: string;
+  subdivision?: string;
+  zoning?: string;
+  lastSaleDate?: string;
+  lastSalePrice?: number;
   formattedAddress?: string;
   latitude?: number;
   longitude?: number;
   managementCompany?: string;
   amenities?: string[];
+  hoa?: {
+    fee?: number;
+  };
+  features?: any;
+  taxAssessments?: any;
+  propertyTaxes?: any;
+  history?: any;
+  owner?: any;
 }
 
 serve(async (req) => {
@@ -105,17 +126,40 @@ serve(async (req) => {
         const { error } = await supabase
           .from('properties')
           .insert({
+            rentcast_id: property.id,
             name: `${address}`,
             address: address,
+            address_line1: property.addressLine1 || null,
+            address_line2: property.addressLine2 || null,
             city: property.city,
             state: property.state,
+            zip_code: property.zipCode || null,
+            county: property.county || null,
+            county_fips: property.countyFips || null,
+            state_fips: property.stateFips || null,
+            property_type: property.propertyType || null,
             beds: property.bedrooms || null,
             baths: property.bathrooms || null,
-            rent: property.price || null,
+            square_footage: property.squareFootage || null,
+            lot_size: property.lotSize || null,
+            year_built: property.yearBuilt || null,
+            assessor_id: property.assessorID || null,
+            legal_description: property.legalDescription || null,
+            subdivision: property.subdivision || null,
+            zoning: property.zoning || null,
+            last_sale_date: property.lastSaleDate || null,
+            last_sale_price: property.lastSalePrice || null,
+            rent: property.lastSalePrice || null,
             latitude: property.latitude || null,
             longitude: property.longitude || null,
+            hoa_fee: property.hoa?.fee || null,
             management_company: property.managementCompany || null,
             amenities: property.amenities || null,
+            features: property.features || null,
+            tax_assessments: property.taxAssessments || null,
+            property_taxes: property.propertyTaxes || null,
+            history: property.history || null,
+            owner: property.owner || null,
             status: 'approved',
             is_verified: false,
             verification_required: false,

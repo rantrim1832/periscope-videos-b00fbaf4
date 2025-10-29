@@ -17,66 +17,135 @@ export type Database = {
       properties: {
         Row: {
           address: string
+          address_line1: string | null
+          address_line2: string | null
           amenities: string[] | null
+          assessor_id: string | null
           baths: number | null
           beds: number | null
           city: string
+          county: string | null
+          county_fips: string | null
           created_at: string
           created_by_user_id: string | null
+          features: Json | null
+          history: Json | null
+          hoa_fee: number | null
           id: string
           is_verified: boolean | null
+          last_sale_date: string | null
+          last_sale_price: number | null
           latitude: number | null
+          legal_description: string | null
           longitude: number | null
+          lot_size: number | null
           management_company: string | null
           name: string
+          owner: Json | null
+          property_taxes: Json | null
+          property_type: string | null
           rent: number | null
           rentcast_data: Json | null
+          rentcast_id: string | null
+          square_footage: number | null
           state: string
+          state_fips: string | null
           status: string | null
+          subdivision: string | null
+          tax_assessments: Json | null
           updated_at: string
           verification_required: boolean | null
+          year_built: number | null
+          zip_code: string | null
+          zoning: string | null
         }
         Insert: {
           address: string
+          address_line1?: string | null
+          address_line2?: string | null
           amenities?: string[] | null
+          assessor_id?: string | null
           baths?: number | null
           beds?: number | null
           city: string
+          county?: string | null
+          county_fips?: string | null
           created_at?: string
           created_by_user_id?: string | null
+          features?: Json | null
+          history?: Json | null
+          hoa_fee?: number | null
           id?: string
           is_verified?: boolean | null
+          last_sale_date?: string | null
+          last_sale_price?: number | null
           latitude?: number | null
+          legal_description?: string | null
           longitude?: number | null
+          lot_size?: number | null
           management_company?: string | null
           name: string
+          owner?: Json | null
+          property_taxes?: Json | null
+          property_type?: string | null
           rent?: number | null
           rentcast_data?: Json | null
+          rentcast_id?: string | null
+          square_footage?: number | null
           state: string
+          state_fips?: string | null
           status?: string | null
+          subdivision?: string | null
+          tax_assessments?: Json | null
           updated_at?: string
           verification_required?: boolean | null
+          year_built?: number | null
+          zip_code?: string | null
+          zoning?: string | null
         }
         Update: {
           address?: string
+          address_line1?: string | null
+          address_line2?: string | null
           amenities?: string[] | null
+          assessor_id?: string | null
           baths?: number | null
           beds?: number | null
           city?: string
+          county?: string | null
+          county_fips?: string | null
           created_at?: string
           created_by_user_id?: string | null
+          features?: Json | null
+          history?: Json | null
+          hoa_fee?: number | null
           id?: string
           is_verified?: boolean | null
+          last_sale_date?: string | null
+          last_sale_price?: number | null
           latitude?: number | null
+          legal_description?: string | null
           longitude?: number | null
+          lot_size?: number | null
           management_company?: string | null
           name?: string
+          owner?: Json | null
+          property_taxes?: Json | null
+          property_type?: string | null
           rent?: number | null
           rentcast_data?: Json | null
+          rentcast_id?: string | null
+          square_footage?: number | null
           state?: string
+          state_fips?: string | null
           status?: string | null
+          subdivision?: string | null
+          tax_assessments?: Json | null
           updated_at?: string
           verification_required?: boolean | null
+          year_built?: number | null
+          zip_code?: string | null
+          zoning?: string | null
         }
         Relationships: []
       }

@@ -1,0 +1,28 @@
+-- Add all RentCast property fields to properties table
+ALTER TABLE public.properties 
+ADD COLUMN IF NOT EXISTS rentcast_id TEXT,
+ADD COLUMN IF NOT EXISTS address_line1 TEXT,
+ADD COLUMN IF NOT EXISTS address_line2 TEXT,
+ADD COLUMN IF NOT EXISTS zip_code TEXT,
+ADD COLUMN IF NOT EXISTS county TEXT,
+ADD COLUMN IF NOT EXISTS county_fips TEXT,
+ADD COLUMN IF NOT EXISTS state_fips TEXT,
+ADD COLUMN IF NOT EXISTS property_type TEXT,
+ADD COLUMN IF NOT EXISTS square_footage INTEGER,
+ADD COLUMN IF NOT EXISTS lot_size INTEGER,
+ADD COLUMN IF NOT EXISTS year_built INTEGER,
+ADD COLUMN IF NOT EXISTS assessor_id TEXT,
+ADD COLUMN IF NOT EXISTS legal_description TEXT,
+ADD COLUMN IF NOT EXISTS subdivision TEXT,
+ADD COLUMN IF NOT EXISTS zoning TEXT,
+ADD COLUMN IF NOT EXISTS last_sale_date TIMESTAMP WITH TIME ZONE,
+ADD COLUMN IF NOT EXISTS last_sale_price NUMERIC,
+ADD COLUMN IF NOT EXISTS hoa_fee NUMERIC,
+ADD COLUMN IF NOT EXISTS features JSONB,
+ADD COLUMN IF NOT EXISTS tax_assessments JSONB,
+ADD COLUMN IF NOT EXISTS property_taxes JSONB,
+ADD COLUMN IF NOT EXISTS history JSONB,
+ADD COLUMN IF NOT EXISTS owner JSONB;
+
+-- Create index on rentcast_id for faster lookups
+CREATE INDEX IF NOT EXISTS idx_properties_rentcast_id ON public.properties(rentcast_id);
