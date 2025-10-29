@@ -1,0 +1,4 @@
+project_id = "eeivsursfgmponlonpmy"
+
+[functions.taggbox-webhook]
+verify_jwt = false

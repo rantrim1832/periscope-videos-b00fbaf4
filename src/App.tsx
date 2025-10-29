@@ -10,6 +10,7 @@ import Community from "./pages/Community";
 import Help from "./pages/Help";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
+import AdminModeration from "./pages/AdminModeration";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +27,7 @@ const App = () => (
           <Route path="/community" element={<Community />} />
           <Route path="/help" element={<Help />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/admin/moderate" element={<AdminModeration />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

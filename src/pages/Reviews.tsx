@@ -1,12 +1,35 @@
+import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { VideoCard } from "@/components/VideoCard";
+import { SeededVideoCard } from "@/components/SeededVideoCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Search, Filter, SlidersHorizontal } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const Reviews = () => {
-  // Mock data - would be fetched from API
+  const [seededVideos, setSeededVideos] = useState<any[]>([]);
+  
+  useEffect(() => {
+    const fetchSeededVideos = async () => {
+      const { data } = await supabase
+        .from('seeded_videos')
+        .select('*')
+        .eq('moderation_status', 'approved')
+        .order('is_positive', { ascending: false })
+        .order('created_at', { ascending: false })
+        .limit(6);
+      
+      if (data) {
+        setSeededVideos(data);
+      }
+    };
+    
+    fetchSeededVideos();
+  }, []);
+
+  // Mock user-submitted data - would be fetched from API
   const videos = Array.from({ length: 12 }, (_, i) => ({
     id: String(i + 1),
     thumbnailUrl: "/placeholder.svg",
@@ -95,11 +118,33 @@ const Reviews = () => {
           </div>
         </div>
 
-        {/* Video Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {videos.map((video) => (
-            <VideoCard key={video.id} {...video} />
-          ))}
+        {/* Seeded Videos Section */}
+        {seededVideos.length > 0 && (
+          <div className="mb-12">
+            <h2 className="text-2xl font-bold text-foreground mb-4">
+              Community Sample Reviews
+            </h2>
+            <p className="text-muted-foreground mb-6">
+              Featured videos from the community to inspire your own reviews
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {seededVideos.map((video) => (
+                <SeededVideoCard key={video.id} {...video} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* User Video Grid */}
+        <div>
+          <h2 className="text-2xl font-bold text-foreground mb-6">
+            User Reviews
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {videos.map((video) => (
+              <VideoCard key={video.id} {...video} />
+            ))}
+          </div>
         </div>
 
         {/* Load More */}
