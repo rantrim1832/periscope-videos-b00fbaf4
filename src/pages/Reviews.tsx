@@ -2,17 +2,107 @@ import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { VideoCard } from "@/components/VideoCard";
 import { SeededVideoCard } from "@/components/SeededVideoCard";
+import { PropertyCard } from "@/components/PropertyCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, Filter, SlidersHorizontal, Smile } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Search, Filter, SlidersHorizontal, Smile, MapPin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 const Reviews = () => {
   const [seededReviews, setSeededReviews] = useState<any[]>([]);
+  const [properties, setProperties] = useState<any[]>([]);
+  const [states, setStates] = useState<string[]>([]);
+  const [cities, setCities] = useState<string[]>([]);
+  const [selectedState, setSelectedState] = useState<string>("all");
+  const [selectedCity, setSelectedCity] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState("");
   const [positiveOnly, setPositiveOnly] = useState(false);
+  const [totalProperties, setTotalProperties] = useState(0);
   
+  // Fetch available states and cities
+  useEffect(() => {
+    const fetchLocations = async () => {
+      const { data: statesData } = await supabase
+        .from('properties')
+        .select('state')
+        .eq('status', 'approved');
+      
+      if (statesData) {
+        const uniqueStates = [...new Set(statesData.map(p => p.state))].sort();
+        setStates(uniqueStates);
+      }
+
+      // Get total count
+      const { count } = await supabase
+        .from('properties')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'approved');
+      
+      setTotalProperties(count || 0);
+    };
+    
+    fetchLocations();
+  }, []);
+
+  // Fetch cities when state changes
+  useEffect(() => {
+    const fetchCities = async () => {
+      if (selectedState === "all") {
+        setCities([]);
+        setSelectedCity("all");
+        return;
+      }
+
+      const { data: citiesData } = await supabase
+        .from('properties')
+        .select('city')
+        .eq('state', selectedState)
+        .eq('status', 'approved');
+      
+      if (citiesData) {
+        const uniqueCities = [...new Set(citiesData.map(p => p.city))].sort();
+        setCities(uniqueCities);
+      }
+    };
+    
+    fetchCities();
+  }, [selectedState]);
+
+  // Fetch properties based on filters
+  useEffect(() => {
+    const fetchProperties = async () => {
+      let query = supabase
+        .from('properties')
+        .select('*')
+        .eq('status', 'approved');
+      
+      if (selectedState !== "all") {
+        query = query.eq('state', selectedState);
+      }
+      
+      if (selectedCity !== "all") {
+        query = query.eq('city', selectedCity);
+      }
+
+      if (searchQuery) {
+        query = query.or(`name.ilike.%${searchQuery}%,address.ilike.%${searchQuery}%,city.ilike.%${searchQuery}%`);
+      }
+      
+      const { data } = await query
+        .order('created_at', { ascending: false })
+        .limit(20);
+      
+      if (data) {
+        setProperties(data);
+      }
+    };
+    
+    fetchProperties();
+  }, [selectedState, selectedCity, searchQuery]);
+
   useEffect(() => {
     const fetchSeededReviews = async () => {
       let query = supabase
@@ -84,22 +174,55 @@ const Reviews = () => {
       <div className="container mx-auto px-4 py-8">
         {/* Search and Filters */}
         <div className="space-y-4 mb-8">
-          <div className="flex flex-col sm:flex-row gap-3">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
-              <Input
-                placeholder="Search reviews by address, property, or tags..."
-                className="pl-10 h-12 bg-card"
-              />
+          <div className="flex flex-col gap-3">
+            {/* Location Filters */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Select value={selectedState} onValueChange={setSelectedState}>
+                <SelectTrigger className="h-12 bg-card sm:w-[200px]">
+                  <SelectValue placeholder="All States" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All States</SelectItem>
+                  {states.map(state => (
+                    <SelectItem key={state} value={state}>{state}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select 
+                value={selectedCity} 
+                onValueChange={setSelectedCity}
+                disabled={selectedState === "all"}
+              >
+                <SelectTrigger className="h-12 bg-card sm:w-[200px]">
+                  <SelectValue placeholder="All Cities" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Cities</SelectItem>
+                  {cities.map(city => (
+                    <SelectItem key={city} value={city}>{city}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <MapPin className="h-4 w-4" />
+                <span>{totalProperties} properties available</span>
+              </div>
             </div>
-            <Button variant="outline" size="lg" className="sm:w-auto">
-              <Filter className="w-4 h-4 mr-2" />
-              Filters
-            </Button>
-            <Button variant="outline" size="lg" className="sm:w-auto">
-              <SlidersHorizontal className="w-4 h-4 mr-2" />
-              Sort
-            </Button>
+
+            {/* Search Bar */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
+                <Input
+                  placeholder="Search by address or property name..."
+                  className="pl-10 h-12 bg-card"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+            </div>
           </div>
 
           {/* Popular Tags */}
@@ -120,9 +243,11 @@ const Reviews = () => {
         {/* Results Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Video Reviews</h1>
+            <h1 className="text-3xl font-bold text-foreground">
+              {selectedState !== "all" ? `${selectedCity !== "all" ? selectedCity + ", " : ""}${selectedState}` : "All Locations"}
+            </h1>
             <p className="text-muted-foreground mt-1">
-              Discover honest apartment experiences from real renters
+              {properties.length} properties found
             </p>
           </div>
           <Button
@@ -134,6 +259,42 @@ const Reviews = () => {
             Positive Only
           </Button>
         </div>
+
+        {/* Properties Section */}
+        {properties.length > 0 && (
+          <div className="mb-12">
+            <h2 className="text-2xl font-bold text-foreground mb-4">
+              Available Properties
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {properties.map((property) => (
+                <PropertyCard
+                  key={property.id}
+                  name={property.name}
+                  address={property.address}
+                  city={property.city}
+                  state={property.state}
+                  bedrooms={property.beds}
+                  bathrooms={property.baths}
+                  rating={4.5}
+                  reviewCount={0}
+                  videoCount={0}
+                  imageUrl="/placeholder.svg"
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {properties.length === 0 && (
+          <div className="text-center py-12 bg-muted/50 rounded-lg mb-12">
+            <MapPin className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <h3 className="text-xl font-semibold mb-2">No Properties Found</h3>
+            <p className="text-muted-foreground mb-4">
+              Try adjusting your filters or search in a different location
+            </p>
+          </div>
+        )}
 
         {/* Seeded Reviews Section */}
         {seededReviews.length > 0 && (
