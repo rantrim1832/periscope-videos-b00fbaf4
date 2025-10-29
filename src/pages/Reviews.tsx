@@ -5,18 +5,26 @@ import { SeededVideoCard } from "@/components/SeededVideoCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, Filter, SlidersHorizontal } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Search, Filter, SlidersHorizontal, Smile } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 const Reviews = () => {
   const [seededVideos, setSeededVideos] = useState<any[]>([]);
+  const [positiveOnly, setPositiveOnly] = useState(false);
   
   useEffect(() => {
     const fetchSeededVideos = async () => {
-      const { data } = await supabase
+      let query = supabase
         .from('seeded_videos')
         .select('*')
-        .eq('moderation_status', 'approved')
+        .eq('moderation_status', 'approved');
+      
+      if (positiveOnly) {
+        query = query.eq('is_positive', true);
+      }
+      
+      const { data } = await query
         .order('is_positive', { ascending: false })
         .order('created_at', { ascending: false })
         .limit(6);
@@ -27,7 +35,7 @@ const Reviews = () => {
     };
     
     fetchSeededVideos();
-  }, []);
+  }, [positiveOnly]);
 
   // Mock user-submitted data - would be fetched from API
   const videos = Array.from({ length: 12 }, (_, i) => ({
@@ -113,9 +121,17 @@ const Reviews = () => {
           <div>
             <h1 className="text-3xl font-bold text-foreground">Video Reviews</h1>
             <p className="text-muted-foreground mt-1">
-              Showing {videos.length} reviews from renters nationwide
+              Discover honest apartment experiences from real renters
             </p>
           </div>
+          <Button
+            variant={positiveOnly ? "default" : "outline"}
+            onClick={() => setPositiveOnly(!positiveOnly)}
+            className="gap-2"
+          >
+            <Smile className="w-4 h-4" />
+            Positive Only
+          </Button>
         </div>
 
         {/* Seeded Videos Section */}
@@ -135,17 +151,32 @@ const Reviews = () => {
           </div>
         )}
 
-        {/* User Video Grid */}
-        <div>
-          <h2 className="text-2xl font-bold text-foreground mb-6">
-            User Reviews
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {videos.map((video) => (
-              <VideoCard key={video.id} {...video} />
-            ))}
-          </div>
-        </div>
+        {/* User Video Grid with Tabs */}
+        <Tabs defaultValue="all" className="w-full">
+          <TabsList className="mb-6">
+            <TabsTrigger value="all">All Reviews</TabsTrigger>
+            <TabsTrigger value="positive" className="gap-2">
+              <Smile className="w-4 h-4" />
+              Positive Experiences
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="all">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {videos.map((video) => (
+                <VideoCard key={video.id} {...video} />
+              ))}
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="positive">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {videos.filter((v, i) => i % 2 === 1).map((video) => (
+                <VideoCard key={video.id} {...video} verified />
+              ))}
+            </div>
+          </TabsContent>
+        </Tabs>
 
         {/* Load More */}
         <div className="flex justify-center mt-12">

@@ -28,7 +28,8 @@ serve(async (req) => {
       embed_url, 
       hashtags, 
       title,
-      post_caption 
+      post_caption,
+      likes 
     } = payload;
 
     // Use caption or post_caption as title fallback
@@ -54,19 +55,33 @@ serve(async (req) => {
     const cityMatch = videoCaption.match(/\b([A-Z][a-z]+(?:\s[A-Z][a-z]+)*),?\s*([A-Z]{2})\b/);
     const detectedCity = cityMatch ? `${cityMatch[1]}, ${cityMatch[2]}` : 'General';
 
-    // Insert into seeded_videos table
+    // Determine if this is a short (based on hashtags or likes threshold)
+    const isShort = hashtagArray.some(tag => 
+      tag.toLowerCase().includes('shorts') || 
+      tag.toLowerCase().includes('short')
+    ) || (likes && likes >= 100);
+
+    // Insert into appropriate table
+    const tableName = isShort ? 'shorts' : 'seeded_videos';
+    const insertData: any = {
+      title: videoTitle,
+      embed_url: embed_url || '',
+      tags: hashtagArray,
+      city: detectedCity,
+      source: 'taggbox',
+      moderation_status: 'pending',
+      likes: likes || 0,
+    };
+
+    if (!isShort) {
+      insertData.caption = videoCaption;
+      insertData.hashtags = hashtagArray;
+      insertData.is_positive = isPositive;
+    }
+
     const { data, error } = await supabase
-      .from('seeded_videos')
-      .insert({
-        title: videoTitle,
-        embed_url: embed_url || '',
-        caption: videoCaption,
-        hashtags: hashtagArray,
-        city: detectedCity,
-        source: 'taggbox',
-        moderation_status: 'pending',
-        is_positive: isPositive,
-      })
+      .from(tableName)
+      .insert(insertData)
       .select()
       .single();
 
@@ -75,13 +90,14 @@ serve(async (req) => {
       throw error;
     }
 
-    console.log('Video imported successfully:', data);
+    console.log(`${isShort ? 'Short' : 'Video'} imported successfully:`, data);
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: 'Video imported successfully',
-        video: data 
+        message: `${isShort ? 'Short' : 'Video'} imported successfully`,
+        type: isShort ? 'short' : 'video',
+        data 
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

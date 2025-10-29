@@ -14,6 +14,101 @@ export type Database = {
   }
   public: {
     Tables: {
+      properties: {
+        Row: {
+          address: string
+          city: string
+          created_at: string
+          id: string
+          name: string
+          rentcast_data: Json | null
+          state: string
+          updated_at: string
+        }
+        Insert: {
+          address: string
+          city: string
+          created_at?: string
+          id?: string
+          name: string
+          rentcast_data?: Json | null
+          state: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string
+          city?: string
+          created_at?: string
+          id?: string
+          name?: string
+          rentcast_data?: Json | null
+          state?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      reviews: {
+        Row: {
+          caption: string | null
+          city: string | null
+          created_at: string
+          embed_code: string | null
+          id: string
+          is_positive: boolean | null
+          likes: number | null
+          property_id: string | null
+          rating: number | null
+          tags: string[] | null
+          title: string
+          updated_at: string
+          user_id: string | null
+          video_url: string | null
+          views: number | null
+        }
+        Insert: {
+          caption?: string | null
+          city?: string | null
+          created_at?: string
+          embed_code?: string | null
+          id?: string
+          is_positive?: boolean | null
+          likes?: number | null
+          property_id?: string | null
+          rating?: number | null
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+          user_id?: string | null
+          video_url?: string | null
+          views?: number | null
+        }
+        Update: {
+          caption?: string | null
+          city?: string | null
+          created_at?: string
+          embed_code?: string | null
+          id?: string
+          is_positive?: boolean | null
+          likes?: number | null
+          property_id?: string | null
+          rating?: number | null
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+          user_id?: string | null
+          video_url?: string | null
+          views?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       seeded_videos: {
         Row: {
           caption: string | null
@@ -55,6 +150,59 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      shorts: {
+        Row: {
+          city: string | null
+          created_at: string
+          embed_url: string
+          id: string
+          likes: number | null
+          moderation_status: string | null
+          review_id: string | null
+          source: string | null
+          tags: string[] | null
+          title: string
+          updated_at: string
+          views: number | null
+        }
+        Insert: {
+          city?: string | null
+          created_at?: string
+          embed_url: string
+          id?: string
+          likes?: number | null
+          moderation_status?: string | null
+          review_id?: string | null
+          source?: string | null
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+          views?: number | null
+        }
+        Update: {
+          city?: string | null
+          created_at?: string
+          embed_url?: string
+          id?: string
+          likes?: number | null
+          moderation_status?: string | null
+          review_id?: string | null
+          source?: string | null
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+          views?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shorts_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "reviews"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

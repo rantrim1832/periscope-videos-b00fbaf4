@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { VideoCard } from "@/components/VideoCard";
 import { PropertyCard } from "@/components/PropertyCard";
 import { Input } from "@/components/ui/input";
-import { Search, TrendingUp, Shield, Users, Video, Award } from "lucide-react";
+import { Search, TrendingUp, Shield, Users, Video, Award, Smile } from "lucide-react";
 import { Link } from "react-router-dom";
 import heroBanner from "@/assets/hero-banner.jpg";
 
@@ -132,6 +132,35 @@ const Index = () => {
                 100% authentic
               </span>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Positive Experiences Spotlight */}
+      <section className="py-16 bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-950/20 dark:to-blue-950/20">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <Smile className="w-8 h-8 text-green-600 dark:text-green-400" />
+                <h2 className="text-3xl font-bold text-foreground">Positive Experiences</h2>
+              </div>
+              <p className="text-muted-foreground">Discover amazing apartments that renters love</p>
+            </div>
+            <Button variant="outline" asChild>
+              <Link to="/reviews">View All</Link>
+            </Button>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {featuredVideos.slice(0, 1).map((video) => (
+              <VideoCard key={video.id} {...{ ...video, verified: true }} />
+            ))}
+            {featuredVideos.slice(1, 2).map((video) => (
+              <VideoCard key={video.id} {...{ ...video, verified: true }} />
+            ))}
+            {featuredVideos.slice(0, 2).map((video) => (
+              <VideoCard key={`pos-${video.id}`} {...{ ...video, verified: true }} />
+            ))}
           </div>
         </div>
       </section>
