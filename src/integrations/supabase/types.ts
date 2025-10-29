@@ -17,33 +17,60 @@ export type Database = {
       properties: {
         Row: {
           address: string
+          baths: number | null
+          beds: number | null
           city: string
           created_at: string
+          created_by_user_id: string | null
           id: string
+          is_verified: boolean | null
+          latitude: number | null
+          longitude: number | null
           name: string
+          rent: number | null
           rentcast_data: Json | null
           state: string
+          status: string | null
           updated_at: string
+          verification_required: boolean | null
         }
         Insert: {
           address: string
+          baths?: number | null
+          beds?: number | null
           city: string
           created_at?: string
+          created_by_user_id?: string | null
           id?: string
+          is_verified?: boolean | null
+          latitude?: number | null
+          longitude?: number | null
           name: string
+          rent?: number | null
           rentcast_data?: Json | null
           state: string
+          status?: string | null
           updated_at?: string
+          verification_required?: boolean | null
         }
         Update: {
           address?: string
+          baths?: number | null
+          beds?: number | null
           city?: string
           created_at?: string
+          created_by_user_id?: string | null
           id?: string
+          is_verified?: boolean | null
+          latitude?: number | null
+          longitude?: number | null
           name?: string
+          rent?: number | null
           rentcast_data?: Json | null
           state?: string
+          status?: string | null
           updated_at?: string
+          verification_required?: boolean | null
         }
         Relationships: []
       }
@@ -218,6 +245,89 @@ export type Database = {
             columns: ["review_id"]
             isOneToOne: false
             referencedRelation: "reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_limits: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          ip_address: string | null
+          last_verification_at: string | null
+          reviews_count: number
+          updated_at: string
+          user_id: string | null
+          verifications_count: number
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          ip_address?: string | null
+          last_verification_at?: string | null
+          reviews_count?: number
+          updated_at?: string
+          user_id?: string | null
+          verifications_count?: number
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          ip_address?: string | null
+          last_verification_at?: string | null
+          reviews_count?: number
+          updated_at?: string
+          user_id?: string | null
+          verifications_count?: number
+        }
+        Relationships: []
+      }
+      user_verifications: {
+        Row: {
+          created_at: string
+          document_url: string | null
+          extracted_address: string | null
+          id: string
+          property_id: string | null
+          rejected_reason: string | null
+          status: string
+          user_id: string | null
+          verification_type: string
+          verified_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          document_url?: string | null
+          extracted_address?: string | null
+          id?: string
+          property_id?: string | null
+          rejected_reason?: string | null
+          status?: string
+          user_id?: string | null
+          verification_type: string
+          verified_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          document_url?: string | null
+          extracted_address?: string | null
+          id?: string
+          property_id?: string | null
+          rejected_reason?: string | null
+          status?: string
+          user_id?: string | null
+          verification_type?: string
+          verified_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_verifications_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
             referencedColumns: ["id"]
           },
         ]
