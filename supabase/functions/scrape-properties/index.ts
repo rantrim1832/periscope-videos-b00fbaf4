@@ -54,6 +54,7 @@ serve(async (req) => {
       url.searchParams.append('city', city);
     }
     url.searchParams.append('state', state);
+    url.searchParams.append('propertyType', 'Apartment'); // Only multifamily apartments
     url.searchParams.append('limit', limit.toString());
 
     const response = await fetch(url.toString(), {

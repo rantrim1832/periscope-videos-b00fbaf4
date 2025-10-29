@@ -208,6 +208,7 @@ const PropertyScraper = () => {
                 <h3 className="font-semibold">Quick Start Guide</h3>
                 <ul className="text-sm text-muted-foreground space-y-1">
                   <li>• Select a state (required) and optionally a city to scrape property data</li>
+                  <li>• Only multifamily apartment buildings are scraped (no houses, condos, or single-family)</li>
                   <li>• Leave city blank to scrape the entire state</li>
                   <li>• The system will fetch up to 500 properties per request</li>
                   <li>• Duplicate properties are automatically skipped</li>
