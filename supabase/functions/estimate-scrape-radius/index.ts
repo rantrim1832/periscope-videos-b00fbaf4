@@ -25,13 +25,19 @@ serve(async (req) => {
       throw new Error('RENTCAST_API_KEY not configured');
     }
 
+    // Capitalize city name properly for RentCast API
+    const formattedCity = city
+      .split(' ')
+      .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
+    
     // First, get properties within radius to find all cities
     const url = new URL('https://api.rentcast.io/v1/properties');
-    url.searchParams.append('address', `${city}, ${state}`);
+    url.searchParams.append('address', `${formattedCity}, ${state}`);
     url.searchParams.append('radius', radius.toString());
     url.searchParams.append('limit', '500');
 
-    console.log(`Fetching properties within ${radius} miles of ${city}, ${state}`);
+    console.log(`Fetching properties within ${radius} miles of ${formattedCity}, ${state}`);
     console.log(`API URL: ${url.toString()}`);
 
     const response = await fetch(url.toString(), {
