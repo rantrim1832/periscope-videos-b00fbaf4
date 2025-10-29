@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Video, Search, User, Menu, Shield, LogIn, LogOut } from "lucide-react";
+import { Video, Search, User, Menu, Shield, LogIn, LogOut, X } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAdmin } from "@/hooks/useAdmin";
@@ -7,10 +7,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
 import { User as SupabaseUser } from "@supabase/supabase-js";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 export const Header = () => {
   const { isAdmin } = useAdmin();
   const [user, setUser] = useState<SupabaseUser | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -100,9 +108,67 @@ export const Header = () => {
               </Link>
             </Button>
           )}
-          <Button variant="ghost" size="icon" className="md:hidden">
-            <Menu className="h-5 w-5" />
-          </Button>
+          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="md:hidden">
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-[300px]">
+              <SheetHeader>
+                <SheetTitle>Menu</SheetTitle>
+              </SheetHeader>
+              <nav className="flex flex-col gap-4 mt-8">
+                <Link 
+                  to="/reviews" 
+                  className="text-lg font-medium hover:text-primary transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Reviews
+                </Link>
+                <Link 
+                  to="/shorts" 
+                  className="text-lg font-medium hover:text-primary transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Shorts
+                </Link>
+                <Link 
+                  to="/community" 
+                  className="text-lg font-medium hover:text-primary transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Community
+                </Link>
+                <Link 
+                  to="/help" 
+                  className="text-lg font-medium hover:text-primary transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Help Center
+                </Link>
+                {isAdmin && (
+                  <Link 
+                    to="/admin/settings" 
+                    className="text-lg font-medium hover:text-primary transition-colors flex items-center gap-2"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <Shield className="w-4 h-4" />
+                    Admin
+                  </Link>
+                )}
+                {user && (
+                  <Link 
+                    to="/post" 
+                    className="text-lg font-medium hover:text-primary transition-colors"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Post Review
+                  </Link>
+                )}
+              </nav>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
     </header>
