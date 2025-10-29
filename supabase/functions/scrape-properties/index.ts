@@ -185,12 +185,17 @@ serve(async (req) => {
         const avgRent = 
           building.units.reduce((sum, u) => sum + (u.lastSalePrice || 0), 0) / building.count;
 
+        // Create a proper building name from addressLine1 or fallback to base address
+        const buildingName = representative.addressLine1 
+          ? `${representative.addressLine1}, ${representative.city}, ${representative.state} ${representative.zipCode || ''}`
+          : baseAddress;
+
         // Insert new building property
         const { error } = await supabase
           .from('properties')
           .insert({
             rentcast_id: representative.id,
-            name: baseAddress, // Use address as name since RentCast doesn't provide building names
+            name: buildingName,
             address: baseAddress,
             address_line1: representative.addressLine1 || null,
             address_line2: representative.addressLine2 || null,

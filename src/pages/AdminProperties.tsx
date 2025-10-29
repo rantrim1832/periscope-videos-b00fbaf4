@@ -77,10 +77,10 @@ export default function AdminProperties() {
                   <TableBody>
                     {properties?.map((property) => (
                       <TableRow key={property.id}>
-                        <TableCell className="font-medium">
-                          {property.name}
+                        <TableCell className="font-medium max-w-xs truncate">
+                          {property.address_line1 || property.address}
                         </TableCell>
-                        <TableCell>{property.address}</TableCell>
+                        <TableCell className="max-w-md truncate">{property.address}</TableCell>
                         <TableCell>{property.city}</TableCell>
                         <TableCell>{property.state}</TableCell>
                         <TableCell>
