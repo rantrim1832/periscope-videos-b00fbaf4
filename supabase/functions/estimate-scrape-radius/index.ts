@@ -25,10 +25,9 @@ serve(async (req) => {
       throw new Error('RENTCAST_API_KEY not configured');
     }
 
-    // Get properties within radius using city and state parameters
+    // Get properties within radius - requires address parameter when using radius
     const url = new URL('https://api.rentcast.io/v1/properties');
-    url.searchParams.append('city', city);
-    url.searchParams.append('state', state);
+    url.searchParams.append('address', `${city}, ${state}`);
     url.searchParams.append('radius', radius.toString());
     url.searchParams.append('limit', '500');
 
