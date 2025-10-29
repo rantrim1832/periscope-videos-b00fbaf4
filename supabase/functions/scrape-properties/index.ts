@@ -29,9 +29,9 @@ serve(async (req) => {
   try {
     const { city, state, limit = 500 } = await req.json();
 
-    if (!city || !state) {
+    if (!state) {
       return new Response(
-        JSON.stringify({ error: 'City and state are required' }),
+        JSON.stringify({ error: 'State is required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -45,11 +45,14 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    console.log(`Fetching properties for ${city}, ${state}...`);
+    const locationStr = city ? `${city}, ${state}` : state;
+    console.log(`Fetching properties for ${locationStr}...`);
 
     // Fetch properties from RentCast
     const url = new URL('https://api.rentcast.io/v1/properties');
-    url.searchParams.append('city', city);
+    if (city) {
+      url.searchParams.append('city', city);
+    }
     url.searchParams.append('state', state);
     url.searchParams.append('limit', limit.toString());
 

@@ -69,10 +69,10 @@ const PropertyScraper = () => {
   const { toast } = useToast();
 
   const handleScrape = async () => {
-    if (!city || !state) {
+    if (!state) {
       toast({
         title: "Missing Information",
-        description: "Please provide both city and state",
+        description: "Please select a state",
         variant: "destructive",
       });
       return;
@@ -83,7 +83,7 @@ const PropertyScraper = () => {
 
     try {
       const { data, error } = await supabase.functions.invoke('scrape-properties', {
-        body: { city, state, limit: 500 }
+        body: { city: city || undefined, state, limit: 500 }
       });
 
       if (error) throw error;
@@ -122,16 +122,16 @@ const PropertyScraper = () => {
             <div className="space-y-4">
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">City</label>
+                  <label className="text-sm font-medium">City (Optional)</label>
                   <Input
-                    placeholder="e.g., Austin"
+                    placeholder="e.g., Austin (leave empty for entire state)"
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
                   />
                 </div>
                 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">State</label>
+                  <label className="text-sm font-medium">State *</label>
                   <Select value={state} onValueChange={setState}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select state" />
@@ -207,7 +207,8 @@ const PropertyScraper = () => {
               <div className="space-y-2">
                 <h3 className="font-semibold">Quick Start Guide</h3>
                 <ul className="text-sm text-muted-foreground space-y-1">
-                  <li>• Select a city and state to scrape property data</li>
+                  <li>• Select a state (required) and optionally a city to scrape property data</li>
+                  <li>• Leave city blank to scrape the entire state</li>
                   <li>• The system will fetch up to 500 properties per request</li>
                   <li>• Duplicate properties are automatically skipped</li>
                   <li>• All properties are automatically approved and ready for reviews</li>
