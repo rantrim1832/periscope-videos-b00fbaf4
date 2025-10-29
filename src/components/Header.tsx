@@ -87,6 +87,9 @@ export const Header = () => {
               <Link to="/admin/properties" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
                 Properties
               </Link>
+              <Link to="/admin/stats" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
+                Stats
+              </Link>
             </>
           )}
         </nav>
@@ -186,6 +189,13 @@ export const Header = () => {
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       Properties
+                    </Link>
+                    <Link 
+                      to="/admin/stats" 
+                      className="text-lg font-medium hover:text-primary transition-colors"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Stats
                     </Link>
                   </>
                 )}

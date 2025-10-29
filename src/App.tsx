@@ -16,6 +16,7 @@ import PropertyScraper from "./pages/PropertyScraper";
 import AdminSettings from "./pages/AdminSettings";
 import AdminScrapeLogs from "./pages/AdminScrapeLogs";
 import AdminProperties from "./pages/AdminProperties";
+import AdminScrapingStats from "./pages/AdminScrapingStats";
 import Auth from "./pages/Auth";
 
 const queryClient = new QueryClient();
@@ -40,6 +41,7 @@ const App = () => (
           <Route path="/admin/settings" element={<AdminSettings />} />
           <Route path="/admin/scrape-logs" element={<AdminScrapeLogs />} />
           <Route path="/admin/properties" element={<AdminProperties />} />
+          <Route path="/admin/stats" element={<AdminScrapingStats />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

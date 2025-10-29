@@ -190,7 +190,7 @@ serve(async (req) => {
           .from('properties')
           .insert({
             rentcast_id: representative.id,
-            name: `${baseAddress} (${building.count} units)`,
+            name: baseAddress, // Use address as name since RentCast doesn't provide building names
             address: baseAddress,
             address_line1: representative.addressLine1 || null,
             address_line2: representative.addressLine2 || null,
