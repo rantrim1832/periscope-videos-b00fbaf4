@@ -67,6 +67,7 @@ export default function AdminProperties() {
                       <TableHead>City</TableHead>
                       <TableHead>State</TableHead>
                       <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Units</TableHead>
                       <TableHead className="text-right">Beds</TableHead>
                       <TableHead className="text-right">Baths</TableHead>
                       <TableHead className="text-right">Rent</TableHead>
@@ -94,6 +95,9 @@ export default function AdminProperties() {
                           >
                             {property.status}
                           </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {property.units_count || '1'}
                         </TableCell>
                         <TableCell className="text-right">
                           {property.beds || "-"}

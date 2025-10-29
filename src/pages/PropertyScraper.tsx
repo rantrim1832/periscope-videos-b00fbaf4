@@ -61,11 +61,20 @@ const US_STATES = [
   { code: "WY", name: "Wyoming" },
 ];
 
+const MAJOR_CA_CITIES = [
+  "Los Angeles", "San Diego", "San Jose", "San Francisco", "Fresno", 
+  "Sacramento", "Long Beach", "Oakland", "Bakersfield", "Anaheim",
+  "Santa Ana", "Riverside", "Stockton", "Irvine", "Chula Vista",
+  "Fremont", "San Bernardino", "Modesto", "Fontana", "Oxnard",
+  "Moreno Valley", "Huntington Beach", "Glendale", "Santa Clarita", "Garden Grove"
+];
+
 const PropertyScraper = () => {
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
+  const [batchProgress, setBatchProgress] = useState<{ current: number; total: number } | null>(null);
   const { toast } = useToast();
 
   const handleScrape = async () => {
@@ -83,7 +92,7 @@ const PropertyScraper = () => {
 
     try {
       const { data, error } = await supabase.functions.invoke('scrape-properties', {
-        body: { city: city || undefined, state, limit: 500 }
+        body: { city: city || undefined, state, limit: 500, minUnits: 50 }
       });
 
       if (error) throw error;
@@ -91,7 +100,7 @@ const PropertyScraper = () => {
       setResult(data);
       toast({
         title: "Scraping Complete",
-        description: `Successfully scraped ${data.inserted} properties`,
+        description: `Successfully scraped ${data.inserted} buildings with 50+ units`,
       });
     } catch (error) {
       console.error('Error scraping properties:', error);
@@ -102,6 +111,73 @@ const PropertyScraper = () => {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleBatchScrape = async () => {
+    if (state !== "CA") {
+      toast({
+        title: "Not Available",
+        description: "Batch scraping is currently only available for California",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    setBatchProgress({ current: 0, total: MAJOR_CA_CITIES.length });
+    
+    let totalInserted = 0;
+    let totalSkipped = 0;
+    const allErrors: any[] = [];
+
+    try {
+      for (let i = 0; i < MAJOR_CA_CITIES.length; i++) {
+        const city = MAJOR_CA_CITIES[i];
+        setBatchProgress({ current: i + 1, total: MAJOR_CA_CITIES.length });
+        
+        try {
+          const { data, error } = await supabase.functions.invoke('scrape-properties', {
+            body: { city, state: "CA", limit: 500, minUnits: 50 }
+          });
+
+          if (error) throw error;
+          
+          totalInserted += data.inserted || 0;
+          totalSkipped += data.skipped || 0;
+          if (data.errors) allErrors.push(...data.errors);
+
+          // Small delay to avoid rate limiting
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        } catch (error) {
+          console.error(`Error scraping ${city}:`, error);
+          allErrors.push({ address: city, error: error.message });
+        }
+      }
+
+      setResult({
+        totalUnits: 'N/A',
+        totalBuildings: 'N/A',
+        qualifiedBuildings: 'N/A',
+        inserted: totalInserted,
+        skipped: totalSkipped,
+        errors: allErrors.slice(0, 20),
+      });
+
+      toast({
+        title: "Batch Scraping Complete",
+        description: `Scraped ${MAJOR_CA_CITIES.length} cities, inserted ${totalInserted} buildings`,
+      });
+    } catch (error) {
+      console.error('Batch scraping error:', error);
+      toast({
+        title: "Batch Scraping Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+      setBatchProgress(null);
     }
   };
 
@@ -153,7 +229,7 @@ const PropertyScraper = () => {
                 className="w-full"
                 size="lg"
               >
-                {isLoading ? (
+                {isLoading && !batchProgress ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Scraping Properties...
@@ -161,28 +237,64 @@ const PropertyScraper = () => {
                 ) : (
                   <>
                     <Download className="mr-2 h-4 w-4" />
-                    Scrape Properties
+                    Scrape Single Location
                   </>
                 )}
               </Button>
+
+              {state === "CA" && (
+                <Button 
+                  onClick={handleBatchScrape} 
+                  disabled={isLoading}
+                  className="w-full"
+                  size="lg"
+                  variant="secondary"
+                >
+                  {batchProgress ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Scraping {batchProgress.current}/{batchProgress.total} cities...
+                    </>
+                  ) : (
+                    <>
+                      <MapPin className="mr-2 h-4 w-4" />
+                      Batch Scrape All Major CA Cities ({MAJOR_CA_CITIES.length} cities)
+                    </>
+                  )}
+                </Button>
+              )}
             </div>
           </Card>
 
           {result && (
             <Card className="p-6">
               <h2 className="text-2xl font-bold mb-4">Scraping Results</h2>
-              <div className="grid md:grid-cols-3 gap-4">
-                <div className="text-center p-4 bg-muted rounded-lg">
-                  <div className="text-3xl font-bold text-primary">{result.total}</div>
-                  <div className="text-sm text-muted-foreground">Total Found</div>
-                </div>
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {result.totalUnits !== 'N/A' && (
+                  <div className="text-center p-4 bg-muted rounded-lg">
+                    <div className="text-3xl font-bold text-primary">{result.totalUnits}</div>
+                    <div className="text-sm text-muted-foreground">Total Units</div>
+                  </div>
+                )}
+                {result.totalBuildings !== 'N/A' && (
+                  <div className="text-center p-4 bg-muted rounded-lg">
+                    <div className="text-3xl font-bold text-blue-600">{result.totalBuildings}</div>
+                    <div className="text-sm text-muted-foreground">Buildings Found</div>
+                  </div>
+                )}
+                {result.qualifiedBuildings !== 'N/A' && (
+                  <div className="text-center p-4 bg-muted rounded-lg">
+                    <div className="text-3xl font-bold text-purple-600">{result.qualifiedBuildings}</div>
+                    <div className="text-sm text-muted-foreground">50+ Units</div>
+                  </div>
+                )}
                 <div className="text-center p-4 bg-muted rounded-lg">
                   <div className="text-3xl font-bold text-green-600">{result.inserted}</div>
                   <div className="text-sm text-muted-foreground">Inserted</div>
                 </div>
                 <div className="text-center p-4 bg-muted rounded-lg">
                   <div className="text-3xl font-bold text-orange-600">{result.skipped}</div>
-                  <div className="text-sm text-muted-foreground">Skipped</div>
+                  <div className="text-sm text-muted-foreground">Skipped (Duplicates)</div>
                 </div>
               </div>
               
@@ -207,11 +319,12 @@ const PropertyScraper = () => {
               <div className="space-y-2">
                 <h3 className="font-semibold">Quick Start Guide</h3>
                 <ul className="text-sm text-muted-foreground space-y-1">
-                  <li>• Select a state (required) and optionally a city to scrape property data</li>
-                  <li>• Only multifamily apartment buildings are scraped (no houses, condos, or single-family)</li>
-                  <li>• Leave city blank to scrape the entire state</li>
-                  <li>• The system will fetch up to 500 properties per request</li>
-                  <li>• Duplicate properties are automatically skipped</li>
+                  <li>• Only scrapes apartment buildings with 50+ units</li>
+                  <li>• Individual units are aggregated into buildings</li>
+                  <li>• Select a state and optionally a city, or use batch mode for California</li>
+                  <li>• The API fetches up to 500 units per request, then aggregates by building</li>
+                  <li>• Duplicate buildings are automatically skipped</li>
+                  <li>• Batch mode scrapes all major CA cities automatically</li>
                   <li>• All properties are automatically approved and ready for reviews</li>
                 </ul>
               </div>

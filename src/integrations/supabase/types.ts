@@ -53,6 +53,7 @@ export type Database = {
           status: string | null
           subdivision: string | null
           tax_assessments: Json | null
+          units_count: number | null
           updated_at: string
           verification_required: boolean | null
           year_built: number | null
@@ -97,6 +98,7 @@ export type Database = {
           status?: string | null
           subdivision?: string | null
           tax_assessments?: Json | null
+          units_count?: number | null
           updated_at?: string
           verification_required?: boolean | null
           year_built?: number | null
@@ -141,6 +143,7 @@ export type Database = {
           status?: string | null
           subdivision?: string | null
           tax_assessments?: Json | null
+          units_count?: number | null
           updated_at?: string
           verification_required?: boolean | null
           year_built?: number | null

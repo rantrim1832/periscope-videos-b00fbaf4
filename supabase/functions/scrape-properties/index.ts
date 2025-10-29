@@ -44,6 +44,15 @@ interface PropertyData {
   owner?: any;
 }
 
+// Helper function to normalize building address (remove unit numbers)
+function normalizeAddress(address: string): string {
+  // Remove common unit identifiers
+  return address
+    .replace(/,?\s*(apt|apartment|unit|#|ste|suite)\s*[0-9a-z-]+/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -53,7 +62,7 @@ serve(async (req) => {
   let logId: string | null = null;
 
   try {
-    const { city, state, limit = 500 } = await req.json();
+    const { city, state, limit = 500, minUnits = 50 } = await req.json();
 
     if (!state) {
       return new Response(
@@ -113,89 +122,128 @@ serve(async (req) => {
     }
 
     const properties: PropertyData[] = await response.json();
-    console.log(`Found ${properties.length} properties`);
+    console.log(`Found ${properties.length} raw properties`);
+
+    // Aggregate properties by building address
+    const buildingMap = new Map<string, { units: PropertyData[], count: number }>();
+    
+    for (const property of properties) {
+      const baseAddress = normalizeAddress(property.formattedAddress || property.address);
+      const key = `${baseAddress}|${property.city}|${property.state}`;
+      
+      if (!buildingMap.has(key)) {
+        buildingMap.set(key, { units: [], count: 0 });
+      }
+      
+      const building = buildingMap.get(key)!;
+      building.units.push(property);
+      building.count++;
+    }
+
+    console.log(`Aggregated into ${buildingMap.size} buildings`);
+
+    // Filter for buildings with minimum units
+    const qualifiedBuildings = Array.from(buildingMap.entries())
+      .filter(([_, building]) => building.count >= minUnits);
+
+    console.log(`Found ${qualifiedBuildings.length} buildings with ${minUnits}+ units`);
 
     let inserted = 0;
     let skipped = 0;
     const errors = [];
 
-    // Insert properties into database
-    for (const property of properties) {
+    // Insert buildings into database
+    for (const [key, building] of qualifiedBuildings) {
       try {
-        const address = property.formattedAddress || property.address;
+        // Use the first unit as representative data for the building
+        const representative = building.units[0];
+        const baseAddress = normalizeAddress(representative.formattedAddress || representative.address);
         
-        // Check if property already exists
+        // Check if building already exists
         const { data: existing } = await supabase
           .from('properties')
           .select('id')
-          .eq('address', address)
-          .eq('city', property.city)
-          .eq('state', property.state)
-          .single();
+          .eq('address', baseAddress)
+          .eq('city', representative.city)
+          .eq('state', representative.state)
+          .maybeSingle();
 
         if (existing) {
           skipped++;
           continue;
         }
 
-        // Insert new property
+        // Calculate average values from all units
+        const avgBeds = Math.round(
+          building.units.reduce((sum, u) => sum + (u.bedrooms || 0), 0) / building.count
+        );
+        const avgBaths = 
+          building.units.reduce((sum, u) => sum + (u.bathrooms || 0), 0) / building.count;
+        const avgSqft = Math.round(
+          building.units.reduce((sum, u) => sum + (u.squareFootage || 0), 0) / building.count
+        );
+        const avgRent = 
+          building.units.reduce((sum, u) => sum + (u.lastSalePrice || 0), 0) / building.count;
+
+        // Insert new building property
         const { error } = await supabase
           .from('properties')
           .insert({
-            rentcast_id: property.id,
-            name: `${address}`,
-            address: address,
-            address_line1: property.addressLine1 || null,
-            address_line2: property.addressLine2 || null,
-            city: property.city,
-            state: property.state,
-            zip_code: property.zipCode || null,
-            county: property.county || null,
-            county_fips: property.countyFips || null,
-            state_fips: property.stateFips || null,
-            property_type: property.propertyType || null,
-            beds: property.bedrooms || null,
-            baths: property.bathrooms || null,
-            square_footage: property.squareFootage || null,
-            lot_size: property.lotSize || null,
-            year_built: property.yearBuilt || null,
-            assessor_id: property.assessorID || null,
-            legal_description: property.legalDescription || null,
-            subdivision: property.subdivision || null,
-            zoning: property.zoning || null,
-            last_sale_date: property.lastSaleDate || null,
-            last_sale_price: property.lastSalePrice || null,
-            rent: property.lastSalePrice || null,
-            latitude: property.latitude || null,
-            longitude: property.longitude || null,
-            hoa_fee: property.hoa?.fee || null,
-            management_company: property.managementCompany || null,
-            amenities: property.amenities || null,
-            features: property.features || null,
-            tax_assessments: property.taxAssessments || null,
-            property_taxes: property.propertyTaxes || null,
-            history: property.history || null,
-            owner: property.owner || null,
+            rentcast_id: representative.id,
+            name: `${baseAddress} (${building.count} units)`,
+            address: baseAddress,
+            address_line1: representative.addressLine1 || null,
+            address_line2: representative.addressLine2 || null,
+            city: representative.city,
+            state: representative.state,
+            zip_code: representative.zipCode || null,
+            county: representative.county || null,
+            county_fips: representative.countyFips || null,
+            state_fips: representative.stateFips || null,
+            property_type: 'Apartment Building',
+            beds: avgBeds || null,
+            baths: avgBaths || null,
+            square_footage: avgSqft || null,
+            lot_size: representative.lotSize || null,
+            year_built: representative.yearBuilt || null,
+            assessor_id: representative.assessorID || null,
+            legal_description: representative.legalDescription || null,
+            subdivision: representative.subdivision || null,
+            zoning: representative.zoning || null,
+            last_sale_date: representative.lastSaleDate || null,
+            last_sale_price: representative.lastSalePrice || null,
+            rent: avgRent || null,
+            latitude: representative.latitude || null,
+            longitude: representative.longitude || null,
+            hoa_fee: representative.hoa?.fee || null,
+            management_company: representative.managementCompany || null,
+            amenities: representative.amenities || null,
+            features: representative.features || null,
+            tax_assessments: representative.taxAssessments || null,
+            property_taxes: representative.propertyTaxes || null,
+            history: representative.history || null,
+            owner: representative.owner || null,
+            units_count: building.count,
             status: 'approved',
             is_verified: false,
             verification_required: false,
-            rentcast_data: property,
+            rentcast_data: { units: building.units, aggregated: true },
           });
 
         if (error) {
-          console.error('Error inserting property:', error);
-          errors.push({ address, error: error.message });
+          console.error('Error inserting building:', error);
+          errors.push({ address: baseAddress, error: error.message });
         } else {
           inserted++;
         }
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-        console.error('Error processing property:', err);
-        errors.push({ address: property.address, error: errorMessage });
+        console.error('Error processing building:', err);
+        errors.push({ address: building.units[0]?.address || 'unknown', error: errorMessage });
       }
     }
 
-    console.log(`Scraping complete: ${inserted} inserted, ${skipped} skipped, ${errors.length} errors`);
+    console.log(`Scraping complete: ${inserted} buildings inserted, ${skipped} skipped, ${errors.length} errors`);
 
     // Update log entry with results
     const duration = Date.now() - startTime;
@@ -218,9 +266,12 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        total: properties.length,
+        totalUnits: properties.length,
+        totalBuildings: buildingMap.size,
+        qualifiedBuildings: qualifiedBuildings.length,
         inserted,
         skipped,
+        minUnits,
         errors: errors.slice(0, 10), // Only return first 10 errors
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
