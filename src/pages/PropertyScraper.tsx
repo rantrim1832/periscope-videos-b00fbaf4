@@ -1,13 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Download, MapPin, Target } from "lucide-react";
+import { Loader2, Download, MapPin, Target, X } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 const US_STATES = [
   { code: "AL", name: "Alabama" },
@@ -87,7 +90,58 @@ const PropertyScraper = () => {
   const [selectedCities, setSelectedCities] = useState<string[]>([]);
   const [cityEstimates, setCityEstimates] = useState<CityEstimate[]>([]);
   const [isEstimating, setIsEstimating] = useState(false);
+  const [searchTags, setSearchTags] = useState<string[]>([]);
+  const [cityInput, setCityInput] = useState("");
+  const [openCityCombobox, setOpenCityCombobox] = useState(false);
   const { toast } = useToast();
+
+  // Auto-fetch nearby cities when a city tag is added
+  useEffect(() => {
+    if (searchTags.length > 0 && state) {
+      const lastCity = searchTags[searchTags.length - 1];
+      fetchNearbyCities(lastCity);
+    }
+  }, [searchTags.length]);
+
+  const fetchNearbyCities = async (cityName: string) => {
+    if (!state) return;
+
+    setIsEstimating(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('estimate-scrape-radius', {
+        body: { city: cityName, state, radius: 50 }
+      });
+
+      if (error) throw error;
+      
+      setCityEstimates(data.estimates.sort((a: CityEstimate, b: CityEstimate) => b.totalUnits - a.totalUnits));
+      toast({
+        title: "Found Nearby Cities",
+        description: `${data.estimates.length} cities within 50 miles of ${cityName}`,
+      });
+    } catch (error) {
+      console.error('Error finding nearby cities:', error);
+      toast({
+        title: "Search Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsEstimating(false);
+    }
+  };
+
+  const addCityTag = (cityName: string) => {
+    if (!searchTags.includes(cityName)) {
+      setSearchTags([...searchTags, cityName]);
+      setCityInput("");
+      setOpenCityCombobox(false);
+    }
+  };
+
+  const removeCityTag = (cityName: string) => {
+    setSearchTags(searchTags.filter(c => c !== cityName));
+  };
 
   const handleEstimateCities = async () => {
     if (!state) {
@@ -99,18 +153,12 @@ const PropertyScraper = () => {
       return;
     }
 
-    // If city is provided, fetch properties within 50-mile radius
-    // Otherwise use predefined CA cities list
-    const citiesToEstimate = city 
-      ? [city]  // Will get nearby cities from RentCast radius search
-      : state === "CA" 
-        ? MAJOR_CA_CITIES 
-        : [];
+    const citiesToEstimate = state === "CA" ? MAJOR_CA_CITIES : [];
 
-    if (citiesToEstimate.length === 0 && !city) {
+    if (citiesToEstimate.length === 0) {
       toast({
         title: "Not Available",
-        description: "City estimation requires either a city name or California state",
+        description: "City estimation currently only available for California",
         variant: "destructive",
       });
       return;
@@ -118,32 +166,17 @@ const PropertyScraper = () => {
 
     setIsEstimating(true);
     try {
-      if (city) {
-        // Fetch properties in 50-mile radius and extract unique cities
-        const { data, error } = await supabase.functions.invoke('estimate-scrape-radius', {
-          body: { city, state, radius: 50 }
-        });
+      const { data, error } = await supabase.functions.invoke('estimate-scrape', {
+        body: { cities: citiesToEstimate, state }
+      });
 
-        if (error) throw error;
-        
-        setCityEstimates(data.estimates.sort((a: CityEstimate, b: CityEstimate) => b.totalUnits - a.totalUnits));
-        toast({
-          title: "Estimation Complete",
-          description: `Found ${data.estimates.length} cities within 50 miles of ${city}`,
-        });
-      } else {
-        const { data, error } = await supabase.functions.invoke('estimate-scrape', {
-          body: { cities: citiesToEstimate, state }
-        });
-
-        if (error) throw error;
-        
-        setCityEstimates(data.estimates.sort((a: CityEstimate, b: CityEstimate) => b.totalUnits - a.totalUnits));
-        toast({
-          title: "Estimation Complete",
-          description: `Fetched estimates for ${citiesToEstimate.length} cities`,
-        });
-      }
+      if (error) throw error;
+      
+      setCityEstimates(data.estimates.sort((a: CityEstimate, b: CityEstimate) => b.totalUnits - a.totalUnits));
+      toast({
+        title: "Estimation Complete",
+        description: `Fetched estimates for ${citiesToEstimate.length} cities`,
+      });
     } catch (error) {
       console.error('Error estimating cities:', error);
       toast({
@@ -395,16 +428,7 @@ const PropertyScraper = () => {
 
           <Card className="p-6">
             <div className="space-y-4">
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">City (Optional)</label>
-                  <Input
-                    placeholder="e.g., Austin (leave empty for entire state)"
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                  />
-                </div>
-                
+              <div className="space-y-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium">State *</label>
                   <Select value={state} onValueChange={setState}>
@@ -419,6 +443,62 @@ const PropertyScraper = () => {
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Search Cities (Auto-finds nearby)</label>
+                  <Popover open={openCityCombobox} onOpenChange={setOpenCityCombobox}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start text-left font-normal"
+                        disabled={!state}
+                      >
+                        {state ? "Type to search cities..." : "Select a state first"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0" align="start">
+                      <Command>
+                        <CommandInput 
+                          placeholder="Search cities..." 
+                          value={cityInput}
+                          onValueChange={setCityInput}
+                        />
+                        <CommandEmpty>No cities found. Press Enter to add "{cityInput}"</CommandEmpty>
+                        <CommandGroup>
+                          {state === "CA" && MAJOR_CA_CITIES
+                            .filter(c => c.toLowerCase().includes(cityInput.toLowerCase()))
+                            .map((city) => (
+                              <CommandItem
+                                key={city}
+                                onSelect={() => addCityTag(city)}
+                              >
+                                {city}
+                              </CommandItem>
+                            ))}
+                          {cityInput && !MAJOR_CA_CITIES.includes(cityInput) && (
+                            <CommandItem onSelect={() => addCityTag(cityInput)}>
+                              Add "{cityInput}"
+                            </CommandItem>
+                          )}
+                        </CommandGroup>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                  
+                  {searchTags.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {searchTags.map((tag) => (
+                        <Badge key={tag} variant="secondary" className="px-3 py-1">
+                          {tag}
+                          <X 
+                            className="ml-2 h-3 w-3 cursor-pointer" 
+                            onClick={() => removeCityTag(tag)}
+                          />
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -475,30 +555,32 @@ const PropertyScraper = () => {
             </div>
           </Card>
 
-          {(state === "CA" || city) && (
+          {(state === "CA" || searchTags.length > 0) && (
             <Card className="p-6">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h2 className="text-2xl font-bold">
-                    {city ? `Cities Near ${city}` : 'Smart City Selection'}
+                    {searchTags.length > 0 ? `Cities Near ${searchTags[searchTags.length - 1]}` : 'Smart City Selection'}
                   </h2>
-                  <Button 
-                    onClick={handleEstimateCities}
-                    disabled={isEstimating || isLoading}
-                    variant="outline"
-                  >
-                    {isEstimating ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Estimating...
-                      </>
-                    ) : (
-                      <>
-                        <Target className="mr-2 h-4 w-4" />
-                        {city ? 'Find Nearby Cities (50mi)' : 'Estimate All Cities'}
-                      </>
-                    )}
-                  </Button>
+                  {state === "CA" && searchTags.length === 0 && (
+                    <Button 
+                      onClick={handleEstimateCities}
+                      disabled={isEstimating || isLoading}
+                      variant="outline"
+                    >
+                      {isEstimating ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Estimating...
+                        </>
+                      ) : (
+                        <>
+                          <Target className="mr-2 h-4 w-4" />
+                          Estimate All CA Cities
+                        </>
+                      )}
+                    </Button>
+                  )}
                 </div>
 
                 {cityEstimates.length > 0 && (
