@@ -124,6 +124,46 @@ const PropertyScraper = () => {
     }
   };
 
+  const handleDeleteState = async () => {
+    if (!state) {
+      toast({
+        title: "No State Selected",
+        description: "Please select a state first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `⚠️ WARNING: This will permanently delete ALL properties from ${state}.\n\nAre you absolutely sure?`
+    );
+    
+    if (!confirmed) return;
+
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('delete-properties', {
+        body: { state }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Deletion Complete",
+        description: data.message,
+      });
+    } catch (error) {
+      console.error('Error deleting properties:', error);
+      toast({
+        title: "Deletion Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const toggleCitySelection = (cityName: string) => {
     setSelectedCities(prev =>
       prev.includes(cityName)
@@ -350,24 +390,34 @@ const PropertyScraper = () => {
                 </div>
               </div>
 
-              <Button 
-                onClick={handleScrape} 
-                disabled={isLoading}
-                className="w-full"
-                size="lg"
-              >
-                {isLoading && !batchProgress ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Scraping Properties...
-                  </>
-                ) : (
-                  <>
-                    <Download className="mr-2 h-4 w-4" />
-                    Scrape Single Location
-                  </>
-                )}
-              </Button>
+              <div className="grid md:grid-cols-2 gap-4">
+                <Button 
+                  onClick={handleScrape} 
+                  disabled={isLoading}
+                  size="lg"
+                >
+                  {isLoading && !batchProgress ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Scraping...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="mr-2 h-4 w-4" />
+                      Scrape Single Location
+                    </>
+                  )}
+                </Button>
+
+                <Button 
+                  onClick={handleDeleteState}
+                  disabled={isLoading || !state}
+                  variant="destructive"
+                  size="lg"
+                >
+                  Delete All {state || "State"} Properties
+                </Button>
+              </div>
 
               {state === "CA" && (
                 <Button 
