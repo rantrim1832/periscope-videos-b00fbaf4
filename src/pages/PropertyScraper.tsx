@@ -90,10 +90,27 @@ const PropertyScraper = () => {
   const { toast } = useToast();
 
   const handleEstimateCities = async () => {
-    if (state !== "CA") {
+    if (!state) {
+      toast({
+        title: "Missing State",
+        description: "Please select a state first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // If city is provided, fetch properties within 50-mile radius
+    // Otherwise use predefined CA cities list
+    const citiesToEstimate = city 
+      ? [city]  // Will get nearby cities from RentCast radius search
+      : state === "CA" 
+        ? MAJOR_CA_CITIES 
+        : [];
+
+    if (citiesToEstimate.length === 0 && !city) {
       toast({
         title: "Not Available",
-        description: "City estimation is currently only available for California",
+        description: "City estimation requires either a city name or California state",
         variant: "destructive",
       });
       return;
@@ -101,17 +118,32 @@ const PropertyScraper = () => {
 
     setIsEstimating(true);
     try {
-      const { data, error } = await supabase.functions.invoke('estimate-scrape', {
-        body: { cities: MAJOR_CA_CITIES, state: "CA" }
-      });
+      if (city) {
+        // Fetch properties in 50-mile radius and extract unique cities
+        const { data, error } = await supabase.functions.invoke('estimate-scrape-radius', {
+          body: { city, state, radius: 50 }
+        });
 
-      if (error) throw error;
-      
-      setCityEstimates(data.estimates.sort((a: CityEstimate, b: CityEstimate) => b.totalUnits - a.totalUnits));
-      toast({
-        title: "Estimation Complete",
-        description: `Fetched estimates for ${MAJOR_CA_CITIES.length} cities`,
-      });
+        if (error) throw error;
+        
+        setCityEstimates(data.estimates.sort((a: CityEstimate, b: CityEstimate) => b.totalUnits - a.totalUnits));
+        toast({
+          title: "Estimation Complete",
+          description: `Found ${data.estimates.length} cities within 50 miles of ${city}`,
+        });
+      } else {
+        const { data, error } = await supabase.functions.invoke('estimate-scrape', {
+          body: { cities: citiesToEstimate, state }
+        });
+
+        if (error) throw error;
+        
+        setCityEstimates(data.estimates.sort((a: CityEstimate, b: CityEstimate) => b.totalUnits - a.totalUnits));
+        toast({
+          title: "Estimation Complete",
+          description: `Fetched estimates for ${citiesToEstimate.length} cities`,
+        });
+      }
     } catch (error) {
       console.error('Error estimating cities:', error);
       toast({
@@ -443,11 +475,13 @@ const PropertyScraper = () => {
             </div>
           </Card>
 
-          {state === "CA" && (
+          {(state === "CA" || city) && (
             <Card className="p-6">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-2xl font-bold">Smart City Selection</h2>
+                  <h2 className="text-2xl font-bold">
+                    {city ? `Cities Near ${city}` : 'Smart City Selection'}
+                  </h2>
                   <Button 
                     onClick={handleEstimateCities}
                     disabled={isEstimating || isLoading}
@@ -461,7 +495,7 @@ const PropertyScraper = () => {
                     ) : (
                       <>
                         <Target className="mr-2 h-4 w-4" />
-                        Estimate All Cities
+                        {city ? 'Find Nearby Cities (50mi)' : 'Estimate All Cities'}
                       </>
                     )}
                   </Button>
