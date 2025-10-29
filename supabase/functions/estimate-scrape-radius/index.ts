@@ -27,13 +27,12 @@ serve(async (req) => {
 
     // First, get properties within radius to find all cities
     const url = new URL('https://api.rentcast.io/v1/properties');
-    url.searchParams.append('city', city);
-    url.searchParams.append('state', state);
+    url.searchParams.append('address', `${city}, ${state}`);
     url.searchParams.append('radius', radius.toString());
-    url.searchParams.append('propertyType', 'Apartment');
     url.searchParams.append('limit', '500');
 
     console.log(`Fetching properties within ${radius} miles of ${city}, ${state}`);
+    console.log(`API URL: ${url.toString()}`);
 
     const response = await fetch(url.toString(), {
       headers: {
@@ -43,7 +42,9 @@ serve(async (req) => {
     });
 
     if (!response.ok) {
-      throw new Error(`RentCast API error: ${response.status}`);
+      const errorText = await response.text();
+      console.error(`RentCast API error ${response.status}:`, errorText);
+      throw new Error(`RentCast API error: ${response.status} - ${errorText}`);
     }
 
     const properties = await response.json();
