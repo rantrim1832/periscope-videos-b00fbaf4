@@ -46,19 +46,23 @@ const DB_FIELDS = [
 ];
 
 const DEFAULT_MAPPING: Record<string, string> = {
+  // Exact matches from new CSV format
   "Name": "name",
-  "Former Name": "former_name",
-  "Concessions": "concessions",
   "Market": "market",
   "Submarket": "submarket",
   "Management Company": "management_company",
-  "Onsite Manager": "onsite_manager",
   "Address": "address",
   "State": "state",
   "City": "city",
   "ZIP": "zip_code",
   "Phone": "phone",
   "Neighborhood": "neighborhood",
+  "County": "county",
+  
+  // Legacy format support
+  "Former Name": "former_name",
+  "Concessions": "concessions",
+  "Onsite Manager": "onsite_manager",
   "Units": "units",
   "Stories": "stories",
   "Built Type": "built_type",
@@ -76,7 +80,6 @@ const DEFAULT_MAPPING: Record<string, string> = {
   "Total Rentable Sqft": "total_rentable_sqft",
   "URL": "url",
   "Classification": "classification",
-  "County": "county",
   "Avg Sqft": "avg_sqft",
 };
 
