@@ -18,6 +18,7 @@ import AdminSettings from "./pages/AdminSettings";
 import AdminScrapeLogs from "./pages/AdminScrapeLogs";
 import AdminProperties from "./pages/AdminProperties";
 import AdminScrapingStats from "./pages/AdminScrapingStats";
+import AdminCSVUpload from "./pages/AdminCSVUpload";
 import Auth from "./pages/Auth";
 
 const queryClient = new QueryClient();
@@ -44,6 +45,7 @@ const App = () => (
           <Route path="/admin/scrape-logs" element={<AdminScrapeLogs />} />
           <Route path="/admin/properties" element={<AdminProperties />} />
           <Route path="/admin/stats" element={<AdminScrapingStats />} />
+          <Route path="/admin/csv-upload" element={<AdminCSVUpload />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

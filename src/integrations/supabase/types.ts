@@ -14,6 +14,126 @@ export type Database = {
   }
   public: {
     Tables: {
+      imported_properties: {
+        Row: {
+          address: string | null
+          avg_eff_price_per_sqft: number | null
+          avg_eff_rent: number | null
+          avg_price_per_sqft: number | null
+          avg_rent: number | null
+          avg_sqft: number | null
+          baths: string | null
+          beds: string | null
+          built_type: string | null
+          city: string | null
+          classification: string | null
+          concessions: string | null
+          county: string | null
+          created_at: string
+          former_name: string | null
+          housing_type: string | null
+          id: string
+          imported_by_user_id: string | null
+          management_company: string | null
+          market: string | null
+          min_lease_term: number | null
+          name: string
+          neighborhood: string | null
+          occupancy_percent: number | null
+          onsite_manager: string | null
+          phone: string | null
+          software_system: string | null
+          source: string | null
+          state: string | null
+          stories: number | null
+          submarket: string | null
+          total_rentable_sqft: number | null
+          units: number | null
+          updated_at: string
+          url: string | null
+          year_built: number | null
+          zip_code: string | null
+        }
+        Insert: {
+          address?: string | null
+          avg_eff_price_per_sqft?: number | null
+          avg_eff_rent?: number | null
+          avg_price_per_sqft?: number | null
+          avg_rent?: number | null
+          avg_sqft?: number | null
+          baths?: string | null
+          beds?: string | null
+          built_type?: string | null
+          city?: string | null
+          classification?: string | null
+          concessions?: string | null
+          county?: string | null
+          created_at?: string
+          former_name?: string | null
+          housing_type?: string | null
+          id?: string
+          imported_by_user_id?: string | null
+          management_company?: string | null
+          market?: string | null
+          min_lease_term?: number | null
+          name: string
+          neighborhood?: string | null
+          occupancy_percent?: number | null
+          onsite_manager?: string | null
+          phone?: string | null
+          software_system?: string | null
+          source?: string | null
+          state?: string | null
+          stories?: number | null
+          submarket?: string | null
+          total_rentable_sqft?: number | null
+          units?: number | null
+          updated_at?: string
+          url?: string | null
+          year_built?: number | null
+          zip_code?: string | null
+        }
+        Update: {
+          address?: string | null
+          avg_eff_price_per_sqft?: number | null
+          avg_eff_rent?: number | null
+          avg_price_per_sqft?: number | null
+          avg_rent?: number | null
+          avg_sqft?: number | null
+          baths?: string | null
+          beds?: string | null
+          built_type?: string | null
+          city?: string | null
+          classification?: string | null
+          concessions?: string | null
+          county?: string | null
+          created_at?: string
+          former_name?: string | null
+          housing_type?: string | null
+          id?: string
+          imported_by_user_id?: string | null
+          management_company?: string | null
+          market?: string | null
+          min_lease_term?: number | null
+          name?: string
+          neighborhood?: string | null
+          occupancy_percent?: number | null
+          onsite_manager?: string | null
+          phone?: string | null
+          software_system?: string | null
+          source?: string | null
+          state?: string | null
+          stories?: number | null
+          submarket?: string | null
+          total_rentable_sqft?: number | null
+          units?: number | null
+          updated_at?: string
+          url?: string | null
+          year_built?: number | null
+          zip_code?: string | null
+        }
+        Relationships: []
+      }
       properties: {
         Row: {
           address: string
