@@ -1,10 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { corsHeaders, requireAuth, authErrorResponse } from "../_shared/auth.ts";
 
 interface ModerationResult {
   approved: boolean;
@@ -17,8 +13,9 @@ async function moderateContent(text: string): Promise<ModerationResult> {
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
   
   if (!LOVABLE_API_KEY) {
-    console.error('LOVABLE_API_KEY not found');
-    return { approved: true, score: 0, flags: [] }; // Fail open if API key missing
+    // Fail closed: do not vouch for content we could not screen.
+    console.error('LOVABLE_API_KEY not found — failing closed');
+    return { approved: false, score: 1, flags: ['moderation_unavailable'], reason: 'Moderation unavailable' };
   }
 
   try {
@@ -92,7 +89,7 @@ Return ONLY valid JSON, no markdown.`
     if (!response.ok) {
       const errorText = await response.text();
       console.error('AI gateway error:', response.status, errorText);
-      return { approved: true, score: 0, flags: [] }; // Fail open on API error
+      return { approved: false, score: 1, flags: ['moderation_error'], reason: 'Moderation service error' };
     }
 
     const data = await response.json();
@@ -100,7 +97,7 @@ Return ONLY valid JSON, no markdown.`
     
     if (!toolCall?.function?.arguments) {
       console.error('No tool call in response');
-      return { approved: true, score: 0, flags: [] };
+      return { approved: false, score: 1, flags: ['moderation_error'], reason: 'Moderation returned no result' };
     }
 
     const result = JSON.parse(toolCall.function.arguments);
@@ -114,13 +111,19 @@ Return ONLY valid JSON, no markdown.`
 
   } catch (error) {
     console.error('Moderation error:', error);
-    return { approved: true, score: 0, flags: [] }; // Fail open on error
+    return { approved: false, score: 1, flags: ['moderation_exception'], reason: 'Moderation threw an exception' };
   }
 }
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    await requireAuth(req);
+  } catch (err) {
+    return authErrorResponse(err);
   }
 
   try {
@@ -152,9 +155,9 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         error: error instanceof Error ? error.message : 'Unknown error',
-        approved: true, // Fail open
-        score: 0,
-        flags: []
+        approved: false, // Fail closed
+        score: 1,
+        flags: ['moderation_exception']
       }),
       {
         status: 500,

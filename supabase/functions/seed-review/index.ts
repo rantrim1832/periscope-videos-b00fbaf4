@@ -1,11 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.77.0";
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { corsHeaders, requireWebhookSecret, authErrorResponse } from "../_shared/auth.ts";
 
 interface ModerationResult {
   approved: boolean;
@@ -18,8 +14,10 @@ async function moderateContent(text: string): Promise<ModerationResult> {
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
   
   if (!LOVABLE_API_KEY) {
-    console.error('LOVABLE_API_KEY not found');
-    return { approved: true, score: 0, flags: [] };
+    // Fail closed: without moderation we cannot vouch for safety, so
+    // hold the content for human review rather than auto-approving.
+    console.error('LOVABLE_API_KEY not found — failing closed');
+    return { approved: false, score: 1, flags: ['moderation_unavailable'], reason: 'Moderation unavailable' };
   }
 
   try {
@@ -67,14 +65,14 @@ async function moderateContent(text: string): Promise<ModerationResult> {
 
     if (!response.ok) {
       console.error('AI moderation error:', response.status);
-      return { approved: true, score: 0, flags: [] };
+      return { approved: false, score: 1, flags: ['moderation_error'], reason: 'Moderation service error' };
     }
 
     const data = await response.json();
     const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
     
     if (!toolCall?.function?.arguments) {
-      return { approved: true, score: 0, flags: [] };
+      return { approved: false, score: 1, flags: ['moderation_error'], reason: 'Moderation returned no result' };
     }
 
     const result = JSON.parse(toolCall.function.arguments);
@@ -87,7 +85,7 @@ async function moderateContent(text: string): Promise<ModerationResult> {
 
   } catch (error) {
     console.error('Moderation error:', error);
-    return { approved: true, score: 0, flags: [] };
+    return { approved: false, score: 1, flags: ['moderation_exception'], reason: 'Moderation threw an exception' };
   }
 }
 
@@ -95,6 +93,12 @@ serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    requireWebhookSecret(req);
+  } catch (err) {
+    return authErrorResponse(err);
   }
 
   try {
@@ -160,9 +164,20 @@ serve(async (req) => {
     const moderation = await moderateContent(contentToModerate);
     console.log('Moderation result:', moderation);
 
-    // Auto-reject if toxicity score > 0.7 or has severe flags
-    const shouldReject = !moderation.approved || moderation.score > 0.7;
-    const moderationStatus = shouldReject ? 'rejected' : 'approved';
+    // Determine moderation status with fail-closed semantics:
+    // - genuinely toxic content -> 'rejected'
+    // - moderation unavailable/errored -> 'pending' (human review queue)
+    // - clean -> 'approved'
+    const moderationUnavailable = moderation.flags.some((f) =>
+      ['moderation_unavailable', 'moderation_error', 'moderation_exception'].includes(f)
+    );
+    const isToxic = !moderation.approved || moderation.score > 0.7;
+    const moderationStatus = moderationUnavailable
+      ? 'pending'
+      : isToxic
+        ? 'rejected'
+        : 'approved';
+    const shouldReject = moderationStatus !== 'approved';
 
     // Determine if this is a short (based on hashtags or likes threshold)
     const isShort = hashtagArray.some(tag => 

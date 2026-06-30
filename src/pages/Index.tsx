@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { VideoCard } from "@/components/VideoCard";
 import { PropertyCard } from "@/components/PropertyCard";
 import { Input } from "@/components/ui/input";
-import { Search, TrendingUp, Shield, Users, Video, Award, Smile } from "lucide-react";
+import { Search, TrendingUp, Shield, Video, Award, Smile } from "lucide-react";
 import { Link } from "react-router-dom";
 import heroBanner from "@/assets/hero-banner.jpg";
 
@@ -120,16 +120,12 @@ const Index = () => {
 
             <div className="flex flex-wrap items-center justify-center gap-4 text-sm text-muted-foreground">
               <span className="flex items-center gap-1">
-                <Video className="w-4 h-4 text-primary" />
-                12,450+ video reviews
-              </span>
-              <span className="flex items-center gap-1">
-                <Users className="w-4 h-4 text-secondary" />
-                8,200+ verified residents
-              </span>
-              <span className="flex items-center gap-1">
                 <Shield className="w-4 h-4 text-success" />
-                100% authentic
+                Verified resident reviews
+              </span>
+              <span className="flex items-center gap-1">
+                <Video className="w-4 h-4 text-primary" />
+                Video proof, not just ratings
               </span>
             </div>
           </div>

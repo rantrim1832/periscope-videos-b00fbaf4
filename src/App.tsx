@@ -20,6 +20,8 @@ import AdminProperties from "./pages/AdminProperties";
 import AdminScrapingStats from "./pages/AdminScrapingStats";
 import AdminCSVUpload from "./pages/AdminCSVUpload";
 import Auth from "./pages/Auth";
+import { AdminRoute } from "./components/AdminRoute";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -35,17 +37,17 @@ const App = () => (
           <Route path="/auth" element={<Auth />} />
           <Route path="/reviews" element={<Reviews />} />
           <Route path="/shorts" element={<Shorts />} />
-          <Route path="/post" element={<PostReview />} />
+          <Route path="/post" element={<ProtectedRoute><PostReview /></ProtectedRoute>} />
           <Route path="/community" element={<Community />} />
           <Route path="/help" element={<Help />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/admin/moderate" element={<AdminModeration />} />
-          <Route path="/admin/scraper" element={<PropertyScraper />} />
-          <Route path="/admin/settings" element={<AdminSettings />} />
-          <Route path="/admin/scrape-logs" element={<AdminScrapeLogs />} />
-          <Route path="/admin/properties" element={<AdminProperties />} />
-          <Route path="/admin/stats" element={<AdminScrapingStats />} />
-          <Route path="/admin/csv-upload" element={<AdminCSVUpload />} />
+          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+          <Route path="/admin/moderate" element={<AdminRoute><AdminModeration /></AdminRoute>} />
+          <Route path="/admin/scraper" element={<AdminRoute><PropertyScraper /></AdminRoute>} />
+          <Route path="/admin/settings" element={<AdminRoute><AdminSettings /></AdminRoute>} />
+          <Route path="/admin/scrape-logs" element={<AdminRoute><AdminScrapeLogs /></AdminRoute>} />
+          <Route path="/admin/properties" element={<AdminRoute><AdminProperties /></AdminRoute>} />
+          <Route path="/admin/stats" element={<AdminRoute><AdminScrapingStats /></AdminRoute>} />
+          <Route path="/admin/csv-upload" element={<AdminRoute><AdminCSVUpload /></AdminRoute>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
