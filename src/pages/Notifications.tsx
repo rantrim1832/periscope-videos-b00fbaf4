@@ -3,18 +3,32 @@ import { Link } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Bell, MessageSquare, UserPlus, CheckCircle, Flame } from 'lucide-react';
+import { Bell, MessageSquare, UserPlus, CheckCircle, Flame, Trophy, Share2 } from 'lucide-react';
 import { useNotifications } from '@/hooks/useNotifications';
 import { formatDistanceToNow } from 'date-fns';
+import { Button } from '@/components/ui/button';
+import { shareContent } from '@/lib/share';
+import { useToast } from '@/hooks/use-toast';
 
 const ICON: Record<string, typeof Bell> = {
   response: MessageSquare, follow: UserPlus, published: CheckCircle, moderation: Bell,
-  watch_activity: Bell, milestone: Flame,
+  watch_activity: Bell, milestone: Flame, levelup: Trophy,
 };
+
+// Notifications people would send to a friend / screenshot.
+const SHAREABLE = new Set(['watch_activity', 'milestone', 'published', 'levelup', 'response']);
 
 const Notifications = () => {
   const { items, loading, markAllRead, unread } = useNotifications();
+  const { toast } = useToast();
   useEffect(() => { if (unread > 0) markAllRead(); }, [unread, markAllRead]);
+
+  const share = async (message: string, propertyId: string | null, type: string) => {
+    const origin = window.location.origin;
+    const url = propertyId ? `${origin}/property/${propertyId}` : type === 'levelup' ? `${origin}/leaderboard` : origin;
+    const res = await shareContent({ title: 'Pariscope', text: message, url });
+    if (res === 'copied') toast({ title: 'Copied — send it to a friend' });
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -33,12 +47,22 @@ const Notifications = () => {
           <div className="space-y-2">
             {items.map((n) => {
               const Icon = ICON[n.type] ?? Bell;
+              const shareBtn = SHAREABLE.has(n.type) ? (
+                <Button
+                  variant="ghost" size="icon" className="shrink-0 h-8 w-8"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); share(n.message, n.property_id, n.type); }}
+                  aria-label="Share"
+                >
+                  <Share2 className="w-4 h-4" />
+                </Button>
+              ) : null;
               const inner = (
                 <Card className={n.is_read ? '' : 'border-primary/40 bg-primary/5'}>
                   <CardContent className="p-4 flex items-center gap-3">
                     <Icon className="w-5 h-5 text-primary shrink-0" />
                     <span className="flex-1 text-sm">{n.message}</span>
-                    <span className="text-xs text-muted-foreground">{formatDistanceToNow(new Date(n.created_at), { addSuffix: true })}</span>
+                    <span className="text-xs text-muted-foreground hidden sm:inline">{formatDistanceToNow(new Date(n.created_at), { addSuffix: true })}</span>
+                    {shareBtn}
                   </CardContent>
                 </Card>
               );
