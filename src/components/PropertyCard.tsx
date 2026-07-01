@@ -1,6 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Bed, Bath, Star, Video } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface PropertyCardProps {
   name: string;
@@ -14,6 +15,7 @@ interface PropertyCardProps {
   videoCount: number;
   imageUrl?: string;
   verified?: boolean;
+  to?: string;
 }
 
 export const PropertyCard = ({
@@ -28,8 +30,9 @@ export const PropertyCard = ({
   videoCount,
   imageUrl = "/placeholder.svg",
   verified = false,
+  to,
 }: PropertyCardProps) => {
-  return (
+  const card = (
     <Card className="group overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer border-border/50 bg-gradient-to-br from-card to-card/80">
       <div className="relative h-48 overflow-hidden bg-muted">
         <img
@@ -83,4 +86,6 @@ export const PropertyCard = ({
       </CardContent>
     </Card>
   );
+
+  return to ? <Link to={to} className="block">{card}</Link> : card;
 };

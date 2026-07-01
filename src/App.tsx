@@ -20,6 +20,10 @@ import AdminProperties from "./pages/AdminProperties";
 import AdminScrapingStats from "./pages/AdminScrapingStats";
 import AdminCSVUpload from "./pages/AdminCSVUpload";
 import Auth from "./pages/Auth";
+import Property from "./pages/Property";
+import Compare from "./pages/Compare";
+import { CompareProvider } from "./context/CompareContext";
+import { CompareBar } from "./components/property/CompareBar";
 
 const queryClient = new QueryClient();
 
@@ -29,9 +33,12 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
+        <CompareProvider>
+          <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/browse" element={<Browse />} />
+          <Route path="/property/:id" element={<Property />} />
+          <Route path="/compare" element={<Compare />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/reviews" element={<Reviews />} />
           <Route path="/shorts" element={<Shorts />} />
@@ -48,7 +55,9 @@ const App = () => (
           <Route path="/admin/csv-upload" element={<AdminCSVUpload />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
-        </Routes>
+          </Routes>
+          <CompareBar />
+        </CompareProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

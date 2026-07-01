@@ -280,6 +280,7 @@ const Reviews = () => {
                   reviewCount={0}
                   videoCount={0}
                   imageUrl="/placeholder.svg"
+                  to={`/property/${property.id}`}
                 />
               ))}
             </div>
