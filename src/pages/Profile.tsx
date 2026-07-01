@@ -61,6 +61,7 @@ const Profile = () => {
                 <span className="flex items-center gap-2"><Trophy className="w-4 h-4 text-warning" /> Level {profile.level}</span>
                 <span className="flex items-center gap-2"><Star className="w-4 h-4 text-primary" /> {profile.points} points</span>
                 <span className="flex items-center gap-2"><Users className="w-4 h-4 text-secondary" /> {profile.followerCount} followers</span>
+                <Link to="/leaderboard" className="text-primary hover:underline">Leaderboard →</Link>
               </div>
               <div className="space-y-1 max-w-md">
                 <div className="flex justify-between text-xs text-muted-foreground">

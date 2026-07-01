@@ -47,6 +47,7 @@ const Welcome = lazy(() => import("./pages/Welcome"));
 const Verify = lazy(() => import("./pages/Verify"));
 const Saved = lazy(() => import("./pages/Saved"));
 const Following = lazy(() => import("./pages/Following"));
+const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 
 const queryClient = new QueryClient();
 
@@ -78,6 +79,7 @@ const App = () => (
                 <Route path="/search" element={<Search />} />
                 <Route path="/feed" element={<Feed />} />
                 <Route path="/discover" element={<Discover />} />
+                <Route path="/leaderboard" element={<Leaderboard />} />
                 <Route path="/saved" element={<Saved />} />
                 <Route path="/following" element={<ProtectedRoute><Following /></ProtectedRoute>} />
                 <Route path="/city/:state/:city" element={<City />} />

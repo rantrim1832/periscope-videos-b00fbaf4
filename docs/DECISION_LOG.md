@@ -133,6 +133,13 @@ Format: `[YYYY-MM-DD] TITLE — Decision · Why prior was weaker · Tradeoffs ·
   privacy) for the skeptical persona. Audit-driven: the #1 PMF risk was cold-start
   emptiness, not missing features. *Status:* Adopted.
 
+- **[2026-07-01] Return-loop batch (habit formation).** Audit found the gap:
+  users could arrive/contribute but had no personalized reason to return. Shipped:
+  **watchlist** (follow properties & cities) + **"What's new" Following feed** +
+  **watch-activity notifications** (new review / score change on followed places);
+  and a **contributor leaderboard** (status/reputation loop). Return + notification
+  + curiosity + status loops. *Status:* Adopted.
+
 ## Escalation items (need founder / external decision)
 - Paid **search/Places vendor** for nationwide channel discovery at scale.
 - Social-platform **OAuth app approvals** (Meta/TikTok/YouTube) for real auto-sync.
