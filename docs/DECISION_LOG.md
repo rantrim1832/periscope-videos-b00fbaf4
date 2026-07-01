@@ -124,6 +124,15 @@ Format: `[YYYY-MM-DD] TITLE — Decision · Why prior was weaker · Tradeoffs ·
   Intelligence** highlight (the signature wedge). All `tsc`/`eslint`/`build`/tests
   green, merged directly to `main`. *Status:* Adopted.
 
+- **[2026-07-01] PMF / launch-readiness batch.** Shipped to `main`: cold-start-
+  resilient homepage + reusable EmptyState (no blank pages at 0 content);
+  **PWA** (manifest + service worker + install + mobile meta) with a documented
+  **mobile strategy** (PWA-first, native later); **share amplification** (util +
+  rankings + city share); **contribution reward reveal**; and a real **Help /
+  trust methodology** page (Truth Score vs trajectory, verification, moderation,
+  privacy) for the skeptical persona. Audit-driven: the #1 PMF risk was cold-start
+  emptiness, not missing features. *Status:* Adopted.
+
 ## Escalation items (need founder / external decision)
 - Paid **search/Places vendor** for nationwide channel discovery at scale.
 - Social-platform **OAuth app approvals** (Meta/TikTok/YouTube) for real auto-sync.
