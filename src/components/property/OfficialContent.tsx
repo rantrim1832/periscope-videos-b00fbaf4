@@ -1,9 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Globe, Instagram, Facebook, Youtube, Box, Images, ShieldCheck, Building2 } from 'lucide-react';
+import { Globe, Instagram, Facebook, Youtube, Box, Images, ShieldCheck, Building2, Plug } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { PropertyView, OfficialChannel, ChannelKind } from '@/domain/property';
+import { useIsManager } from '@/hooks/useIsManager';
 
 const ICON: Record<ChannelKind, typeof Globe> = {
   website: Globe, instagram: Instagram, facebook: Facebook, tiktok: Youtube,
@@ -22,6 +23,7 @@ export const OfficialContent = ({ property }: { property: PropertyView }) => {
   const channels = property.officialChannels ?? [];
   const verified = channels.some((c) => c.verified);
   const embeds = channels.filter((c) => c.embedUrl);
+  const isManager = useIsManager(property.id);
 
   return (
     <section className="container mx-auto px-4 py-10">
@@ -31,6 +33,11 @@ export const OfficialContent = ({ property }: { property: PropertyView }) => {
           <Badge variant={verified ? 'success' : 'secondary'} className="gap-1">
             <ShieldCheck className="w-3 h-3" /> {verified ? 'Official · Verified' : 'Official · Public'}
           </Badge>
+        )}
+        {isManager && (
+          <Button variant="outline" size="sm" asChild className="ml-auto">
+            <Link to={`/manage/${property.id}`}><Plug className="w-4 h-4 mr-1" /> Connect sources</Link>
+          </Button>
         )}
       </div>
       <p className="text-muted-foreground mb-4">
