@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Bell, MessageSquare, UserPlus, CheckCircle, Flame, Trophy, Share2 } from 'lucide-react';
 import { useNotifications } from '@/hooks/useNotifications';
 import { formatDistanceToNow } from 'date-fns';
-import { Button } from '@/components/ui/button';
 import { shareContent } from '@/lib/share';
 import { useToast } from '@/hooks/use-toast';
 
