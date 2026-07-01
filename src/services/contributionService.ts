@@ -6,6 +6,8 @@
 import type { ContributionDraft, SubmissionResult, SubmissionStatus } from '@/domain/contribution';
 import { getModerationProvider, type ModerationProvider } from './providers/moderation';
 import { getVideoProvider, type VideoProvider } from './providers/video';
+import { getEnv } from './env';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface ContributionSink {
   save(
@@ -68,3 +70,22 @@ export function createContributionService(deps: ContributionDeps = {}) {
 }
 
 export type ContributionService = ReturnType<typeof createContributionService>;
+
+// Dispatcher used by the UI. In canonical mode, submission goes through the
+// server-side `submit-review` edge function (tamper-proof moderation + insert +
+// auto Truth Score recompute). Otherwise the mock in-memory service runs the
+// full flow offline for development/demo.
+const mockService = createContributionService();
+
+export async function submitContribution(draft: ContributionDraft): Promise<SubmissionResult> {
+  if (getEnv('VITE_USE_CANONICAL') === 'true') {
+    const { data, error } = await supabase.functions.invoke('submit-review', { body: draft });
+    if (error) throw error;
+    return data as SubmissionResult;
+  }
+  return mockService.submit(draft);
+}
+
+export async function createContributionUpload() {
+  return getVideoProvider().createDirectUpload();
+}

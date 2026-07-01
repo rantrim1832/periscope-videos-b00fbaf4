@@ -19,7 +19,7 @@ import {
 } from '@/domain/contribution';
 import { LIFE_STAGE_LABELS, type LifeStage } from '@/domain/property';
 import { CATEGORY_LABELS } from '@/domain/truthScore';
-import { createContributionService } from '@/services/contributionService';
+import { submitContribution, createContributionUpload } from '@/services/contributionService';
 
 const TYPES: { key: ContributionType; icon: typeof Video; title: string; desc: string }[] = [
   { key: 'video', icon: Video, title: 'Video', desc: 'The strongest proof — show the reality' },
@@ -28,8 +28,6 @@ const TYPES: { key: ContributionType; icon: typeof Video; title: string; desc: s
 ];
 
 const STAGES: LifeStage[] = ['moveIn', 'living', 'maintenance', 'moveOut', 'deposit'];
-
-const service = createContributionService();
 
 export const ContributeFlow = ({ propertyId, propertyName }: { propertyId: string; propertyName: string }) => {
   const navigate = useNavigate();
@@ -55,7 +53,7 @@ export const ContributeFlow = ({ propertyId, propertyName }: { propertyId: strin
     }
     setSubmitting(true);
     try {
-      const res = await service.submit(draft);
+      const res = await submitContribution(draft);
       setResult(res);
     } catch {
       toast({ title: 'Something went wrong', description: 'Please try again.', variant: 'destructive' });
@@ -131,7 +129,7 @@ export const ContributeFlow = ({ propertyId, propertyName }: { propertyId: strin
                 <p className="text-sm font-medium">Upload your {draft.type}</p>
                 <p className="text-xs text-muted-foreground mt-1">Processed securely; your address is never shown.</p>
                 <Button variant="outline" size="sm" className="mt-3" onClick={async () => {
-                  const up = await service.createUpload();
+                  const up = await createContributionUpload();
                   set({ mediaAssetId: up.assetId });
                   toast({ title: 'Upload ready', description: `Provider: ${up.provider}` });
                 }}>
