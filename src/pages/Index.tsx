@@ -4,10 +4,17 @@ import { VideoCard } from "@/components/VideoCard";
 import { PropertyCard } from "@/components/PropertyCard";
 import { Input } from "@/components/ui/input";
 import { Search, TrendingUp, Shield, Users, Video, Award, Smile } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
 import heroBanner from "@/assets/hero-banner.jpg";
 
 const Index = () => {
+  const navigate = useNavigate();
+  const [heroQuery, setHeroQuery] = useState("");
+  const runSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (heroQuery.trim()) navigate(`/search?q=${encodeURIComponent(heroQuery.trim())}`);
+  };
   // Mock data for demonstration
   const featuredVideos = [
     {
@@ -105,18 +112,20 @@ const Index = () => {
             </p>
 
             {/* Search Bar */}
-            <div className="flex flex-col sm:flex-row gap-3 max-w-2xl mx-auto">
+            <form onSubmit={runSearch} className="flex flex-col sm:flex-row gap-3 max-w-2xl mx-auto">
               <div className="flex-1 relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
                 <Input
                   placeholder="Search by address, city, or property name..."
                   className="pl-10 h-12 bg-card/90 backdrop-blur-sm"
+                  value={heroQuery}
+                  onChange={(e) => setHeroQuery(e.target.value)}
                 />
               </div>
-              <Button variant="hero" size="lg" className="sm:w-auto">
+              <Button type="submit" variant="hero" size="lg" className="sm:w-auto">
                 Search
               </Button>
-            </div>
+            </form>
 
             <div className="flex flex-wrap items-center justify-center gap-4 text-sm text-muted-foreground">
               <span className="flex items-center gap-1">

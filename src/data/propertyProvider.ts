@@ -13,6 +13,7 @@ export interface PropertyDataProvider {
   readonly name: string;
   getProperty(id: string): Promise<PropertyView | null>;
   listSummaries(): Promise<PropertyView[]>;
+  search(query: string): Promise<PropertyView[]>;
 }
 
 export class MockPropertyProvider implements PropertyDataProvider {
@@ -22,6 +23,15 @@ export class MockPropertyProvider implements PropertyDataProvider {
   }
   async listSummaries(): Promise<PropertyView[]> {
     return FIXTURE_PROPERTIES;
+  }
+  async search(query: string): Promise<PropertyView[]> {
+    const q = query.trim().toLowerCase();
+    if (!q) return [];
+    return FIXTURE_PROPERTIES.filter((p) =>
+      [p.name, p.city, p.state, p.addressLine1]
+        .filter(Boolean)
+        .some((f) => (f as string).toLowerCase().includes(q)),
+    );
   }
 }
 
@@ -84,10 +94,8 @@ export class CanonicalPropertyProvider implements PropertyDataProvider {
     };
   }
 
-  async listSummaries(): Promise<PropertyView[]> {
-    const { data } = await this.db
-      .from('canonical_property').select('*').eq('status', 'active').limit(24);
-    return (data ?? []).map((prop: any) => ({
+  private mapSummary(prop: any): PropertyView {
+    return {
       id: prop.id,
       name: prop.name ?? 'Unnamed property',
       addressLine1: prop.address_line1 ?? null,
@@ -99,7 +107,41 @@ export class CanonicalPropertyProvider implements PropertyDataProvider {
       reviews: [],
       media: [],
       timeline: [],
-    }));
+    };
+  }
+
+  async listSummaries(): Promise<PropertyView[]> {
+    const { data } = await this.db
+      .from('canonical_property').select('*').eq('status', 'active').limit(24);
+    return (data ?? []).map((p: any) => this.mapSummary(p));
+  }
+
+  // Alias-aware search: direct match on canonical fields OR any alias name,
+  // so "Willow Creek Apts" resolves the same canonical entity as "Willow Creek".
+  async search(query: string): Promise<PropertyView[]> {
+    const q = query.trim();
+    if (!q) return [];
+    const term = `%${q}%`;
+
+    const { data: direct } = await this.db
+      .from('canonical_property').select('*')
+      .eq('status', 'active')
+      .or(`name.ilike.${term},address_line1.ilike.${term},city.ilike.${term}`)
+      .limit(20);
+    const results: any[] = direct ?? [];
+    const seen = new Set(results.map((r) => r.id));
+
+    const { data: aliasRows } = await this.db
+      .from('property_alias').select('canonical_property_id')
+      .ilike('alias_name', term).limit(20);
+    const aliasIds = [...new Set((aliasRows ?? []).map((a: any) => a.canonical_property_id))]
+      .filter((id) => !seen.has(id));
+    if (aliasIds.length > 0) {
+      const { data: viaAlias } = await this.db
+        .from('canonical_property').select('*').in('id', aliasIds).eq('status', 'active');
+      results.push(...(viaAlias ?? []));
+    }
+    return results.map((p) => this.mapSummary(p));
   }
 }
 

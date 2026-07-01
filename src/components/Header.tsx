@@ -99,8 +99,10 @@ export const Header = () => {
 
         <div className="flex items-center gap-2">
           <ThemeToggle />
-          <Button variant="ghost" size="icon" className="hidden md:flex">
-            <Search className="h-5 w-5" />
+          <Button variant="ghost" size="icon" className="hidden md:flex" asChild>
+            <Link to="/search" aria-label="Search">
+              <Search className="h-5 w-5" />
+            </Link>
           </Button>
           {user ? (
             <>
