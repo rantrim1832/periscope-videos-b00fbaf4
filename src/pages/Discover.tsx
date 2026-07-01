@@ -9,12 +9,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Trophy, TrendingDown, MapPin } from 'lucide-react';
 import { getPropertyProvider } from '@/data/propertyProvider';
 import { computeTruthScore, CATEGORY_LABELS, CATEGORY_ORDER, scoreColorVar, categoryPct, type CategoryKey } from '@/domain/truthScore';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 // Discovery (Mode 2): "show me the best/worst apartments." Curated rankings by
 // category + location — decision support that's inherently shareable and SEO-rich.
 type Metric = 'overall' | CategoryKey;
 
 const Discover = () => {
+  useDocumentTitle('Discover the best & worst apartments | Pariscope', 'Ranked by trust-weighted resident experience — best and worst apartments by category and location.');
   const [metric, setMetric] = useState<Metric>('overall');
   const [order, setOrder] = useState<'best' | 'worst'>('best');
   const [state, setState] = useState<string>('all');

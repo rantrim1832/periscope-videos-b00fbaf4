@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { MapPin, Trophy, TrendingDown, Play, PenLine } from 'lucide-react';
 import { getPropertyProvider } from '@/data/propertyProvider';
 import { computeTruthScore, scoreColorVar } from '@/domain/truthScore';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 // City landing page — an indexable, shareable local hub tying together the
 // city's properties, best/worst Truth Scores, and local content.
@@ -15,6 +16,10 @@ const City = () => {
   const { state = '', city = '' } = useParams();
   const cityName = decodeURIComponent(city);
   const stateName = decodeURIComponent(state);
+  useDocumentTitle(
+    `Apartments in ${cityName}, ${stateName} — Reviews & Truth Scores | Pariscope`,
+    `Verified resident reviews, video proof, and Truth Scores for apartments in ${cityName}, ${stateName}.`,
+  );
 
   const { data: properties = [], isLoading } = useQuery({
     queryKey: ['city', stateName, cityName],
