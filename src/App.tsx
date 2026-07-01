@@ -2,12 +2,11 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import Browse from "./pages/Browse";
 import Reviews from "./pages/Reviews";
 import Shorts from "./pages/Shorts";
-import PostReview from "./pages/PostReview";
 import Community from "./pages/Community";
 import Help from "./pages/Help";
 import Profile from "./pages/Profile";
@@ -53,7 +52,7 @@ const App = () => (
           <Route path="/auth" element={<Auth />} />
           <Route path="/reviews" element={<Reviews />} />
           <Route path="/shorts" element={<Shorts />} />
-          <Route path="/post" element={<PostReview />} />
+          <Route path="/post" element={<Navigate to="/contribute" replace />} />
           <Route path="/community" element={<Community />} />
           <Route path="/help" element={<Help />} />
           <Route path="/profile" element={<Profile />} />

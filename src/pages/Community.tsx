@@ -66,6 +66,10 @@ const Community = () => {
     <div className="min-h-screen bg-background">
       <Header />
 
+      <div className="bg-primary/10 border-b border-primary/20 text-center py-2 text-sm text-muted-foreground">
+        Preview — Community is illustrative in this demo; live discussions &amp; polls are coming soon.
+      </div>
+
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto space-y-8">
           {/* Header */}

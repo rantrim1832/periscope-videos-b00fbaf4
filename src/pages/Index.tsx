@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { VideoCard } from "@/components/VideoCard";
 import { PropertyCard } from "@/components/PropertyCard";
 import { Input } from "@/components/ui/input";
-import { Search, TrendingUp, Shield, Users, Video, Award, Smile } from "lucide-react";
+import { Search, TrendingUp, Shield, Video, Award, Smile } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import heroBanner from "@/assets/hero-banner.jpg";
@@ -129,16 +129,12 @@ const Index = () => {
 
             <div className="flex flex-wrap items-center justify-center gap-4 text-sm text-muted-foreground">
               <span className="flex items-center gap-1">
-                <Video className="w-4 h-4 text-primary" />
-                12,450+ video reviews
-              </span>
-              <span className="flex items-center gap-1">
-                <Users className="w-4 h-4 text-secondary" />
-                8,200+ verified residents
-              </span>
-              <span className="flex items-center gap-1">
                 <Shield className="w-4 h-4 text-success" />
-                100% authentic
+                Verified resident reviews
+              </span>
+              <span className="flex items-center gap-1">
+                <Video className="w-4 h-4 text-primary" />
+                Video proof, not just ratings
               </span>
             </div>
           </div>
@@ -214,7 +210,7 @@ const Index = () => {
               <p className="text-muted-foreground mt-1">Most reviewed apartments in your area</p>
             </div>
             <Button variant="outline" asChild>
-              <Link to="/properties">Explore All</Link>
+              <Link to="/browse">Explore All</Link>
             </Button>
           </div>
 
@@ -242,13 +238,13 @@ const Index = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button variant="hero" size="lg" asChild>
-                <Link to="/post">
+                <Link to="/contribute">
                   <Video className="w-5 h-5 mr-2" />
                   Post Your Review
                 </Link>
               </Button>
-              <Button variant="outline" size="lg">
-                Learn More
+              <Button variant="outline" size="lg" asChild>
+                <Link to="/help">Learn More</Link>
               </Button>
             </div>
           </div>
@@ -279,13 +275,13 @@ const Index = () => {
                   </Link>
                 </li>
                 <li>
-                  <Link to="/properties" className="hover:text-primary transition-colors">
+                  <Link to="/browse" className="hover:text-primary transition-colors">
                     Properties
                   </Link>
                 </li>
                 <li>
-                  <Link to="/community" className="hover:text-primary transition-colors">
-                    Community
+                  <Link to="/feed" className="hover:text-primary transition-colors">
+                    Feed
                   </Link>
                 </li>
               </ul>
@@ -299,14 +295,12 @@ const Index = () => {
                   </Link>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-primary transition-colors">
+                  <a href="mailto:support@pariscope.com" className="hover:text-primary transition-colors">
                     Contact Us
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-primary transition-colors">
-                    Guidelines
-                  </a>
+                  <span className="opacity-50 cursor-default">Guidelines (coming soon)</span>
                 </li>
               </ul>
             </div>
@@ -314,14 +308,10 @@ const Index = () => {
               <h3 className="font-semibold mb-4">Legal</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li>
-                  <a href="#" className="hover:text-primary transition-colors">
-                    Privacy Policy
-                  </a>
+                  <span className="opacity-50 cursor-default">Privacy Policy (coming soon)</span>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-primary transition-colors">
-                    Terms of Service
-                  </a>
+                  <span className="opacity-50 cursor-default">Terms of Service (coming soon)</span>
                 </li>
               </ul>
             </div>

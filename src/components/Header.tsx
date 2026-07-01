@@ -115,7 +115,7 @@ export const Header = () => {
                 </Link>
               </Button>
               <Button variant="hero" size="sm" className="hidden sm:flex" asChild>
-                <Link to="/post">Post Review</Link>
+                <Link to="/contribute">Post Review</Link>
               </Button>
               <Button variant="ghost" size="icon" onClick={handleSignOut}>
                 <LogOut className="h-5 w-5" />
@@ -223,7 +223,7 @@ export const Header = () => {
                 )}
                 {user && (
                   <Link 
-                    to="/post" 
+                    to="/contribute" 
                     className="text-lg font-medium hover:text-primary transition-colors"
                     onClick={() => setMobileMenuOpen(false)}
                   >

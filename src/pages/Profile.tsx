@@ -61,6 +61,10 @@ const Profile = () => {
     <div className="min-h-screen bg-background">
       <Header />
 
+      <div className="bg-primary/10 border-b border-primary/20 text-center py-2 text-sm text-muted-foreground">
+        Preview — profile shown with sample data; live contributor profiles are coming soon.
+      </div>
+
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto space-y-8">
           {/* Profile Header */}
