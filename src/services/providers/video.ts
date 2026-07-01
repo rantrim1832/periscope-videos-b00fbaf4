@@ -30,8 +30,10 @@ export class MockVideoProvider implements VideoProvider {
     return { uploadUrl: `https://mock.upload.local/${assetId}`, assetId, provider: this.name };
   }
   async getPlayback(assetId: string): Promise<PlaybackInfo> {
+    // A real, public sample HLS stream so playback UX is genuinely exercisable
+    // in development without a video vendor. Swapped for real assets in prod.
     return {
-      hlsUrl: `https://mock.stream.local/${assetId}/playlist.m3u8`,
+      hlsUrl: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8',
       thumbnailUrl: `https://mock.stream.local/${assetId}/thumb.jpg`,
       provider: this.name,
     };

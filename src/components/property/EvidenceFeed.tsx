@@ -1,12 +1,14 @@
+import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Play, ShieldCheck, Building2, MapPin } from 'lucide-react';
 import type { MediaItem, PropertyView } from '@/domain/property';
+import { EvidenceViewer } from './EvidenceViewer';
 
 // Two truths, always labeled, never merged: Resident Reality vs Official.
-const MediaCard = ({ item }: { item: MediaItem }) => (
-  <Card className="group overflow-hidden cursor-pointer hover:shadow-lg transition-all border-border/50">
+const MediaCard = ({ item, onPlay }: { item: MediaItem; onPlay: (m: MediaItem) => void }) => (
+  <Card onClick={() => onPlay(item)} className="group overflow-hidden cursor-pointer hover:shadow-lg transition-all border-border/50">
     <div className="relative aspect-[9/16] bg-gradient-to-br from-primary/15 to-secondary/15 flex items-center justify-center">
       <Play className="w-10 h-10 text-foreground/70 group-hover:scale-110 transition-transform" />
       <div className="absolute top-2 left-2 flex gap-1">
@@ -30,6 +32,7 @@ const MediaCard = ({ item }: { item: MediaItem }) => (
 export const EvidenceFeed = ({ property }: { property: PropertyView }) => {
   const resident = property.media.filter((m) => m.source !== 'official');
   const official = property.media.filter((m) => m.source === 'official');
+  const [active, setActive] = useState<MediaItem | null>(null);
 
   if (property.media.length === 0) {
     return (
@@ -54,21 +57,22 @@ export const EvidenceFeed = ({ property }: { property: PropertyView }) => {
           <TabsTrigger value="official">Official ({official.length})</TabsTrigger>
         </TabsList>
         <TabsContent value="resident">
-          <Grid items={resident} empty="No resident videos yet — be the first." />
+          <Grid items={resident} empty="No resident videos yet — be the first." onPlay={setActive} />
         </TabsContent>
         <TabsContent value="official">
-          <Grid items={official} empty="This property hasn't posted official content. Own it? Claim to respond." />
+          <Grid items={official} empty="This property hasn't posted official content. Own it? Claim to respond." onPlay={setActive} />
         </TabsContent>
       </Tabs>
+      <EvidenceViewer item={active} open={active != null} onOpenChange={(o) => !o && setActive(null)} />
     </section>
   );
 };
 
-const Grid = ({ items, empty }: { items: MediaItem[]; empty: string }) =>
+const Grid = ({ items, empty, onPlay }: { items: MediaItem[]; empty: string; onPlay: (m: MediaItem) => void }) =>
   items.length === 0 ? (
     <p className="text-sm text-muted-foreground py-6">{empty}</p>
   ) : (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-      {items.map((m) => <MediaCard key={m.id} item={m} />)}
+      {items.map((m) => <MediaCard key={m.id} item={m} onPlay={onPlay} />)}
     </div>
   );
