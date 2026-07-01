@@ -115,6 +115,15 @@ Format: `[YYYY-MM-DD] TITLE — Decision · Why prior was weaker · Tradeoffs ·
   verification was deferred behind content density (correct then); now content/
   creator/retention loops exist, so trust-weighting is meaningful. *Status:* Adopted.
 
+- **[2026-07-01] Overnight autonomous batch.** Shipped to `main`: app hardening
+  (route code-splitting, ErrorBoundary, scroll restoration); community Q&A;
+  engagement (saved properties, review helpful votes); SEO (dynamic sitemap edge
+  fn, robots, per-page titles); go-live tooling (`setup:check` + GO_LIVE.md);
+  **vitest suite (25 tests)**; README rewrite; **Property Health Index**
+  (trajectory, distinct from the reputation Truth Score); **Deposit Return
+  Intelligence** highlight (the signature wedge). All `tsc`/`eslint`/`build`/tests
+  green, merged directly to `main`. *Status:* Adopted.
+
 ## Escalation items (need founder / external decision)
 - Paid **search/Places vendor** for nationwide channel discovery at scale.
 - Social-platform **OAuth app approvals** (Meta/TikTok/YouTube) for real auto-sync.
