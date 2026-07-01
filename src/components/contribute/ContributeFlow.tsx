@@ -295,7 +295,7 @@ const ResultScreen = ({ result, propertyId, onShare }: { result: SubmissionResul
   const map = {
     published: {
       icon: PartyPopper, color: 'text-success',
-      title: 'Your truth is live', desc: 'Thank you — this could save someone from a costly mistake.',
+      title: 'Your truth is live 🎉', desc: 'Thank you — this could save someone from a costly mistake. You just earned points toward your next badge; watch the views roll in.',
     },
     pending: {
       icon: Clock, color: 'text-warning',
@@ -316,7 +316,10 @@ const ResultScreen = ({ result, propertyId, onShare }: { result: SubmissionResul
         <p className="text-muted-foreground">{map.desc}</p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
           {result.status === 'published' && (
-            <Button variant="hero" onClick={onShare}><Share2 className="w-4 h-4 mr-2" /> Share your review</Button>
+            <>
+              <Button variant="hero" onClick={onShare}><Share2 className="w-4 h-4 mr-2" /> Share your review</Button>
+              <Button variant="outline" asChild><Link to="/profile">See your points &amp; badges</Link></Button>
+            </>
           )}
           <Button variant="outline" asChild><Link to={`/property/${propertyId}`}>Back to property</Link></Button>
         </div>

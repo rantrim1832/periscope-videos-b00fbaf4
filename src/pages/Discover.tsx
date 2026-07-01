@@ -6,8 +6,10 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Trophy, TrendingDown, MapPin } from 'lucide-react';
+import { Trophy, TrendingDown, MapPin, Share2 } from 'lucide-react';
 import { getPropertyProvider } from '@/data/propertyProvider';
+import { shareContent } from '@/lib/share';
+import { useToast } from '@/hooks/use-toast';
 import { computeTruthScore, CATEGORY_LABELS, CATEGORY_ORDER, scoreColorVar, categoryPct, type CategoryKey } from '@/domain/truthScore';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
@@ -17,6 +19,7 @@ type Metric = 'overall' | CategoryKey;
 
 const Discover = () => {
   useDocumentTitle('Discover the best & worst apartments | Pariscope', 'Ranked by trust-weighted resident experience — best and worst apartments by category and location.');
+  const { toast } = useToast();
   const [metric, setMetric] = useState<Metric>('overall');
   const [order, setOrder] = useState<'best' | 'worst'>('best');
   const [state, setState] = useState<string>('all');
@@ -47,11 +50,17 @@ const Discover = () => {
     <div className="min-h-screen bg-background">
       <Header />
       <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <h1 className="text-3xl font-bold mb-1 flex items-center gap-2">
-          {order === 'best' ? <Trophy className="w-7 h-7 text-warning" /> : <TrendingDown className="w-7 h-7 text-destructive" />}
-          {order === 'best' ? 'Best' : 'Worst'} for {metricLabel}
-          {state !== 'all' ? ` in ${state}` : ''}
-        </h1>
+        <div className="flex items-start justify-between gap-3 mb-1">
+          <h1 className="text-3xl font-bold flex items-center gap-2">
+            {order === 'best' ? <Trophy className="w-7 h-7 text-warning" /> : <TrendingDown className="w-7 h-7 text-destructive" />}
+            {order === 'best' ? 'Best' : 'Worst'} for {metricLabel}
+            {state !== 'all' ? ` in ${state}` : ''}
+          </h1>
+          <Button variant="outline" size="sm" className="shrink-0" onClick={async () => {
+            const res = await shareContent({ title: 'Pariscope ranking', text: `${order === 'best' ? 'Best' : 'Worst'} for ${metricLabel}${state !== 'all' ? ` in ${state}` : ''} on Pariscope` });
+            if (res === 'copied') toast({ title: 'Link copied' });
+          }}><Share2 className="w-4 h-4 mr-2" /> Share</Button>
+        </div>
         <p className="text-muted-foreground mb-6">Ranked by trust-weighted resident experience.</p>
 
         <div className="flex flex-wrap gap-2 mb-6">

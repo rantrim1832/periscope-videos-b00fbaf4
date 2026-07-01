@@ -5,10 +5,12 @@ import { Header } from '@/components/Header';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, Trophy, TrendingDown, Play, PenLine } from 'lucide-react';
+import { MapPin, Trophy, TrendingDown, Play, PenLine, Share2 } from 'lucide-react';
 import { getPropertyProvider } from '@/data/propertyProvider';
 import { computeTruthScore, scoreColorVar } from '@/domain/truthScore';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { shareContent } from '@/lib/share';
+import { useToast } from '@/hooks/use-toast';
 
 // City landing page — an indexable, shareable local hub tying together the
 // city's properties, best/worst Truth Scores, and local content.
@@ -21,6 +23,7 @@ const City = () => {
     `Verified resident reviews, video proof, and Truth Scores for apartments in ${cityName}, ${stateName}.`,
   );
 
+  const { toast } = useToast();
   const { data: properties = [], isLoading } = useQuery({
     queryKey: ['city', stateName, cityName],
     queryFn: () => getPropertyProvider().listByLocation(stateName, cityName),
@@ -45,7 +48,13 @@ const City = () => {
           <span>{stateName}</span> /
           <span className="text-foreground font-medium">{cityName}</span>
         </div>
-        <h1 className="text-4xl font-bold flex items-center gap-2"><MapPin className="w-8 h-8 text-primary" /> Apartments in {cityName}, {stateName}</h1>
+        <div className="flex items-start justify-between gap-3">
+          <h1 className="text-4xl font-bold flex items-center gap-2"><MapPin className="w-8 h-8 text-primary" /> Apartments in {cityName}, {stateName}</h1>
+          <Button variant="outline" size="sm" className="shrink-0 mt-1" onClick={async () => {
+            const res = await shareContent({ title: `Apartments in ${cityName}`, text: `Apartment truth for ${cityName}, ${stateName} on Pariscope` });
+            if (res === 'copied') toast({ title: 'Link copied' });
+          }}><Share2 className="w-4 h-4 mr-2" /> Share</Button>
+        </div>
         <p className="text-muted-foreground mt-2 mb-8">{properties.length} communities · verified resident truth with video proof.</p>
 
         {isLoading ? (
