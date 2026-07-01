@@ -22,6 +22,7 @@ import AdminCSVUpload from "./pages/AdminCSVUpload";
 import Auth from "./pages/Auth";
 import Property from "./pages/Property";
 import Compare from "./pages/Compare";
+import Contribute from "./pages/Contribute";
 import { CompareProvider } from "./context/CompareContext";
 import { CompareBar } from "./components/property/CompareBar";
 
@@ -39,6 +40,8 @@ const App = () => (
           <Route path="/browse" element={<Browse />} />
           <Route path="/property/:id" element={<Property />} />
           <Route path="/compare" element={<Compare />} />
+          <Route path="/contribute" element={<Contribute />} />
+          <Route path="/contribute/:propertyId" element={<Contribute />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/reviews" element={<Reviews />} />
           <Route path="/shorts" element={<Shorts />} />
