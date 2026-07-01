@@ -15,6 +15,9 @@ import { ReportCard } from '@/components/property/ReportCard';
 import { EvidenceFeed } from '@/components/property/EvidenceFeed';
 import { ReviewsByLifeStage } from '@/components/property/ReviewsByLifeStage';
 import { StickyContribute } from '@/components/property/StickyContribute';
+import { LocationSection } from '@/components/property/LocationSection';
+import { CompletenessPanel } from '@/components/property/CompletenessPanel';
+import { NearbyProperties } from '@/components/property/NearbyProperties';
 import type { TimelineEvent } from '@/domain/property';
 
 const Timeline = ({ events }: { events: TimelineEvent[] }) => {
@@ -106,8 +109,9 @@ const Property = () => {
 
       <VerdictHero property={property} result={result} onWatch={watch} onContribute={contribute} />
 
-      <div className="container mx-auto px-4 py-10 max-w-3xl">
+      <div className="container mx-auto px-4 py-10 max-w-3xl grid gap-6 md:grid-cols-2">
         <ReportCard propertyName={property.name} location={location} result={result} />
+        <CompletenessPanel property={property} />
       </div>
 
       <div ref={evidenceRef}>
@@ -116,7 +120,11 @@ const Property = () => {
 
       <ReviewsByLifeStage property={property} onContribute={contribute} />
 
+      <LocationSection property={property} />
+
       <Timeline events={property.timeline} />
+
+      <NearbyProperties property={property} />
 
       {/* Keep going — never a dead end */}
       <section className="container mx-auto px-4 py-10">

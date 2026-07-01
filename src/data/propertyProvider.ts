@@ -128,6 +128,8 @@ export class CanonicalPropertyProvider implements PropertyDataProvider {
       addressLine1: prop.address_line1 ?? null,
       city: prop.city ?? null,
       state: prop.state ?? null,
+      latitude: prop.latitude ?? null,
+      longitude: prop.longitude ?? null,
       propertyClass: (prop.property_class ?? 'unknown') as PropertyClass,
       unitsCount: prop.units_count ?? null,
       claimedByManager: false,

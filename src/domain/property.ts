@@ -54,6 +54,8 @@ export interface PropertyView {
   addressLine1: string | null;
   city: string | null;
   state: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   propertyClass: PropertyClass;
   unitsCount: number | null;
   claimedByManager: boolean;
