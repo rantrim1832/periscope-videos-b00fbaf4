@@ -7,9 +7,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import {
-  Video, Camera, FileText, Check, ShieldCheck, Upload, Loader2, Share2,
+  Video, Camera, FileText, Link2, ShieldCheck, Upload, Loader2, Share2,
   PartyPopper, Clock, XCircle,
 } from 'lucide-react';
+import { parseEmbed } from '@/services/providers/embed';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { StarRating } from './StarRating';
@@ -23,6 +24,7 @@ import { submitContribution, createContributionUpload } from '@/services/contrib
 
 const TYPES: { key: ContributionType; icon: typeof Video; title: string; desc: string }[] = [
   { key: 'video', icon: Video, title: 'Video', desc: 'The strongest proof — show the reality' },
+  { key: 'import', icon: Link2, title: 'Import a post', desc: 'Already posted on TikTok/YouTube? Link it' },
   { key: 'photo', icon: Camera, title: 'Photo', desc: 'A picture worth a thousand reviews' },
   { key: 'text', icon: FileText, title: 'Written', desc: 'Tell it in your words' },
 ];
@@ -85,7 +87,7 @@ export const ContributeFlow = ({ propertyId, propertyName }: { propertyId: strin
             <CardTitle>How do you want to share the truth?</CardTitle>
             <CardDescription>Video is the most trusted — but every honest contribution helps.</CardDescription>
           </CardHeader>
-          <CardContent className="grid sm:grid-cols-3 gap-3">
+          <CardContent className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {TYPES.map((t) => {
               const Icon = t.icon;
               const active = draft.type === t.key;
@@ -122,6 +124,24 @@ export const ContributeFlow = ({ propertyId, propertyName }: { propertyId: strin
                 ))}
               </div>
             </div>
+
+            {draft.type === 'import' && (
+              <div className="space-y-2">
+                <Label htmlFor="import-url">Link to your public video</Label>
+                <Input
+                  id="import-url"
+                  className="mt-1"
+                  placeholder="https://www.tiktok.com/@you/video/… or a YouTube/Instagram link"
+                  value={draft.importUrl ?? ''}
+                  onChange={(e) => set({ importUrl: e.target.value })}
+                />
+                {draft.importUrl && (
+                  parseEmbed(draft.importUrl)
+                    ? <p className="text-xs text-success">✓ {parseEmbed(draft.importUrl)!.platform} video detected — we’ll embed it with attribution (we never re-host).</p>
+                    : <p className="text-xs text-destructive">Unrecognized link. Supported: YouTube, TikTok, Instagram.</p>
+                )}
+              </div>
+            )}
 
             {(draft.type === 'video' || draft.type === 'photo') && (
               <div className="border-2 border-dashed border-border rounded-lg p-8 text-center bg-muted/20">
@@ -171,7 +191,13 @@ export const ContributeFlow = ({ propertyId, propertyName }: { propertyId: strin
 
             <div className="flex justify-between pt-2">
               <Button variant="outline" onClick={() => setStep(1)}>Back</Button>
-              <Button variant="hero" disabled={!draft.title.trim()} onClick={() => setStep(3)}>Continue</Button>
+              <Button
+                variant="hero"
+                disabled={!draft.title.trim() || (draft.type === 'import' && !parseEmbed(draft.importUrl ?? ''))}
+                onClick={() => setStep(3)}
+              >
+                Continue
+              </Button>
             </div>
           </CardContent>
         </Card>

@@ -22,6 +22,8 @@ export interface MediaItem {
   title: string;
   thumbnailUrl?: string;
   playbackUrl?: string;
+  embedUrl?: string;      // iframe src for embedded social video (no re-host)
+  platform?: string;      // 'youtube' | 'tiktok' | 'instagram'
   city?: string;
   isPositive?: boolean;
   verified?: boolean;

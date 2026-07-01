@@ -99,11 +99,13 @@ export class CanonicalPropertyProvider implements PropertyDataProvider {
 
     const reviews = (reviewRows ?? []).map((r: any) => this.mapReview(r));
     const media: MediaItem[] = (reviewRows ?? [])
-      .filter((r: any) => r.media_asset_id)
+      .filter((r: any) => r.media_asset_id || r.embed_url)
       .map((r: any) => ({
         id: r.id,
-        source: r.source === 'official' ? 'official' : 'resident',
+        source: r.embed_url ? 'imported' : (r.source === 'official' ? 'official' : 'resident'),
         title: r.title,
+        embedUrl: r.embed_url ?? undefined,
+        platform: r.embed_platform ?? undefined,
         isPositive: undefined,
         verified: r.trust_tier === 'verified_resident',
       }));

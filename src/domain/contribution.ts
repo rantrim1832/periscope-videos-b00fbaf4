@@ -3,7 +3,7 @@ import type { CategoryKey } from './truthScore';
 import type { LifeStage } from './property';
 import type { ResidentTrustTier, VerificationMethod } from './types';
 
-export type ContributionType = 'video' | 'photo' | 'text';
+export type ContributionType = 'video' | 'photo' | 'text' | 'import';
 
 export interface ContributionDraft {
   propertyId: string;
@@ -18,6 +18,7 @@ export interface ContributionDraft {
   verificationMethod: VerificationMethod;
   anonymous: boolean;
   mediaAssetId?: string;
+  importUrl?: string;      // public social URL to embed (YouTube/TikTok/Instagram)
 }
 
 export type SubmissionStatus = 'published' | 'pending' | 'rejected';

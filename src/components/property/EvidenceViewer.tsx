@@ -21,7 +21,7 @@ export const EvidenceViewer = ({
 
   useEffect(() => {
     let active = true;
-    if (open && item) {
+    if (open && item && !item.embedUrl) {
       const assetId = item.playbackUrl ?? item.id;
       getVideoProvider().getPlayback(assetId).then((p) => {
         if (active) setSrc(p.hlsUrl);
@@ -37,7 +37,17 @@ export const EvidenceViewer = ({
       <DialogContent className="max-w-md p-0 overflow-hidden bg-black border-0">
         <DialogTitle className="sr-only">{item?.title ?? 'Video'}</DialogTitle>
         <div className="relative aspect-[9/16] bg-black">
-          {src && <VideoPlayer src={src} className="w-full h-full object-contain bg-black" />}
+          {item?.embedUrl ? (
+            <iframe
+              src={item.embedUrl}
+              title={item.title}
+              className="w-full h-full"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+          ) : (
+            src && <VideoPlayer src={src} className="w-full h-full object-contain bg-black" />
+          )}
           <div className="absolute top-3 left-3">
             {item?.source === 'official'
               ? <Badge variant="secondary" className="gap-1"><Building2 className="w-3 h-3" /> Official</Badge>

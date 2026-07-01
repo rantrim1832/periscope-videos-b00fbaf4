@@ -15,6 +15,18 @@ const corsHeaders = {
 
 const MODERATION_UNCERTAIN = ['moderation_unavailable', 'moderation_error', 'moderation_exception'];
 
+// Parse a public social URL into an embeddable iframe src (no re-host).
+function parseEmbed(raw: string): { platform: string; embedUrl: string } | null {
+  if (!raw) return null;
+  const yt = raw.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/|youtube\.com\/embed\/)([\w-]{11})/);
+  if (yt) return { platform: 'youtube', embedUrl: `https://www.youtube.com/embed/${yt[1]}` };
+  const tt = raw.match(/tiktok\.com\/(?:@[\w.-]+\/video\/|v\/)(\d+)/);
+  if (tt) return { platform: 'tiktok', embedUrl: `https://www.tiktok.com/embed/v2/${tt[1]}` };
+  const ig = raw.match(/instagram\.com\/(?:reel|p|tv)\/([\w-]+)/);
+  if (ig) return { platform: 'instagram', embedUrl: `https://www.instagram.com/reel/${ig[1]}/embed` };
+  return null;
+}
+
 interface Moderation { approved: boolean; score: number; flags: string[]; reason?: string }
 
 async function moderate(text: string): Promise<Moderation> {
@@ -76,6 +88,8 @@ serve(async (req) => {
     const uncertain = mod.flags.some((f: string) => MODERATION_UNCERTAIN.includes(f));
     const status = uncertain ? 'pending' : mod.approved ? 'approved' : 'rejected';
 
+    const embed = draft.type === 'import' ? parseEmbed(draft.importUrl ?? '') : null;
+
     const { data, error } = await supabase
       .from('canonical_review')
       .insert({
@@ -90,7 +104,9 @@ serve(async (req) => {
         ratings: draft.ratings ?? {},
         would_lease_again: draft.wouldLeaseAgain ?? null,
         media_asset_id: draft.mediaAssetId ?? null,
-        has_video: draft.type === 'video',
+        embed_url: embed?.embedUrl ?? null,
+        embed_platform: embed?.platform ?? null,
+        has_video: draft.type === 'video' || !!embed,
         source: 'resident',
         moderation_status: status,
         moderation_score: mod.score,

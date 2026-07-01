@@ -49,6 +49,11 @@ const richMedia: MediaItem[] = [
   { id: 'm3', source: 'resident', title: 'The pool & gym are unreal', city: 'Los Angeles, CA', isPositive: true },
   { id: 'm4', source: 'official', title: 'Official amenity tour', city: 'Los Angeles, CA' },
   { id: 'm5', source: 'official', title: 'Renovated 2BR walkthrough', city: 'Los Angeles, CA' },
+  {
+    id: 'm6', source: 'imported', title: 'Imported: resident apartment tour (YouTube)',
+    city: 'Los Angeles, CA', platform: 'youtube',
+    embedUrl: 'https://www.youtube.com/embed/aqz-KE-bpKQ',
+  },
 ];
 
 const richTimeline: TimelineEvent[] = [
