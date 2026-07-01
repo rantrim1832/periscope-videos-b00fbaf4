@@ -1,57 +1,48 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Check, Circle, Link2, Building2, Users, Sparkles, MapPin } from 'lucide-react';
+import { Check, Circle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import type { PropertyView } from '@/domain/property';
+import { computeDensity } from '@/domain/density';
 
-// "Perceived density before perfect density": show the layered content model as
-// a completeness picture, reframing gaps as an invitation to help — never as an
-// abandoned page.
+// The Property Density Score: perceived density across the layered model,
+// reframing gaps as an invitation to help — never an abandoned page.
 export const CompletenessPanel = ({ property }: { property: PropertyView }) => {
   const navigate = useNavigate();
-  const hasImported = property.media.some((m) => m.source === 'imported' || m.embedUrl);
-  const hasOfficial = property.media.some((m) => m.source === 'official') || (property.officialChannels?.length ?? 0) > 0;
-  const hasResident = property.reviews.length > 0 || property.media.some((m) => m.source === 'resident');
-  const hasCreator = property.media.some((m) => m.platform && m.source === 'imported'); // creator-attributed embeds
-
-  const layers = [
-    { icon: MapPin, label: 'Basics, map & metadata', present: true, action: null as null | (() => void), cta: '' },
-    { icon: Link2, label: 'Public social evidence', present: hasImported, action: () => navigate(`/contribute/${property.id}`), cta: 'Import a post' },
-    { icon: Building2, label: 'Official property content', present: hasOfficial, action: () => navigate(`/contribute/${property.id}`), cta: 'Add official content' },
-    { icon: Users, label: 'Resident truth', present: hasResident, action: () => navigate(`/contribute/${property.id}`), cta: 'Add your truth' },
-    { icon: Sparkles, label: 'Creator & investigations', present: hasCreator, action: () => navigate(`/contribute/${property.id}`), cta: 'Contribute' },
-  ];
-  const done = layers.filter((l) => l.present).length;
+  const density = computeDensity(property);
+  const filled = Math.round((density.pct / 100) * 10);
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
-          <span>The full picture</span>
-          <span className="text-sm font-normal text-muted-foreground">{done} of {layers.length} layers</span>
+          <span>Density</span>
+          <span className="text-sm font-normal text-muted-foreground tabular-nums">{density.pct}%</span>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        <div className="h-2 rounded-full bg-muted overflow-hidden">
-          <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${(done / layers.length) * 100}%` }} />
+        <div className="font-mono text-primary text-lg tracking-tight" aria-hidden>
+          {'█'.repeat(filled)}{'░'.repeat(10 - filled)}
         </div>
-        {layers.map((l) => {
-          const Icon = l.icon;
-          return (
-            <div key={l.label} className="flex items-center gap-3">
-              {l.present
-                ? <Check className="w-5 h-5 text-success shrink-0" />
-                : <Circle className="w-5 h-5 text-muted-foreground/40 shrink-0" />}
-              <Icon className="w-4 h-4 text-muted-foreground shrink-0" />
-              <span className={`flex-1 text-sm ${l.present ? '' : 'text-muted-foreground'}`}>{l.label}</span>
-              {!l.present && l.action && (
-                <Button variant="ghost" size="sm" onClick={l.action}>{l.cta}</Button>
-              )}
+
+        <div className="grid grid-cols-1 gap-1.5">
+          {density.items.map((item) => (
+            <div key={item.key} className="flex items-center gap-2 text-sm">
+              {item.present
+                ? <Check className="w-4 h-4 text-success shrink-0" />
+                : <Circle className="w-4 h-4 text-muted-foreground/40 shrink-0" />}
+              <span className={item.present ? '' : 'text-muted-foreground'}>{item.label}</span>
             </div>
-          );
-        })}
-        <p className="text-xs text-muted-foreground pt-1">
-          Resident truth + official context = the complete picture. Help fill it in.
+          ))}
+        </div>
+
+        {!density.items.find((i) => i.key === 'resident_truth')?.present && (
+          <Button variant="hero" size="sm" className="w-full" onClick={() => navigate(`/contribute/${property.id}`)}>
+            Add the first resident truth
+          </Button>
+        )}
+        <p className="text-xs text-muted-foreground">
+          Resident truth + official context = the complete picture.
         </p>
       </CardContent>
     </Card>
