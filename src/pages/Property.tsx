@@ -17,6 +17,7 @@ import { ReviewsByLifeStage } from '@/components/property/ReviewsByLifeStage';
 import { StickyContribute } from '@/components/property/StickyContribute';
 import { LocationSection } from '@/components/property/LocationSection';
 import { StoryCompleteness } from '@/components/property/StoryCompleteness';
+import { HealthIndicator } from '@/components/property/HealthIndicator';
 import { ContentSuggestions } from '@/components/property/ContentSuggestions';
 import { NearbyProperties } from '@/components/property/NearbyProperties';
 import { OfficialContent } from '@/components/property/OfficialContent';
@@ -114,7 +115,10 @@ const Property = () => {
 
       <div className="container mx-auto px-4 py-10 max-w-3xl grid gap-6 md:grid-cols-2">
         <ReportCard propertyName={property.name} location={location} result={result} />
-        <StoryCompleteness property={property} />
+        <div className="space-y-6">
+          <HealthIndicator property={property} />
+          <StoryCompleteness property={property} />
+        </div>
       </div>
 
       <div ref={evidenceRef}>
