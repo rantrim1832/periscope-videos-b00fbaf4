@@ -9,11 +9,31 @@ import { FIXTURE_PROPERTIES, findFixture } from './fixtures';
 import { getEnv } from '@/services/env';
 import { supabase } from '@/integrations/supabase/client';
 
+export interface LocationCount {
+  state?: string;
+  city?: string;
+  count: number;
+}
+
 export interface PropertyDataProvider {
   readonly name: string;
   getProperty(id: string): Promise<PropertyView | null>;
   listSummaries(): Promise<PropertyView[]>;
   search(query: string): Promise<PropertyView[]>;
+  listStates(): Promise<LocationCount[]>;
+  listCities(state: string): Promise<LocationCount[]>;
+  listByLocation(state: string, city: string): Promise<PropertyView[]>;
+}
+
+function tally<T>(rows: T[], key: (r: T) => string | null | undefined): { value: string; count: number }[] {
+  const map = new Map<string, number>();
+  for (const r of rows) {
+    const k = key(r);
+    if (k) map.set(k, (map.get(k) ?? 0) + 1);
+  }
+  return [...map.entries()]
+    .map(([value, count]) => ({ value, count }))
+    .sort((a, b) => b.count - a.count);
 }
 
 export class MockPropertyProvider implements PropertyDataProvider {
@@ -32,6 +52,15 @@ export class MockPropertyProvider implements PropertyDataProvider {
         .filter(Boolean)
         .some((f) => (f as string).toLowerCase().includes(q)),
     );
+  }
+  async listStates(): Promise<LocationCount[]> {
+    return tally(FIXTURE_PROPERTIES, (p) => p.state).map((t) => ({ state: t.value, count: t.count }));
+  }
+  async listCities(state: string): Promise<LocationCount[]> {
+    return tally(FIXTURE_PROPERTIES.filter((p) => p.state === state), (p) => p.city).map((t) => ({ city: t.value, count: t.count }));
+  }
+  async listByLocation(state: string, city: string): Promise<PropertyView[]> {
+    return FIXTURE_PROPERTIES.filter((p) => p.state === state && p.city === city);
   }
 }
 
@@ -142,6 +171,20 @@ export class CanonicalPropertyProvider implements PropertyDataProvider {
       results.push(...(viaAlias ?? []));
     }
     return results.map((p) => this.mapSummary(p));
+  }
+
+  async listStates(): Promise<LocationCount[]> {
+    const { data } = await this.db.from('canonical_property').select('state').eq('status', 'active');
+    return tally(data ?? [], (r: any) => r.state).map((t) => ({ state: t.value, count: t.count }));
+  }
+  async listCities(state: string): Promise<LocationCount[]> {
+    const { data } = await this.db.from('canonical_property').select('city').eq('status', 'active').eq('state', state);
+    return tally(data ?? [], (r: any) => r.city).map((t) => ({ city: t.value, count: t.count }));
+  }
+  async listByLocation(state: string, city: string): Promise<PropertyView[]> {
+    const { data } = await this.db
+      .from('canonical_property').select('*').eq('status', 'active').eq('state', state).eq('city', city).limit(60);
+    return (data ?? []).map((p: any) => this.mapSummary(p));
   }
 }
 

@@ -10,10 +10,21 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Filter, SlidersHorizontal, Smile, MapPin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { getPropertyProvider } from "@/data/propertyProvider";
+import type { PropertyView } from "@/domain/property";
+
+interface SeededReview {
+  id: string; title: string; video_url: string; caption?: string;
+  tags?: string[]; city?: string; is_positive?: boolean;
+}
+interface PropertySummary {
+  id: string; name: string; address: string; city: string; state: string;
+  beds?: number; baths?: number;
+}
 
 const Reviews = () => {
-  const [seededReviews, setSeededReviews] = useState<any[]>([]);
-  const [properties, setProperties] = useState<any[]>([]);
+  const [seededReviews, setSeededReviews] = useState<SeededReview[]>([]);
+  const [properties, setProperties] = useState<PropertySummary[]>([]);
   const [states, setStates] = useState<string[]>([]);
   const [cities, setCities] = useState<string[]>([]);
   const [selectedState, setSelectedState] = useState<string>("all");
@@ -22,32 +33,17 @@ const Reviews = () => {
   const [positiveOnly, setPositiveOnly] = useState(false);
   const [totalProperties, setTotalProperties] = useState(0);
   
-  // Fetch available states and cities
+  // Fetch available states via the property provider (canonical or mock).
   useEffect(() => {
     const fetchLocations = async () => {
-      const { data: statesData } = await supabase
-        .from('properties')
-        .select('state')
-        .eq('status', 'approved');
-      
-      if (statesData) {
-        const uniqueStates = [...new Set(statesData.map(p => p.state))].sort();
-        setStates(uniqueStates);
-      }
-
-      // Get total count
-      const { count } = await supabase
-        .from('properties')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'approved');
-      
-      setTotalProperties(count || 0);
+      const stateCounts = await getPropertyProvider().listStates();
+      setStates(stateCounts.map((s) => s.state!).filter(Boolean).sort());
+      setTotalProperties(stateCounts.reduce((sum, s) => sum + s.count, 0));
     };
-    
     fetchLocations();
   }, []);
 
-  // Fetch cities when state changes
+  // Fetch cities when state changes.
   useEffect(() => {
     const fetchCities = async () => {
       if (selectedState === "all") {
@@ -55,49 +51,35 @@ const Reviews = () => {
         setSelectedCity("all");
         return;
       }
-
-      const { data: citiesData } = await supabase
-        .from('properties')
-        .select('city')
-        .eq('state', selectedState)
-        .eq('status', 'approved');
-      
-      if (citiesData) {
-        const uniqueCities = [...new Set(citiesData.map(p => p.city))].sort();
-        setCities(uniqueCities);
-      }
+      const cityCounts = await getPropertyProvider().listCities(selectedState);
+      setCities(cityCounts.map((c) => c.city!).filter(Boolean).sort());
     };
-    
     fetchCities();
   }, [selectedState]);
 
-  // Fetch properties based on filters
+  // Fetch properties based on filters via the provider (canonical or mock).
   useEffect(() => {
     const fetchProperties = async () => {
-      let query = supabase
-        .from('properties')
-        .select('*')
-        .eq('status', 'approved');
-      
-      if (selectedState !== "all") {
-        query = query.eq('state', selectedState);
+      const provider = getPropertyProvider();
+      let result: PropertyView[];
+      if (searchQuery.trim()) {
+        result = await provider.search(searchQuery);
+      } else if (selectedState !== "all" && selectedCity !== "all") {
+        result = await provider.listByLocation(selectedState, selectedCity);
+      } else if (selectedState !== "all") {
+        const cityCounts = await provider.listCities(selectedState);
+        const lists = await Promise.all(
+          cityCounts.slice(0, 5).map((c) => provider.listByLocation(selectedState, c.city!)),
+        );
+        result = lists.flat();
+      } else {
+        result = await provider.listSummaries();
       }
-      
-      if (selectedCity !== "all") {
-        query = query.eq('city', selectedCity);
-      }
-
-      if (searchQuery) {
-        query = query.or(`name.ilike.%${searchQuery}%,address.ilike.%${searchQuery}%,city.ilike.%${searchQuery}%`);
-      }
-      
-      const { data } = await query
-        .order('created_at', { ascending: false })
-        .limit(20);
-      
-      if (data) {
-        setProperties(data);
-      }
+      // Map to the shape the PropertyCard section expects.
+      setProperties(result.map((p) => ({
+        id: p.id, name: p.name, address: p.addressLine1 ?? '', city: p.city ?? '',
+        state: p.state ?? '', beds: undefined, baths: undefined,
+      })));
     };
     
     fetchProperties();
