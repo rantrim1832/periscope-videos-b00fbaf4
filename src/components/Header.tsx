@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Video, Search, User, Menu, Shield, LogIn, LogOut, X, Bell } from "lucide-react";
+import { Video, Search, User, Menu, Shield, LogIn, LogOut, X, Bell, Bookmark } from "lucide-react";
 import { useNotifications } from "@/hooks/useNotifications";
 import { Link, useNavigate } from "react-router-dom";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -111,6 +111,11 @@ export const Header = () => {
           </Button>
           {user ? (
             <>
+              <Button variant="ghost" size="icon" asChild className="hidden sm:flex">
+                <Link to="/saved" aria-label="Saved">
+                  <Bookmark className="h-5 w-5" />
+                </Link>
+              </Button>
               <Button variant="ghost" size="icon" asChild className="relative">
                 <Link to="/notifications" aria-label="Notifications">
                   <Bell className="h-5 w-5" />

@@ -7,6 +7,7 @@ import type { PropertyView, ReviewView, LifeStage } from '@/domain/property';
 import { LIFE_STAGE_LABELS } from '@/domain/property';
 import type { ResidentTrustTier } from '@/domain/types';
 import { ReviewResponses } from './ReviewResponses';
+import { ReviewHelpful } from './ReviewHelpful';
 import { useIsManager } from '@/hooks/useIsManager';
 
 const TRUST_BADGE: Record<ResidentTrustTier, { label: string; variant: 'success' | 'secondary' | 'outline' }> = {
@@ -34,6 +35,7 @@ const ReviewRow = ({ review, canRespond }: { review: ReviewView; canRespond: boo
           {review.tenureLabel && <span className="text-muted-foreground">{review.tenureLabel}</span>}
           <Badge variant="muted">{LIFE_STAGE_LABELS[review.lifeStage]}</Badge>
           {review.views ? <span className="flex items-center gap-1 text-muted-foreground"><Eye className="w-3 h-3" /> {review.views}</span> : null}
+          <ReviewHelpful reviewId={review.id} />
         </div>
         <ReviewResponses reviewId={review.id} canRespond={canRespond} />
       </CardContent>

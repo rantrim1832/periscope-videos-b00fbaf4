@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { CompareProvider } from "./context/CompareContext";
+import { SavedProvider } from "./context/SavedContext";
 import { CompareBar } from "./components/property/CompareBar";
 import { DemoBanner } from "./components/DemoBanner";
 import { AdminRoute } from "./components/AdminRoute";
@@ -44,6 +45,7 @@ const Notifications = lazy(() => import("./pages/Notifications"));
 const ManageProperty = lazy(() => import("./pages/ManageProperty"));
 const Welcome = lazy(() => import("./pages/Welcome"));
 const Verify = lazy(() => import("./pages/Verify"));
+const Saved = lazy(() => import("./pages/Saved"));
 
 const queryClient = new QueryClient();
 
@@ -61,6 +63,7 @@ const App = () => (
       <BrowserRouter>
         <ErrorBoundary>
           <CompareProvider>
+            <SavedProvider>
             <ScrollToTop />
             <DemoBanner />
             <Suspense fallback={<PageFallback />}>
@@ -74,6 +77,7 @@ const App = () => (
                 <Route path="/search" element={<Search />} />
                 <Route path="/feed" element={<Feed />} />
                 <Route path="/discover" element={<Discover />} />
+                <Route path="/saved" element={<Saved />} />
                 <Route path="/city/:state/:city" element={<City />} />
                 <Route path="/claim/:propertyId" element={<ClaimProperty />} />
                 <Route path="/creator/:id" element={<Creator />} />
@@ -102,6 +106,7 @@ const App = () => (
               </Routes>
             </Suspense>
             <CompareBar />
+            </SavedProvider>
           </CompareProvider>
         </ErrorBoundary>
       </BrowserRouter>
