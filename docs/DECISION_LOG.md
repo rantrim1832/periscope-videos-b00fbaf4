@@ -102,6 +102,12 @@ Format: `[YYYY-MM-DD] TITLE — Decision · Why prior was weaker · Tradeoffs ·
   *Tradeoff:* less first-time "what is this" framing (mitigated by content legibility
   + onboarding). *Status:* Adopted — discover by using, not reading.
 
+- **[2026-07-01] Contributor rewards + real profile.** Points/levels/badges
+  (Type-A recognition only, awarded server-side on review publish) + a real
+  self-profile (level, points, badges, contributions, followers). *Prior:* the
+  profile was hardcoded mock; contribution had no status/recognition payoff.
+  *Status:* Adopted.
+
 ## Escalation items (need founder / external decision)
 - Paid **search/Places vendor** for nationwide channel discovery at scale.
 - Social-platform **OAuth app approvals** (Meta/TikTok/YouTube) for real auto-sync.
