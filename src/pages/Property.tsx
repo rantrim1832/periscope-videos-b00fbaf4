@@ -20,6 +20,7 @@ import { StoryCompleteness } from '@/components/property/StoryCompleteness';
 import { ContentSuggestions } from '@/components/property/ContentSuggestions';
 import { NearbyProperties } from '@/components/property/NearbyProperties';
 import { OfficialContent } from '@/components/property/OfficialContent';
+import { PropertyQA } from '@/components/property/PropertyQA';
 import type { TimelineEvent } from '@/domain/property';
 
 const Timeline = ({ events }: { events: TimelineEvent[] }) => {
@@ -129,6 +130,8 @@ const Property = () => {
       <LocationSection property={property} />
 
       <Timeline events={property.timeline} />
+
+      <PropertyQA propertyId={property.id} />
 
       <NearbyProperties property={property} />
 
