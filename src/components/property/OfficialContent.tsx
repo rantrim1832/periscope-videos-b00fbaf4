@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Globe, Instagram, Facebook, Youtube, Box, Images, ShieldCheck, Building2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import type { PropertyView, OfficialChannel, ChannelKind } from '@/domain/property';
 
 const ICON: Record<ChannelKind, typeof Globe> = {
@@ -39,7 +40,7 @@ export const OfficialContent = ({ property }: { property: PropertyView }) => {
       {channels.length === 0 ? (
         <Card className="p-6 bg-muted/30 border-dashed flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <p className="text-muted-foreground">No official content yet.</p>
-          <Button variant="outline">Own this property? Claim it to add official content</Button>
+          <Button variant="outline" asChild><Link to={`/claim/${property.id}`}>Own this property? Claim it to add official content</Link></Button>
         </Card>
       ) : (
         <div className="space-y-4">
@@ -71,7 +72,7 @@ export const OfficialContent = ({ property }: { property: PropertyView }) => {
           {!verified && (
             <p className="text-xs text-muted-foreground">
               Linked/embedded from public sources with attribution — we don’t re-host. Are you the operator?{' '}
-              <span className="underline cursor-pointer">Claim this property</span> to verify and manage it.
+              <Link to={`/claim/${property.id}`} className="underline">Claim this property</Link> to verify and manage it.
             </p>
           )}
         </div>

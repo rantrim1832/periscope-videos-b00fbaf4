@@ -6,6 +6,8 @@ import { ShieldCheck, Video, Play } from 'lucide-react';
 import type { PropertyView, ReviewView, LifeStage } from '@/domain/property';
 import { LIFE_STAGE_LABELS } from '@/domain/property';
 import type { ResidentTrustTier } from '@/domain/types';
+import { ReviewResponses } from './ReviewResponses';
+import { useIsManager } from '@/hooks/useIsManager';
 
 const TRUST_BADGE: Record<ResidentTrustTier, { label: string; variant: 'success' | 'secondary' | 'outline' }> = {
   verified_resident: { label: 'Verified resident', variant: 'success' },
@@ -15,7 +17,7 @@ const TRUST_BADGE: Record<ResidentTrustTier, { label: string; variant: 'success'
 
 const STAGES: (LifeStage | 'all')[] = ['all', 'moveIn', 'living', 'maintenance', 'moveOut', 'deposit'];
 
-const ReviewRow = ({ review }: { review: ReviewView }) => {
+const ReviewRow = ({ review, canRespond }: { review: ReviewView; canRespond: boolean }) => {
   const trust = TRUST_BADGE[review.trustTier];
   return (
     <Card className="border-border/50">
@@ -32,6 +34,7 @@ const ReviewRow = ({ review }: { review: ReviewView }) => {
           {review.tenureLabel && <span className="text-muted-foreground">{review.tenureLabel}</span>}
           <Badge variant="muted">{LIFE_STAGE_LABELS[review.lifeStage]}</Badge>
         </div>
+        <ReviewResponses reviewId={review.id} canRespond={canRespond} />
       </CardContent>
     </Card>
   );
@@ -39,6 +42,7 @@ const ReviewRow = ({ review }: { review: ReviewView }) => {
 
 export const ReviewsByLifeStage = ({ property, onContribute }: { property: PropertyView; onContribute?: () => void }) => {
   const [stage, setStage] = useState<LifeStage | 'all'>('all');
+  const isManager = useIsManager(property.id);
   const reviews = stage === 'all' ? property.reviews : property.reviews.filter((r) => r.lifeStage === stage);
 
   return (
@@ -75,7 +79,7 @@ export const ReviewsByLifeStage = ({ property, onContribute }: { property: Prope
         <p className="text-sm text-muted-foreground py-6">No reviews for this stage yet.</p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-          {reviews.map((r) => <ReviewRow key={r.id} review={r} />)}
+          {reviews.map((r) => <ReviewRow key={r.id} review={r} canRespond={isManager} />)}
         </div>
       )}
     </section>

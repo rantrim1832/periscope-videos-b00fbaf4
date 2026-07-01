@@ -25,6 +25,8 @@ import Compare from "./pages/Compare";
 import Contribute from "./pages/Contribute";
 import Search from "./pages/Search";
 import Feed from "./pages/Feed";
+import ClaimProperty from "./pages/ClaimProperty";
+import AdminClaims from "./pages/AdminClaims";
 import { CompareProvider } from "./context/CompareContext";
 import { CompareBar } from "./components/property/CompareBar";
 
@@ -46,6 +48,8 @@ const App = () => (
           <Route path="/contribute/:propertyId" element={<Contribute />} />
           <Route path="/search" element={<Search />} />
           <Route path="/feed" element={<Feed />} />
+          <Route path="/claim/:propertyId" element={<ClaimProperty />} />
+          <Route path="/admin/claims" element={<AdminClaims />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/reviews" element={<Reviews />} />
           <Route path="/shorts" element={<Shorts />} />
