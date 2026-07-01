@@ -28,8 +28,9 @@ const Index = () => {
     if (q.trim()) navigate(`/search?q=${encodeURIComponent(q.trim())}`);
   };
 
-  const { data: feed = [] } = useQuery({ queryKey: ["home-feed"], queryFn: () => getPropertyProvider().feed() });
-  const { data: properties = [] } = useQuery({ queryKey: ["home-props"], queryFn: () => getPropertyProvider().listSummaries() });
+  const { data: feed = [], isLoading: feedLoading } = useQuery({ queryKey: ["home-feed"], queryFn: () => getPropertyProvider().feed() });
+  const { data: properties = [], isLoading: propsLoading } = useQuery({ queryKey: ["home-props"], queryFn: () => getPropertyProvider().listSummaries() });
+  const loading = feedLoading || propsLoading;
 
   const hooks = useMemo<Hook[]>(() => {
     const scoreHooks: Hook[] = properties
@@ -86,10 +87,12 @@ const Index = () => {
 
       {/* The wall — content is the hero */}
       <main className="container mx-auto px-4 py-6">
-        {hooks.length === 0 ? (
-          <div className="text-center py-20 text-muted-foreground">
-            <p className="mb-4">Loading what's happening…</p>
+        {loading ? (
+          <div className="flex justify-center py-20">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent" />
           </div>
+        ) : hooks.length === 0 ? (
+          <ColdStart />
         ) : (
           <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 [column-fill:_balance]">
             {hooks.map((h) => (
@@ -110,6 +113,33 @@ const Index = () => {
     </div>
   );
 };
+
+const POPULAR_CITIES = [
+  'Los Angeles', 'Austin', 'Chicago', 'Phoenix', 'Atlanta', 'Denver', 'Seattle', 'Miami',
+];
+
+// Shown when there's no content yet (nationwide launch reality). Curiosity- and
+// action-forward — never a blank page.
+const ColdStart = () => (
+  <div className="text-center py-12 max-w-2xl mx-auto">
+    <h2 className="text-3xl font-bold mb-3">Be the first to expose or defend your building</h2>
+    <p className="text-muted-foreground mb-8">
+      Pariscope is brand new in your area. Look up where you live, drop a 15-second video or a quick review,
+      and start the truth for the next renter.
+    </p>
+    <div className="flex flex-wrap justify-center gap-2 mb-8">
+      {POPULAR_CITIES.map((c) => (
+        <Button key={c} variant="outline" size="sm" asChild>
+          <Link to={`/search?q=${encodeURIComponent(c)}`}>{c}</Link>
+        </Button>
+      ))}
+    </div>
+    <div className="flex flex-col sm:flex-row gap-3 justify-center">
+      <Button variant="hero" size="lg" asChild><Link to="/contribute"><PenLine className="w-5 h-5 mr-2" /> Add the first truth</Link></Button>
+      <Button variant="outline" size="lg" asChild><Link to="/welcome">How it works</Link></Button>
+    </div>
+  </div>
+);
 
 const HookCard = ({ hook }: { hook: Hook }) => {
   if (hook.kind === "clip") {
