@@ -102,6 +102,11 @@ const FeedCard = ({ item }: { item: FeedItem }) => {
           <Link to={`/property/${item.propertyId}`} className="flex items-center gap-1 text-white/80 text-sm hover:text-white">
             <MapPin className="w-4 h-4" /> {item.propertyName} · {item.location}
           </Link>
+          {item.creatorId && item.creatorName && (
+            <Link to={`/creator/${item.creatorId}`} className="text-white/70 text-xs hover:text-white">
+              by {item.creatorName}
+            </Link>
+          )}
           <div className="flex gap-2 pt-1">
             <Button size="sm" variant="secondary" onClick={share}><Share2 className="w-4 h-4 mr-1" /> Share</Button>
             <Button size="sm" variant="hero" asChild><Link to={`/contribute/${item.propertyId}`}><PenLine className="w-4 h-4 mr-1" /> Add your truth</Link></Button>

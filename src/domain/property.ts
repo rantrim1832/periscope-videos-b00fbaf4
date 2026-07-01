@@ -35,6 +35,8 @@ export interface FeedItem extends MediaItem {
   propertyId: string;
   propertyName: string;
   location: string;
+  creatorId?: string;
+  creatorName?: string;
 }
 
 export const FEED_CATEGORIES = [

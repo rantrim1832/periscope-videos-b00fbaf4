@@ -232,7 +232,7 @@ export class CanonicalPropertyProvider implements PropertyDataProvider {
     // Approved reviews that carry playable media, newest first, with property context.
     const { data } = await this.db
       .from('canonical_review')
-      .select('id, title, life_stage, has_video, media_asset_id, embed_url, embed_platform, trust_tier, source, created_at, canonical_property:canonical_property_id(id, name, city, state)')
+      .select('id, title, life_stage, has_video, media_asset_id, embed_url, embed_platform, trust_tier, source, created_at, resident_id, author_pseudonym, canonical_property:canonical_property_id(id, name, city, state), resident:resident_id(display_name, pseudonym)')
       .eq('moderation_status', 'approved')
       .or('media_asset_id.not.is.null,embed_url.not.is.null')
       .order('created_at', { ascending: false })
@@ -248,6 +248,8 @@ export class CanonicalPropertyProvider implements PropertyDataProvider {
       propertyId: r.canonical_property?.id ?? '',
       propertyName: r.canonical_property?.name ?? 'Property',
       location: [r.canonical_property?.city, r.canonical_property?.state].filter(Boolean).join(', '),
+      creatorId: r.resident_id ?? undefined,
+      creatorName: r.resident?.display_name ?? r.resident?.pseudonym ?? r.author_pseudonym ?? undefined,
     }));
   }
 }
