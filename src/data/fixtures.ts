@@ -2,7 +2,7 @@
 // Used by the mock provider so the UI is fully functional before the canonical
 // graph is live. Realistic but clearly illustrative.
 
-import type { PropertyView, ReviewView, MediaItem, TimelineEvent } from '@/domain/property';
+import type { PropertyView, ReviewView, MediaItem, TimelineEvent, FeedItem } from '@/domain/property';
 
 const daysAgo = (n: number) => new Date(Date.now() - n * 86_400_000).toISOString();
 
@@ -44,14 +44,14 @@ const richReviews: ReviewView[] = [
 ];
 
 const richMedia: MediaItem[] = [
-  { id: 'm1', source: 'resident', title: 'Move-out deposit dispute walkthrough', city: 'Los Angeles, CA', verified: true, isPositive: false },
-  { id: 'm2', source: 'resident', title: 'Ceiling leak — 2 weeks unfixed', city: 'Los Angeles, CA', verified: true, isPositive: false },
-  { id: 'm3', source: 'resident', title: 'The pool & gym are unreal', city: 'Los Angeles, CA', isPositive: true },
-  { id: 'm4', source: 'official', title: 'Official amenity tour', city: 'Los Angeles, CA' },
-  { id: 'm5', source: 'official', title: 'Renovated 2BR walkthrough', city: 'Los Angeles, CA' },
+  { id: 'm1', source: 'resident', title: 'Move-out deposit dispute walkthrough', city: 'Los Angeles, CA', verified: true, isPositive: false, category: 'Deposit nightmares' },
+  { id: 'm2', source: 'resident', title: 'Ceiling leak — 2 weeks unfixed', city: 'Los Angeles, CA', verified: true, isPositive: false, category: 'Maintenance disasters' },
+  { id: 'm3', source: 'resident', title: 'The pool & gym are unreal', city: 'Los Angeles, CA', isPositive: true, category: 'Luxury tours' },
+  { id: 'm4', source: 'official', title: 'Official amenity tour', city: 'Los Angeles, CA', category: 'Luxury tours' },
+  { id: 'm5', source: 'official', title: 'Renovated 2BR walkthrough', city: 'Los Angeles, CA', category: 'Luxury tours' },
   {
     id: 'm6', source: 'imported', title: 'Imported: resident apartment tour (YouTube)',
-    city: 'Los Angeles, CA', platform: 'youtube',
+    city: 'Los Angeles, CA', platform: 'youtube', category: 'Would you live here?',
     embedUrl: 'https://www.youtube.com/embed/aqz-KE-bpKQ',
   },
 ];
@@ -119,4 +119,15 @@ export const FIXTURE_PROPERTIES: PropertyView[] = [
 
 export function findFixture(id: string): PropertyView | null {
   return FIXTURE_PROPERTIES.find((p) => p.id === id) ?? FIXTURE_PROPERTIES[0] ?? null;
+}
+
+export function fixtureFeed(): FeedItem[] {
+  return FIXTURE_PROPERTIES.flatMap((p) =>
+    p.media.map((m) => ({
+      ...m,
+      propertyId: p.id,
+      propertyName: p.name,
+      location: [p.city, p.state].filter(Boolean).join(', '),
+    })),
+  );
 }

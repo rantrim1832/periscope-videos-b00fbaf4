@@ -2,10 +2,10 @@
 // mock data now, and switches to the canonical Supabase graph (set
 // VITE_USE_CANONICAL=true) with no component changes once migrations are live.
 
-import type { PropertyView, ReviewView, MediaItem, LifeStage, TimelineEvent } from '@/domain/property';
+import type { PropertyView, ReviewView, MediaItem, LifeStage, TimelineEvent, FeedItem } from '@/domain/property';
 import type { CategoryKey } from '@/domain/truthScore';
 import type { PropertyClass } from '@/domain/types';
-import { FIXTURE_PROPERTIES, findFixture } from './fixtures';
+import { FIXTURE_PROPERTIES, findFixture, fixtureFeed } from './fixtures';
 import { getEnv } from '@/services/env';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -23,6 +23,16 @@ export interface PropertyDataProvider {
   listStates(): Promise<LocationCount[]>;
   listCities(state: string): Promise<LocationCount[]>;
   listByLocation(state: string, city: string): Promise<PropertyView[]>;
+  feed(): Promise<FeedItem[]>;
+}
+
+// Derive an entertainment-feed category from review signals.
+export function deriveCategory(lifeStage: string | null, isPositive: boolean | null, hasEmbed: boolean): string {
+  if (lifeStage === 'deposit') return 'Deposit nightmares';
+  if (lifeStage === 'maintenance') return 'Maintenance disasters';
+  if (isPositive) return 'Luxury tours';
+  if (hasEmbed) return 'Would you live here?';
+  return 'Horror stories';
 }
 
 function tally<T>(rows: T[], key: (r: T) => string | null | undefined): { value: string; count: number }[] {
@@ -61,6 +71,9 @@ export class MockPropertyProvider implements PropertyDataProvider {
   }
   async listByLocation(state: string, city: string): Promise<PropertyView[]> {
     return FIXTURE_PROPERTIES.filter((p) => p.state === state && p.city === city);
+  }
+  async feed(): Promise<FeedItem[]> {
+    return fixtureFeed();
   }
 }
 
@@ -201,6 +214,29 @@ export class CanonicalPropertyProvider implements PropertyDataProvider {
     const { data } = await this.db
       .from('canonical_property').select('*').eq('status', 'active').eq('state', state).eq('city', city).limit(60);
     return (data ?? []).map((p: any) => this.mapSummary(p));
+  }
+
+  async feed(): Promise<FeedItem[]> {
+    // Approved reviews that carry playable media, newest first, with property context.
+    const { data } = await this.db
+      .from('canonical_review')
+      .select('id, title, life_stage, has_video, media_asset_id, embed_url, embed_platform, trust_tier, source, created_at, canonical_property:canonical_property_id(id, name, city, state)')
+      .eq('moderation_status', 'approved')
+      .or('media_asset_id.not.is.null,embed_url.not.is.null')
+      .order('created_at', { ascending: false })
+      .limit(60);
+    return (data ?? []).map((r: any) => ({
+      id: r.id,
+      source: r.embed_url ? 'imported' : (r.source === 'official' ? 'official' : 'resident'),
+      title: r.title,
+      embedUrl: r.embed_url ?? undefined,
+      platform: r.embed_platform ?? undefined,
+      category: deriveCategory(r.life_stage, null, !!r.embed_url),
+      verified: r.trust_tier === 'verified_resident',
+      propertyId: r.canonical_property?.id ?? '',
+      propertyName: r.canonical_property?.name ?? 'Property',
+      location: [r.canonical_property?.city, r.canonical_property?.state].filter(Boolean).join(', '),
+    }));
   }
 }
 

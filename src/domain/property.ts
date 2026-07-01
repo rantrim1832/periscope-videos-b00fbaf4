@@ -25,9 +25,29 @@ export interface MediaItem {
   embedUrl?: string;      // iframe src for embedded social video (no re-host)
   platform?: string;      // 'youtube' | 'tiktok' | 'instagram'
   city?: string;
+  category?: string;      // entertainment feed category
   isPositive?: boolean;
   verified?: boolean;
 }
+
+// A media item with its property context, for the entertainment feed.
+export interface FeedItem extends MediaItem {
+  propertyId: string;
+  propertyName: string;
+  location: string;
+}
+
+export const FEED_CATEGORIES = [
+  'All',
+  'Horror stories',
+  'Deposit nightmares',
+  'Maintenance disasters',
+  'Luxury tours',
+  'Investigations',
+  'Apartment hacks',
+  'Would you live here?',
+] as const;
+export type FeedCategory = (typeof FEED_CATEGORIES)[number];
 
 export interface ReviewView extends ReviewSignal {
   id: string;

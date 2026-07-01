@@ -61,6 +61,9 @@ export const Header = () => {
         </Link>
 
         <nav className="hidden md:flex items-center gap-6">
+          <Link to="/feed" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
+            Feed
+          </Link>
           <Link to="/browse" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
             Browse Properties
           </Link>
@@ -137,6 +140,13 @@ export const Header = () => {
                 <SheetTitle>Menu</SheetTitle>
               </SheetHeader>
               <nav className="flex flex-col gap-4 mt-8">
+                <Link 
+                  to="/feed" 
+                  className="text-lg font-medium hover:text-primary transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Feed
+                </Link>
                 <Link 
                   to="/browse" 
                   className="text-lg font-medium hover:text-primary transition-colors"
