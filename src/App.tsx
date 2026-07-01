@@ -46,6 +46,7 @@ const ManageProperty = lazy(() => import("./pages/ManageProperty"));
 const Welcome = lazy(() => import("./pages/Welcome"));
 const Verify = lazy(() => import("./pages/Verify"));
 const Saved = lazy(() => import("./pages/Saved"));
+const Following = lazy(() => import("./pages/Following"));
 
 const queryClient = new QueryClient();
 
@@ -78,6 +79,7 @@ const App = () => (
                 <Route path="/feed" element={<Feed />} />
                 <Route path="/discover" element={<Discover />} />
                 <Route path="/saved" element={<Saved />} />
+                <Route path="/following" element={<ProtectedRoute><Following /></ProtectedRoute>} />
                 <Route path="/city/:state/:city" element={<City />} />
                 <Route path="/claim/:propertyId" element={<ClaimProperty />} />
                 <Route path="/creator/:id" element={<Creator />} />

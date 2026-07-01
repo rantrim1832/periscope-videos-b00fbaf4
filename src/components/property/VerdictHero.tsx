@@ -6,6 +6,7 @@ import type { TruthScoreResult } from '@/domain/truthScore';
 import { TruthScoreGauge } from './TruthScoreGauge';
 import { AddToCompareButton } from './AddToCompareButton';
 import { SaveButton } from './SaveButton';
+import { WatchButton } from './WatchButton';
 import { isDemoMode } from '@/lib/demo';
 import { computeStory } from '@/domain/story';
 
@@ -84,6 +85,7 @@ export const VerdictHero = ({ property, result, onWatch, onContribute }: Props) 
               </Button>
               <AddToCompareButton property={property} score={result.score} />
               <SaveButton property={property} />
+              <WatchButton type="property" id={property.id} label={property.name} />
             </div>
           </div>
 

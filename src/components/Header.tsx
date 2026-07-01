@@ -69,6 +69,11 @@ export const Header = () => {
           <Link to="/discover" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
             Discover
           </Link>
+          {user && (
+            <Link to="/following" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
+              Following
+            </Link>
+          )}
           <Link to="/browse" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
             Browse Properties
           </Link>
@@ -247,6 +252,13 @@ export const Header = () => {
                 )}
                 {user && (
                   <>
+                    <Link 
+                      to="/following" 
+                      className="text-lg font-medium hover:text-primary transition-colors"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Following
+                    </Link>
                     <Link 
                       to="/saved" 
                       className="text-lg font-medium hover:text-primary transition-colors"
