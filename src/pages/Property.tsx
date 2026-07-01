@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react';
+import { useMemo, useRef, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Header } from '@/components/Header';
@@ -9,6 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { GitCompareArrows, TrendingDown, TrendingUp, History } from 'lucide-react';
 import { getPropertyProvider } from '@/data/propertyProvider';
 import { computeTruthScore } from '@/domain/truthScore';
+import { setPropertyMeta } from '@/lib/meta';
 import { VerdictHero } from '@/components/property/VerdictHero';
 import { ReportCard } from '@/components/property/ReportCard';
 import { EvidenceFeed } from '@/components/property/EvidenceFeed';
@@ -57,6 +58,17 @@ const Property = () => {
     () => computeTruthScore(property?.reviews ?? []),
     [property],
   );
+
+  useEffect(() => {
+    if (property) {
+      setPropertyMeta({
+        propertyId: property.id,
+        name: property.name,
+        location: [property.city, property.state].filter(Boolean).join(', '),
+        score: result.score,
+      });
+    }
+  }, [property, result.score]);
 
   const contribute = () => navigate(`/contribute/${id}`);
   const watch = () => evidenceRef.current?.scrollIntoView({ behavior: 'smooth' });

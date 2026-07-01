@@ -14,3 +14,7 @@ verify_jwt = false
 
 [functions.scrape-properties]
 verify_jwt = false
+
+# Public OG image for link-unfurl previews.
+[functions.og-image]
+verify_jwt = false
