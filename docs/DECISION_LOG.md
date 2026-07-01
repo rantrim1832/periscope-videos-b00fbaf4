@@ -83,6 +83,17 @@ Format: `[YYYY-MM-DD] TITLE — Decision · Why prior was weaker · Tradeoffs ·
 - **[2026-07-01] PROPOSED: Adaptive property hero (story-first when confidence-
   gated).** See PRODUCT_SPEC. *Status:* Adopted under delegated authority (this PR).
 
+- **[2026-07-01] Homepage is the product, not a brochure.** The landing now leads
+  with real search, a live feed preview, and real Truth Scores (worst-first — the
+  "gap" hook), plus an action triad. *Prior:* a static marketing page hid the best
+  features behind nav; a user wouldn't discover the magic in 60s. *Tradeoff:*
+  less classic-marketing framing. *Status:* Adopted.
+
+- **[2026-07-01] Onboarding identity selection (/welcome).** New users choose
+  renter/resident/manager/creator and are routed to the right first experience
+  (intent stored on resident_profile). *Prior:* bare signup dumped everyone on the
+  homepage with no path to value. *Status:* Adopted.
+
 ## Escalation items (need founder / external decision)
 - Paid **search/Places vendor** for nationwide channel discovery at scale.
 - Social-platform **OAuth app approvals** (Meta/TikTok/YouTube) for real auto-sync.

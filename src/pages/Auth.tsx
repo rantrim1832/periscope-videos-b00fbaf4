@@ -35,9 +35,19 @@ const Auth = () => {
   }, []);
 
   useEffect(() => {
-    if (user) {
-      navigate('/');
-    }
+    if (!user) return;
+    // Route new users (no chosen intent) into onboarding; returning users home.
+    // Falls back to home in demo mode / if the profile table isn't reachable.
+    (async () => {
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data, error } = await (supabase as any)
+          .from('resident_profile').select('intent').eq('id', user.id).maybeSingle();
+        navigate(!error && data && !data.intent ? '/welcome' : '/');
+      } catch {
+        navigate('/');
+      }
+    })();
   }, [user, navigate]);
 
   const handleAuth = async (e: React.FormEvent) => {
@@ -75,10 +85,10 @@ const Auth = () => {
           description: "Signed in successfully",
         });
       }
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: "Error",
-        description: error.message,
+        description: error instanceof Error ? error.message : "Something went wrong",
         variant: "destructive",
       });
     } finally {
