@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 const CREATOR_TYPE_LABEL: Record<string, string> = {
   tour: 'Tour Creator', investigator: 'Apartment Investigator',
   neighborhood: 'Neighborhood Creator', reviewer: 'Review Creator',
+  management: 'Verified Management',
 };
 
 const Creator = () => {

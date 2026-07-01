@@ -16,7 +16,8 @@ import { EvidenceFeed } from '@/components/property/EvidenceFeed';
 import { ReviewsByLifeStage } from '@/components/property/ReviewsByLifeStage';
 import { StickyContribute } from '@/components/property/StickyContribute';
 import { LocationSection } from '@/components/property/LocationSection';
-import { CompletenessPanel } from '@/components/property/CompletenessPanel';
+import { StoryCompleteness } from '@/components/property/StoryCompleteness';
+import { ContentSuggestions } from '@/components/property/ContentSuggestions';
 import { NearbyProperties } from '@/components/property/NearbyProperties';
 import { OfficialContent } from '@/components/property/OfficialContent';
 import type { TimelineEvent } from '@/domain/property';
@@ -112,7 +113,7 @@ const Property = () => {
 
       <div className="container mx-auto px-4 py-10 max-w-3xl grid gap-6 md:grid-cols-2">
         <ReportCard propertyName={property.name} location={location} result={result} />
-        <CompletenessPanel property={property} />
+        <StoryCompleteness property={property} />
       </div>
 
       <div ref={evidenceRef}>
@@ -120,6 +121,8 @@ const Property = () => {
       </div>
 
       <OfficialContent property={property} />
+
+      <ContentSuggestions property={property} />
 
       <ReviewsByLifeStage property={property} onContribute={contribute} />
 
