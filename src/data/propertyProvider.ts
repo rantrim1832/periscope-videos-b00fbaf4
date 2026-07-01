@@ -2,7 +2,7 @@
 // mock data now, and switches to the canonical Supabase graph (set
 // VITE_USE_CANONICAL=true) with no component changes once migrations are live.
 
-import type { PropertyView, ReviewView, MediaItem, LifeStage, TimelineEvent, FeedItem } from '@/domain/property';
+import type { PropertyView, ReviewView, MediaItem, LifeStage, TimelineEvent, FeedItem, OfficialChannel, ChannelKind } from '@/domain/property';
 import type { CategoryKey } from '@/domain/truthScore';
 import type { PropertyClass } from '@/domain/types';
 import { FIXTURE_PROPERTIES, findFixture, fixtureFeed } from './fixtures';
@@ -123,6 +123,17 @@ export class CanonicalPropertyProvider implements PropertyDataProvider {
         verified: r.trust_tier === 'verified_resident',
       }));
 
+    const { data: channelRows } = await this.db
+      .from('property_channel').select('*').eq('canonical_property_id', id);
+    const officialChannels: OfficialChannel[] = (channelRows ?? []).map((c: any) => ({
+      id: c.id,
+      kind: c.kind as ChannelKind,
+      url: c.url,
+      embedUrl: c.embed_url ?? undefined,
+      label: c.label ?? undefined,
+      verified: !!c.is_verified,
+    }));
+
     const { data: eventRows } = await this.db
       .from('property_event').select('*')
       .eq('canonical_property_id', id)
@@ -145,10 +156,11 @@ export class CanonicalPropertyProvider implements PropertyDataProvider {
       longitude: prop.longitude ?? null,
       propertyClass: (prop.property_class ?? 'unknown') as PropertyClass,
       unitsCount: prop.units_count ?? null,
-      claimedByManager: false,
+      claimedByManager: officialChannels.some((c) => c.verified),
       reviews,
       media,
       timeline,
+      officialChannels,
     };
   }
 

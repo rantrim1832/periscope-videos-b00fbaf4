@@ -18,6 +18,7 @@ import { StickyContribute } from '@/components/property/StickyContribute';
 import { LocationSection } from '@/components/property/LocationSection';
 import { CompletenessPanel } from '@/components/property/CompletenessPanel';
 import { NearbyProperties } from '@/components/property/NearbyProperties';
+import { OfficialContent } from '@/components/property/OfficialContent';
 import type { TimelineEvent } from '@/domain/property';
 
 const Timeline = ({ events }: { events: TimelineEvent[] }) => {
@@ -117,6 +118,8 @@ const Property = () => {
       <div ref={evidenceRef}>
         <EvidenceFeed property={property} />
       </div>
+
+      <OfficialContent property={property} />
 
       <ReviewsByLifeStage property={property} onContribute={contribute} />
 

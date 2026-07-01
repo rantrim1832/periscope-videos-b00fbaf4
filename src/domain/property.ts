@@ -68,6 +68,18 @@ export interface TimelineEvent {
   delta?: number; // score delta if applicable
 }
 
+export type ChannelKind =
+  | 'website' | 'instagram' | 'facebook' | 'tiktok' | 'youtube' | 'matterport' | 'gallery';
+
+export interface OfficialChannel {
+  id: string;
+  kind: ChannelKind;
+  url: string;
+  embedUrl?: string;
+  label?: string;
+  verified: boolean; // true once the property is claimed & verified
+}
+
 export interface PropertyView {
   id: string;
   name: string;
@@ -83,4 +95,5 @@ export interface PropertyView {
   reviews: ReviewView[];
   media: MediaItem[];
   timeline: TimelineEvent[];
+  officialChannels?: OfficialChannel[];
 }

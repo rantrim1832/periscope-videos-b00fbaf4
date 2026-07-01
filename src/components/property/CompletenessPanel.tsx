@@ -10,7 +10,7 @@ import type { PropertyView } from '@/domain/property';
 export const CompletenessPanel = ({ property }: { property: PropertyView }) => {
   const navigate = useNavigate();
   const hasImported = property.media.some((m) => m.source === 'imported' || m.embedUrl);
-  const hasOfficial = property.media.some((m) => m.source === 'official');
+  const hasOfficial = property.media.some((m) => m.source === 'official') || (property.officialChannels?.length ?? 0) > 0;
   const hasResident = property.reviews.length > 0 || property.media.some((m) => m.source === 'resident');
   const hasCreator = property.media.some((m) => m.platform && m.source === 'imported'); // creator-attributed embeds
 

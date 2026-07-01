@@ -77,6 +77,12 @@ export const FIXTURE_PROPERTIES: PropertyView[] = [
     reviews: richReviews,
     media: richMedia,
     timeline: richTimeline,
+    officialChannels: [
+      { id: 'c1', kind: 'website', url: 'https://example.com/avalon-hollywood', verified: false },
+      { id: 'c2', kind: 'instagram', url: 'https://instagram.com/avalonhollywood', verified: false },
+      { id: 'c3', kind: 'youtube', url: 'https://youtube.com/@avalonhollywood', verified: false },
+      { id: 'c4', kind: 'matterport', url: 'https://my.matterport.com/show/?m=demo', embedUrl: 'https://my.matterport.com/show/?m=demo', verified: false, label: '3D virtual tour' },
+    ],
   },
   {
     id: 'the-quarry-sparse',
@@ -89,6 +95,10 @@ export const FIXTURE_PROPERTIES: PropertyView[] = [
     propertyClass: 'midsize',
     unitsCount: 140,
     claimedByManager: true,
+    officialChannels: [
+      { id: 'q1', kind: 'website', url: 'https://example.com/the-quarry', verified: true },
+      { id: 'q2', kind: 'instagram', url: 'https://instagram.com/thequarryatx', verified: true },
+    ],
     reviews: [
       {
         id: 's1', authorPseudonym: 'first_voice', trustTier: 'likely_resident',
