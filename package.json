@@ -10,7 +10,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "seed:channels": "tsx scripts/seed-channels.ts",
-    "ingest": "tsx scripts/ingest.ts"
+    "ingest": "tsx scripts/ingest.ts",
+    "setup:check": "tsx scripts/setup-check.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
