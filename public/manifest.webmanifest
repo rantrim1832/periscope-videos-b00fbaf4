@@ -1,0 +1,18 @@
+{
+  "name": "Pariscope — the trust layer for renting",
+  "short_name": "Pariscope",
+  "description": "The truth about any apartment, with video proof. Look it up before you sign.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0b0f17",
+  "theme_color": "#7c3aed",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Feed", "url": "/feed" },
+    { "name": "Search", "url": "/search" },
+    { "name": "Add your truth", "url": "/contribute" }
+  ]
+}
