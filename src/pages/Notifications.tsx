@@ -3,12 +3,13 @@ import { Link } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Bell, MessageSquare, UserPlus, CheckCircle } from 'lucide-react';
+import { Bell, MessageSquare, UserPlus, CheckCircle, Flame } from 'lucide-react';
 import { useNotifications } from '@/hooks/useNotifications';
 import { formatDistanceToNow } from 'date-fns';
 
 const ICON: Record<string, typeof Bell> = {
   response: MessageSquare, follow: UserPlus, published: CheckCircle, moderation: Bell,
+  watch_activity: Bell, milestone: Flame,
 };
 
 const Notifications = () => {
@@ -41,7 +42,9 @@ const Notifications = () => {
                   </CardContent>
                 </Card>
               );
-              return n.review_id ? <Link key={n.id} to={`/property/`} className="block">{inner}</Link> : <div key={n.id}>{inner}</div>;
+              return n.property_id
+                ? <Link key={n.id} to={`/property/${n.property_id}`} className="block">{inner}</Link>
+                : <div key={n.id}>{inner}</div>;
             })}
           </div>
         )}
