@@ -2,7 +2,7 @@
 // mock data now, and switches to the canonical Supabase graph (set
 // VITE_USE_CANONICAL=true) with no component changes once migrations are live.
 
-import type { PropertyView, ReviewView, MediaItem, LifeStage } from '@/domain/property';
+import type { PropertyView, ReviewView, MediaItem, LifeStage, TimelineEvent } from '@/domain/property';
 import type { CategoryKey } from '@/domain/truthScore';
 import type { PropertyClass } from '@/domain/types';
 import { FIXTURE_PROPERTIES, findFixture } from './fixtures';
@@ -108,6 +108,18 @@ export class CanonicalPropertyProvider implements PropertyDataProvider {
         verified: r.trust_tier === 'verified_resident',
       }));
 
+    const { data: eventRows } = await this.db
+      .from('property_event').select('*')
+      .eq('canonical_property_id', id)
+      .order('event_date', { ascending: true });
+    const timeline: TimelineEvent[] = (eventRows ?? []).map((e: any) => ({
+      id: e.id,
+      date: e.event_date,
+      kind: e.kind,
+      label: e.label,
+      delta: e.delta ?? undefined,
+    }));
+
     return {
       id: prop.id,
       name: prop.name ?? 'Unnamed property',
@@ -119,7 +131,7 @@ export class CanonicalPropertyProvider implements PropertyDataProvider {
       claimedByManager: false,
       reviews,
       media,
-      timeline: [],
+      timeline,
     };
   }
 
