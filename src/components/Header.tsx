@@ -66,11 +66,11 @@ export const Header = () => {
           <Link to="/feed" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
             Feed
           </Link>
+          <Link to="/discover" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
+            Discover
+          </Link>
           <Link to="/browse" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
             Browse Properties
-          </Link>
-          <Link to="/reviews" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
-            Reviews
           </Link>
           <Link to="/shorts" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
             Shorts
@@ -158,6 +158,13 @@ export const Header = () => {
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Feed
+                </Link>
+                <Link 
+                  to="/discover" 
+                  className="text-lg font-medium hover:text-primary transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Discover
                 </Link>
                 <Link 
                   to="/browse" 

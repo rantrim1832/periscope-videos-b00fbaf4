@@ -31,6 +31,7 @@ import Notifications from "./pages/Notifications";
 import ManageProperty from "./pages/ManageProperty";
 import Welcome from "./pages/Welcome";
 import Verify from "./pages/Verify";
+import Discover from "./pages/Discover";
 import AdminVerifications from "./pages/AdminVerifications";
 import { CompareProvider } from "./context/CompareContext";
 import { CompareBar } from "./components/property/CompareBar";
@@ -57,6 +58,7 @@ const App = () => (
             <Route path="/contribute/:propertyId" element={<Contribute />} />
             <Route path="/search" element={<Search />} />
             <Route path="/feed" element={<Feed />} />
+            <Route path="/discover" element={<Discover />} />
             <Route path="/claim/:propertyId" element={<ClaimProperty />} />
             <Route path="/creator/:id" element={<Creator />} />
             <Route path="/welcome" element={<Welcome />} />
