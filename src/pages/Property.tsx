@@ -58,7 +58,7 @@ const Property = () => {
     [property],
   );
 
-  const contribute = () => navigate('/post');
+  const contribute = () => navigate(`/contribute/${id}`);
   const watch = () => evidenceRef.current?.scrollIntoView({ behavior: 'smooth' });
 
   if (isLoading) {
