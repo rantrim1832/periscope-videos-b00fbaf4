@@ -6,6 +6,7 @@ import type { TruthScoreResult } from '@/domain/truthScore';
 import { TruthScoreGauge } from './TruthScoreGauge';
 import { AddToCompareButton } from './AddToCompareButton';
 import { isDemoMode } from '@/lib/demo';
+import { computeStory } from '@/domain/story';
 
 interface Props {
   property: PropertyView;
@@ -13,6 +14,31 @@ interface Props {
   onWatch?: () => void;
   onContribute?: () => void;
 }
+
+// Story-first indicator shown when the Truth Score is confidence-gated (the
+// nationwide-launch default). A giant empty score gauge under-delivers; showing
+// how complete the property's story is — and inviting help — feels intentional.
+const StoryProgress = ({ property }: { property: PropertyView }) => {
+  const story = computeStory(property);
+  const size = 176, stroke = 12;
+  const r = (size - stroke) / 2, c = 2 * Math.PI * r;
+  return (
+    <div className="flex flex-col items-center">
+      <div className="relative" style={{ width: size, height: size }}>
+        <svg width={size} height={size} className="-rotate-90">
+          <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="hsl(var(--muted))" strokeWidth={stroke} />
+          <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="hsl(var(--primary))" strokeWidth={stroke}
+            strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - story.pct / 100)} />
+        </svg>
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <span className="text-4xl font-bold text-primary tabular-nums">{story.pct}%</span>
+          <span className="text-[11px] text-muted-foreground tracking-wide">STORY COMPLETE</span>
+        </div>
+      </div>
+      <p className="mt-3 text-sm font-medium text-center max-w-[16rem]">Gathering resident data — the Truth Score appears as reviews arrive</p>
+    </div>
+  );
+};
 
 export const VerdictHero = ({ property, result, onWatch, onContribute }: Props) => {
   const location = [property.city, property.state].filter(Boolean).join(', ');
@@ -60,7 +86,7 @@ export const VerdictHero = ({ property, result, onWatch, onContribute }: Props) 
           </div>
 
           <div className="shrink-0 self-center">
-            <TruthScoreGauge result={result} />
+            {isEmpty ? <StoryProgress property={property} /> : <TruthScoreGauge result={result} />}
           </div>
         </div>
       </div>
