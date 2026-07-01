@@ -4,7 +4,8 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PropertyCard } from "@/components/PropertyCard";
-import { MapPin, ChevronRight, Search, Building2 } from "lucide-react";
+import { MapPin, ChevronRight, Search, Building2, ExternalLink } from "lucide-react";
+import { Link } from "react-router-dom";
 import { getPropertyProvider, type LocationCount } from "@/data/propertyProvider";
 import type { PropertyView } from "@/domain/property";
 
@@ -118,6 +119,15 @@ const Browse = () => {
             </div>
           )}
 
+          {view === "properties" && (
+            <div className="mb-4">
+              <Button variant="outline" size="sm" asChild>
+                <Link to={`/city/${encodeURIComponent(selectedState)}/${encodeURIComponent(selectedCity)}`}>
+                  <ExternalLink className="h-4 w-4 mr-2" /> Open {selectedCity} city page
+                </Link>
+              </Button>
+            </div>
+          )}
           {view === "properties" && (
             properties.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
