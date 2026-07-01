@@ -5,6 +5,7 @@ import type { PropertyView } from '@/domain/property';
 import type { TruthScoreResult } from '@/domain/truthScore';
 import { TruthScoreGauge } from './TruthScoreGauge';
 import { AddToCompareButton } from './AddToCompareButton';
+import { isDemoMode } from '@/lib/demo';
 
 interface Props {
   property: PropertyView;
@@ -23,6 +24,9 @@ export const VerdictHero = ({ property, result, onWatch, onContribute }: Props) 
         <div className="flex flex-col md:flex-row md:items-center gap-8 md:gap-12">
           <div className="flex-1 space-y-4">
             <div className="flex items-center gap-2 flex-wrap">
+              {isDemoMode() && (
+                <Badge variant="outline" className="border-amber-500/50 text-amber-600 dark:text-amber-400">Sample data</Badge>
+              )}
               {property.claimedByManager && (
                 <Badge variant="outline" className="gap-1"><ShieldCheck className="w-3 h-3" /> Manager responds</Badge>
               )}

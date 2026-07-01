@@ -37,6 +37,11 @@ Founder UX review and customer demonstration with production integrations mocked
 ## 5. Broken links hidden/disabled
 - `/properties` → `/browse`; `/post` → `/contribute`; Contact → mailto; Guidelines/Privacy/Terms → clearly-labeled "coming soon" (non-interactive).
 
+## 5b. Mock/demo data clearly labeled (honesty safeguard)
+- **Site-wide "Demo mode" banner** (dismissible) whenever running on mock providers: *"all scores, reviews, residents, and videos shown are illustrative sample data, not real content."*
+- **"Sample data"** badge on each property's verdict hero in demo mode.
+- No real reviews, residents, videos, claims, or scores are fabricated or presented as real — all illustrative content is labeled as such.
+
 ## 6. Incomplete features labeled
 - **Community** and **Profile** carry a "Preview" banner (illustrative, live data coming soon).
 - Official content labeled **Official · Public** vs **Official · Verified**.
@@ -49,6 +54,18 @@ Founder UX review and customer demonstration with production integrations mocked
 - **Contributor** → import or record; clear moderation outcomes + share.
 - **Property manager** → claim → (admin approve) → verified badge + respond (cannot delete reviews).
 - **Admin** → moderation + claim queues functional.
+
+## Embarrassment flags (things to know before showing anyone)
+Addressed in this build:
+- ✅ Fabricated metrics removed; all sample content now labeled "Demo mode / Sample data."
+- ✅ No `href="#"` dead links; `/properties` and `/post` redirected.
+- ✅ Community/Profile marked "Preview."
+
+Still true — disclose if asked (not blockers for a mock UX review):
+- ⚠️ **Security hardening (Phase 0) is on a separate branch (#1), not in this demo lineage.** Fine for a mocked demo (no real auth/admin abuse surface), but **must merge before any public/live launch** (self-admin escalation, RLS, edge-function authz, fail-closed moderation live).
+- ⚠️ **Legacy admin pages** (`/admin/scraper`, `/admin/settings`, `/admin/stats`, `/admin/properties`, `/admin/csv-upload`, `/admin/scrape-logs`) are from the original app and are **not route-guarded in this lineage** (the `AdminRoute` guard is in #1). Reachable by URL; not linked from the demo nav. Avoid demoing them, or merge #1.
+- ⚠️ **Legacy `Reviews` and `Shorts` pages** contain leftover sample content and are superseded by `/property` and `/feed`; consider removing from nav for a cleaner demo.
+- ⚠️ Contribution/claim **submission requires sign-in**; in pure-mock mode the write is in-memory (no persistence across reload).
 
 ## Known demo limitations (by design)
 - Live data requires migrations applied + `VITE_USE_CANONICAL=true` + Supabase creds; edge functions deployed; `WEBHOOK_SECRET` set.

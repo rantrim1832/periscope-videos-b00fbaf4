@@ -28,6 +28,7 @@ import ClaimProperty from "./pages/ClaimProperty";
 import AdminClaims from "./pages/AdminClaims";
 import { CompareProvider } from "./context/CompareContext";
 import { CompareBar } from "./components/property/CompareBar";
+import { DemoBanner } from "./components/DemoBanner";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +39,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <CompareProvider>
+          <DemoBanner />
           <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/browse" element={<Browse />} />
