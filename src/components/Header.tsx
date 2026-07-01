@@ -246,13 +246,36 @@ export const Header = () => {
                   </>
                 )}
                 {user && (
-                  <Link 
-                    to="/contribute" 
-                    className="text-lg font-medium hover:text-primary transition-colors"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Post Review
-                  </Link>
+                  <>
+                    <Link 
+                      to="/saved" 
+                      className="text-lg font-medium hover:text-primary transition-colors"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Saved
+                    </Link>
+                    <Link 
+                      to="/notifications" 
+                      className="text-lg font-medium hover:text-primary transition-colors"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Notifications{unread > 0 ? ` (${unread})` : ''}
+                    </Link>
+                    <Link 
+                      to="/profile" 
+                      className="text-lg font-medium hover:text-primary transition-colors"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Profile
+                    </Link>
+                    <Link 
+                      to="/contribute" 
+                      className="text-lg font-medium hover:text-primary transition-colors"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Post Review
+                    </Link>
+                  </>
                 )}
               </nav>
             </SheetContent>
