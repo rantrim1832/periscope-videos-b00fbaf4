@@ -60,6 +60,7 @@ export interface ReviewView extends ReviewSignal {
   body?: string;
   ratings: Partial<Record<CategoryKey, number>>;
   hasVideo?: boolean;
+  views?: number;
 }
 
 export interface TimelineEvent {

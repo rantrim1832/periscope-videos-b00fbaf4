@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { Video, Search, User, Menu, Shield, LogIn, LogOut, X } from "lucide-react";
+import { Video, Search, User, Menu, Shield, LogIn, LogOut, X, Bell } from "lucide-react";
+import { useNotifications } from "@/hooks/useNotifications";
 import { Link, useNavigate } from "react-router-dom";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAdmin } from "@/hooks/useAdmin";
@@ -17,6 +18,7 @@ import {
 
 export const Header = () => {
   const { isAdmin } = useAdmin();
+  const { unread } = useNotifications();
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { toast } = useToast();
@@ -109,6 +111,16 @@ export const Header = () => {
           </Button>
           {user ? (
             <>
+              <Button variant="ghost" size="icon" asChild className="relative">
+                <Link to="/notifications" aria-label="Notifications">
+                  <Bell className="h-5 w-5" />
+                  {unread > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 min-w-[1.1rem] h-[1.1rem] px-1 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center">
+                      {unread > 9 ? '9+' : unread}
+                    </span>
+                  )}
+                </Link>
+              </Button>
               <Button variant="ghost" size="icon" asChild>
                 <Link to="/profile">
                   <User className="h-5 w-5" />

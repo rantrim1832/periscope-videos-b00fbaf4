@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ShieldCheck, Video, Play } from 'lucide-react';
+import { ShieldCheck, Video, Play, Eye } from 'lucide-react';
 import type { PropertyView, ReviewView, LifeStage } from '@/domain/property';
 import { LIFE_STAGE_LABELS } from '@/domain/property';
 import type { ResidentTrustTier } from '@/domain/types';
@@ -33,6 +33,7 @@ const ReviewRow = ({ review, canRespond }: { review: ReviewView; canRespond: boo
           <Badge variant={trust.variant} className="gap-1"><ShieldCheck className="w-3 h-3" /> {trust.label}</Badge>
           {review.tenureLabel && <span className="text-muted-foreground">{review.tenureLabel}</span>}
           <Badge variant="muted">{LIFE_STAGE_LABELS[review.lifeStage]}</Badge>
+          {review.views ? <span className="flex items-center gap-1 text-muted-foreground"><Eye className="w-3 h-3" /> {review.views}</span> : null}
         </div>
         <ReviewResponses reviewId={review.id} canRespond={canRespond} />
       </CardContent>

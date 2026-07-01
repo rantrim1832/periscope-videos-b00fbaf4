@@ -96,6 +96,7 @@ export class CanonicalPropertyProvider implements PropertyDataProvider {
       body: r.body ?? undefined,
       ratings: (r.ratings ?? {}) as Partial<Record<CategoryKey, number>>,
       hasVideo: !!r.has_video,
+      views: r.views ?? 0,
     };
   }
 

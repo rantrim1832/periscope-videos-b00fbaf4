@@ -27,6 +27,7 @@ import Feed from "./pages/Feed";
 import ClaimProperty from "./pages/ClaimProperty";
 import AdminClaims from "./pages/AdminClaims";
 import Creator from "./pages/Creator";
+import Notifications from "./pages/Notifications";
 import { CompareProvider } from "./context/CompareContext";
 import { CompareBar } from "./components/property/CompareBar";
 import { DemoBanner } from "./components/DemoBanner";
@@ -53,6 +54,7 @@ const App = () => (
           <Route path="/claim/:propertyId" element={<ClaimProperty />} />
           <Route path="/admin/claims" element={<AdminClaims />} />
           <Route path="/creator/:id" element={<Creator />} />
+          <Route path="/notifications" element={<Notifications />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/reviews" element={<Reviews />} />
           <Route path="/shorts" element={<Shorts />} />
