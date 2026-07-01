@@ -230,12 +230,17 @@ export const ContributeFlow = ({ propertyId, propertyName }: { propertyId: strin
               <span className="text-sm">Post anonymously (your identity stays hidden)</span>
             </label>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <span className="text-sm text-muted-foreground">You'll appear as:</span>
               <Badge variant={draft.trustTier === 'verified_resident' ? 'success' : draft.trustTier === 'likely_resident' ? 'secondary' : 'outline'}>
                 {draft.trustTier === 'unverified' ? 'Unverified' : draft.trustTier === 'likely_resident' ? 'Likely resident' : 'Verified resident'}
               </Badge>
             </div>
+            {draft.trustTier !== 'unverified' && (
+              <Button variant="outline" size="sm" onClick={() => navigate(`/verify/${propertyId}`)}>
+                <ShieldCheck className="w-4 h-4 mr-2" /> Verify residency now (GPS or document)
+              </Button>
+            )}
 
             <div className="flex justify-between pt-2">
               <Button variant="outline" onClick={() => setStep(2)}>Back</Button>

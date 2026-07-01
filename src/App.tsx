@@ -30,6 +30,8 @@ import Creator from "./pages/Creator";
 import Notifications from "./pages/Notifications";
 import ManageProperty from "./pages/ManageProperty";
 import Welcome from "./pages/Welcome";
+import Verify from "./pages/Verify";
+import AdminVerifications from "./pages/AdminVerifications";
 import { CompareProvider } from "./context/CompareContext";
 import { CompareBar } from "./components/property/CompareBar";
 import { DemoBanner } from "./components/DemoBanner";
@@ -58,6 +60,7 @@ const App = () => (
             <Route path="/claim/:propertyId" element={<ClaimProperty />} />
             <Route path="/creator/:id" element={<Creator />} />
             <Route path="/welcome" element={<Welcome />} />
+            <Route path="/verify/:propertyId" element={<ProtectedRoute><Verify /></ProtectedRoute>} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/reviews" element={<Reviews />} />
             <Route path="/shorts" element={<Shorts />} />
@@ -69,6 +72,7 @@ const App = () => (
             <Route path="/manage/:propertyId" element={<ProtectedRoute><ManageProperty /></ProtectedRoute>} />
             <Route path="/admin/moderate" element={<AdminRoute><AdminModeration /></AdminRoute>} />
             <Route path="/admin/claims" element={<AdminRoute><AdminClaims /></AdminRoute>} />
+            <Route path="/admin/verifications" element={<AdminRoute><AdminVerifications /></AdminRoute>} />
             <Route path="/admin/scraper" element={<AdminRoute><PropertyScraper /></AdminRoute>} />
             <Route path="/admin/settings" element={<AdminRoute><AdminSettings /></AdminRoute>} />
             <Route path="/admin/scrape-logs" element={<AdminRoute><AdminScrapeLogs /></AdminRoute>} />

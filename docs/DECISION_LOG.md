@@ -108,6 +108,13 @@ Format: `[YYYY-MM-DD] TITLE — Decision · Why prior was weaker · Tradeoffs ·
   profile was hardcoded mock; contribution had no status/recognition payoff.
   *Status:* Adopted.
 
+- **[2026-07-01] T2/T3 resident verification (server-side).** GPS-in-range →
+  Likely Resident (instant); lease/utility document → Verified Resident (admin-
+  approved). Trust-tier changes are server-side only (edge fn/admin), never
+  client-declared; verification proves residency, not identity. *Prior:*
+  verification was deferred behind content density (correct then); now content/
+  creator/retention loops exist, so trust-weighting is meaningful. *Status:* Adopted.
+
 ## Escalation items (need founder / external decision)
 - Paid **search/Places vendor** for nationwide channel discovery at scale.
 - Social-platform **OAuth app approvals** (Meta/TikTok/YouTube) for real auto-sync.
