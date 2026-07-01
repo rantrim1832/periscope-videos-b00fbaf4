@@ -18,6 +18,7 @@ import { StickyContribute } from '@/components/property/StickyContribute';
 import { LocationSection } from '@/components/property/LocationSection';
 import { StoryCompleteness } from '@/components/property/StoryCompleteness';
 import { HealthIndicator } from '@/components/property/HealthIndicator';
+import { DepositIntelligence } from '@/components/property/DepositIntelligence';
 import { ContentSuggestions } from '@/components/property/ContentSuggestions';
 import { NearbyProperties } from '@/components/property/NearbyProperties';
 import { OfficialContent } from '@/components/property/OfficialContent';
@@ -112,6 +113,8 @@ const Property = () => {
       <Header />
 
       <VerdictHero property={property} result={result} onWatch={watch} onContribute={contribute} />
+
+      <DepositIntelligence result={result} />
 
       <div className="container mx-auto px-4 py-10 max-w-3xl grid gap-6 md:grid-cols-2">
         <ReportCard propertyName={property.name} location={location} result={result} />
