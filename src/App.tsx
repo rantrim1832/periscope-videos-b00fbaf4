@@ -33,6 +33,8 @@ import Welcome from "./pages/Welcome";
 import { CompareProvider } from "./context/CompareContext";
 import { CompareBar } from "./components/property/CompareBar";
 import { DemoBanner } from "./components/DemoBanner";
+import { AdminRoute } from "./components/AdminRoute";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -45,36 +47,36 @@ const App = () => (
         <CompareProvider>
           <DemoBanner />
           <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/browse" element={<Browse />} />
-          <Route path="/property/:id" element={<Property />} />
-          <Route path="/compare" element={<Compare />} />
-          <Route path="/contribute" element={<Contribute />} />
-          <Route path="/contribute/:propertyId" element={<Contribute />} />
-          <Route path="/search" element={<Search />} />
-          <Route path="/feed" element={<Feed />} />
-          <Route path="/claim/:propertyId" element={<ClaimProperty />} />
-          <Route path="/admin/claims" element={<AdminClaims />} />
-          <Route path="/creator/:id" element={<Creator />} />
-          <Route path="/notifications" element={<Notifications />} />
-          <Route path="/manage/:propertyId" element={<ManageProperty />} />
-          <Route path="/welcome" element={<Welcome />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/reviews" element={<Reviews />} />
-          <Route path="/shorts" element={<Shorts />} />
-          <Route path="/post" element={<Navigate to="/contribute" replace />} />
-          <Route path="/community" element={<Community />} />
-          <Route path="/help" element={<Help />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/admin/moderate" element={<AdminModeration />} />
-          <Route path="/admin/scraper" element={<PropertyScraper />} />
-          <Route path="/admin/settings" element={<AdminSettings />} />
-          <Route path="/admin/scrape-logs" element={<AdminScrapeLogs />} />
-          <Route path="/admin/properties" element={<AdminProperties />} />
-          <Route path="/admin/stats" element={<AdminScrapingStats />} />
-          <Route path="/admin/csv-upload" element={<AdminCSVUpload />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
+            <Route path="/" element={<Index />} />
+            <Route path="/browse" element={<Browse />} />
+            <Route path="/property/:id" element={<Property />} />
+            <Route path="/compare" element={<Compare />} />
+            <Route path="/contribute" element={<Contribute />} />
+            <Route path="/contribute/:propertyId" element={<Contribute />} />
+            <Route path="/search" element={<Search />} />
+            <Route path="/feed" element={<Feed />} />
+            <Route path="/claim/:propertyId" element={<ClaimProperty />} />
+            <Route path="/creator/:id" element={<Creator />} />
+            <Route path="/welcome" element={<Welcome />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/reviews" element={<Reviews />} />
+            <Route path="/shorts" element={<Shorts />} />
+            <Route path="/post" element={<Navigate to="/contribute" replace />} />
+            <Route path="/community" element={<Community />} />
+            <Route path="/help" element={<Help />} />
+            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+            <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
+            <Route path="/manage/:propertyId" element={<ProtectedRoute><ManageProperty /></ProtectedRoute>} />
+            <Route path="/admin/moderate" element={<AdminRoute><AdminModeration /></AdminRoute>} />
+            <Route path="/admin/claims" element={<AdminRoute><AdminClaims /></AdminRoute>} />
+            <Route path="/admin/scraper" element={<AdminRoute><PropertyScraper /></AdminRoute>} />
+            <Route path="/admin/settings" element={<AdminRoute><AdminSettings /></AdminRoute>} />
+            <Route path="/admin/scrape-logs" element={<AdminRoute><AdminScrapeLogs /></AdminRoute>} />
+            <Route path="/admin/properties" element={<AdminRoute><AdminProperties /></AdminRoute>} />
+            <Route path="/admin/stats" element={<AdminRoute><AdminScrapingStats /></AdminRoute>} />
+            <Route path="/admin/csv-upload" element={<AdminRoute><AdminCSVUpload /></AdminRoute>} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
           </Routes>
           <CompareBar />
         </CompareProvider>

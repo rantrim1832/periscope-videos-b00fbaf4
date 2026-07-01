@@ -3,15 +3,11 @@ import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
 import { Shield, Crown, Users, Settings } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const AdminSettings = () => {
-  const [loading, setLoading] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [userId, setUserId] = useState<string | null>(null);
-  const { toast } = useToast();
 
   useEffect(() => {
     checkStatus();
@@ -20,79 +16,14 @@ const AdminSettings = () => {
   const checkStatus = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
-      setUserId(user.id);
-      
       const { data } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', user.id)
         .eq('role', 'admin')
-        .single();
-      
+        .maybeSingle();
+
       setIsAdmin(!!data);
-    }
-  };
-
-  const makeAdmin = async () => {
-    if (!userId) {
-      toast({
-        title: "Not authenticated",
-        description: "Please sign in first",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const { error } = await supabase
-        .from('user_roles')
-        .insert({ user_id: userId, role: 'admin' });
-
-      if (error) throw error;
-
-      setIsAdmin(true);
-      toast({
-        title: "Success!",
-        description: "You are now an admin",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const removeAdmin = async () => {
-    if (!userId) return;
-
-    setLoading(true);
-    try {
-      const { error } = await supabase
-        .from('user_roles')
-        .delete()
-        .eq('user_id', userId)
-        .eq('role', 'admin');
-
-      if (error) throw error;
-
-      setIsAdmin(false);
-      toast({
-        title: "Admin removed",
-        description: "You are no longer an admin",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -113,7 +44,7 @@ const AdminSettings = () => {
                 Admin Status
               </CardTitle>
               <CardDescription>
-                Grant yourself admin access to manage the platform
+                Your administrative access to the platform
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -127,16 +58,11 @@ const AdminSettings = () => {
                     </p>
                   </div>
                 </div>
-                {!isAdmin ? (
-                  <Button onClick={makeAdmin} disabled={loading} className="w-full sm:w-auto">
-                    {loading ? 'Processing...' : 'Make Me Admin'}
-                  </Button>
-                ) : (
-                  <Button onClick={removeAdmin} disabled={loading} variant="destructive" className="w-full sm:w-auto">
-                    {loading ? 'Processing...' : 'Remove Admin'}
-                  </Button>
-                )}
               </div>
+              <p className="text-xs text-muted-foreground">
+                Admin roles are provisioned by existing administrators. To grant
+                the first admin, seed the role directly via the Supabase dashboard.
+              </p>
             </CardContent>
           </Card>
 

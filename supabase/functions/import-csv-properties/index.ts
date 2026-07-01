@@ -1,10 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { corsHeaders, requireAdmin, authErrorResponse } from "../_shared/auth.ts";
 
 interface FieldMapping {
   [csvHeader: string]: string; // maps CSV header to database column
@@ -21,6 +17,13 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  let adminUserId: string;
+  try {
+    adminUserId = await requireAdmin(req);
+  } catch (err) {
+    return authErrorResponse(err);
+  }
+
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
@@ -30,19 +33,7 @@ serve(async (req) => {
     }
 
     const supabase = createClient(supabaseUrl, supabaseKey);
-
-    // Get the authenticated user
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      throw new Error('No authorization header');
-    }
-
-    const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-
-    if (authError || !user) {
-      throw new Error('Unauthorized');
-    }
+    const user = { id: adminUserId };
 
     const { csvContent, fieldMapping }: RequestBody = await req.json();
 

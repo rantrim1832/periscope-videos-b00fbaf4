@@ -1,19 +1,35 @@
 project_id = "eeivsursfgmponlonpmy"
 
+# Webhooks are called by external services without a user session and are
+# protected by a shared secret (x-webhook-secret), verified in-function.
 [functions.taggbox-webhook]
 verify_jwt = false
 
 [functions.seed-review]
 verify_jwt = false
 
+# All other functions require a valid JWT at the gateway AND enforce
+# admin/authenticated checks in-function (see _shared/auth.ts).
 [functions.moderate-content]
-verify_jwt = false
+verify_jwt = true
 
 [functions.enrich-property]
-verify_jwt = false
+verify_jwt = true
 
 [functions.scrape-properties]
-verify_jwt = false
+verify_jwt = true
+
+[functions.estimate-scrape]
+verify_jwt = true
+
+[functions.estimate-scrape-radius]
+verify_jwt = true
+
+[functions.delete-properties]
+verify_jwt = true
+
+[functions.import-csv-properties]
+verify_jwt = true
 
 # Public OG image for link-unfurl previews.
 [functions.og-image]
