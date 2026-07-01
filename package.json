@@ -9,7 +9,8 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
-    "seed:channels": "tsx scripts/seed-channels.ts"
+    "seed:channels": "tsx scripts/seed-channels.ts",
+    "ingest": "tsx scripts/ingest.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
