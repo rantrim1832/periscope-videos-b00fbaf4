@@ -94,6 +94,14 @@ Format: `[YYYY-MM-DD] TITLE — Decision · Why prior was weaker · Tradeoffs ·
   (intent stored on resident_profile). *Prior:* bare signup dumped everyone on the
   homepage with no path to value. *Status:* Adopted.
 
+- **[2026-07-01] Homepage answers "what's most interesting right now" in <10s.**
+  Content-hook-first wall (real clips + Truth Score reveals + "management changed →
+  score dropped" drama + category chips); slim search; no manifesto. *Prior:* even
+  the "living homepage" led with an explanatory hero — optimizing for explanation,
+  not curiosity/outrage/surprise. Many visitors aren't shopping; hooks pull them in.
+  *Tradeoff:* less first-time "what is this" framing (mitigated by content legibility
+  + onboarding). *Status:* Adopted — discover by using, not reading.
+
 ## Escalation items (need founder / external decision)
 - Paid **search/Places vendor** for nationwide channel discovery at scale.
 - Social-platform **OAuth app approvals** (Meta/TikTok/YouTube) for real auto-sync.
