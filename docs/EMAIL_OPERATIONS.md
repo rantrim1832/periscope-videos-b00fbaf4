@@ -8,7 +8,7 @@ Set these on the external Supabase project:
 
 ```bash
 RESEND_API_KEY=<resend-api-key>
-RESEND_FROM_EMAIL="Pariscope <team@joinperiscope.com>"
+RESEND_FROM_EMAIL="Periscope <team@joinperiscope.com>"
 RESEND_REPLY_TO="team@joinperiscope.com"
 ```
 

@@ -49,7 +49,7 @@ Deno.serve(async (req) => {
   if (!subject) return json({ error: "Subject is required" }, 400);
   if (!html && !text) return json({ error: "HTML or text body is required" }, 400);
 
-  const from = Deno.env.get("RESEND_FROM_EMAIL") ?? "Pariscope <team@joinperiscope.com>";
+  const from = Deno.env.get("RESEND_FROM_EMAIL") ?? "Periscope <team@joinperiscope.com>";
   const replyTo = payload.replyTo ?? Deno.env.get("RESEND_REPLY_TO") ?? "team@joinperiscope.com";
 
   const response = await fetch("https://api.resend.com/emails", {
