@@ -46,6 +46,14 @@ fail-closed moderation → published/pending/rejected → share loop + notificat
 SEO property pages · entertainment feed · creator/investigator program · content
 suggestions · contributor feedback (views, replies, follows, published) · comparison.
 
+## Product backlog / next UX pass
+- **Identity-based onboarding redirect.** Property staff/PM flow should not dump
+  users into generic apartment search. After selecting "I manage a property,"
+  route to: find my property → add it if missing → create staff profile → claim/
+  connect official sources → then explore the site. Renter/resident/creator flows
+  should lead with interesting local video/feed discovery (location-aware where
+  permitted), with "find current/past property" as a secondary but obvious action.
+
 ## Business model
 Renters never pay for truth. Monetize PMs (claim free → analytics/lead-gen) + data
 licensing (private org graph). Connected-source claim is the freemium wedge.
