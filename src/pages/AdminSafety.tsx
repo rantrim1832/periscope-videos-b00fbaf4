@@ -5,7 +5,18 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { ShieldAlert, LifeBuoy } from 'lucide-react';
+import { ShieldAlert, LifeBuoy, Mail } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 
 type SafetyRow = {
   id: string;
@@ -25,6 +36,10 @@ const AdminSafety = () => {
   const { toast } = useToast();
   const [rows, setRows] = useState<SafetyRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [replyRow, setReplyRow] = useState<SafetyRow | null>(null);
+  const [replySubject, setReplySubject] = useState('');
+  const [replyBody, setReplyBody] = useState('');
+  const [sending, setSending] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -82,6 +97,44 @@ const AdminSafety = () => {
     load();
   };
 
+  const openReply = (row: SafetyRow) => {
+    setReplyRow(row);
+    setReplySubject(`Re: ${row.subject || row.type}`);
+    setReplyBody('');
+  };
+
+  const sendReply = async () => {
+    if (!replyRow?.email) return;
+    if (!replySubject.trim() || !replyBody.trim()) {
+      toast({ title: 'Subject and message are required', variant: 'destructive' });
+      return;
+    }
+    setSending(true);
+    const { data, error } = await supabase.functions.invoke('send-email', {
+      body: {
+        to: replyRow.email,
+        subject: replySubject,
+        text: replyBody,
+        html: `<div style="font-family:system-ui,sans-serif;white-space:pre-wrap;">${replyBody
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')}</div>`,
+      },
+    });
+    setSending(false);
+    if (error || (data as any)?.error) {
+      toast({
+        title: 'Could not send reply',
+        description: error?.message || (data as any)?.error || 'Unknown error',
+        variant: 'destructive',
+      });
+      return;
+    }
+    toast({ title: 'Reply sent', description: `Emailed ${replyRow.email}` });
+    await updateStatus(replyRow, 'resolved');
+    setReplyRow(null);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -114,6 +167,11 @@ const AdminSafety = () => {
                     {row.url && <a className="text-sm text-primary underline break-all" href={row.url} target="_blank" rel="noreferrer">{row.url}</a>}
                     <p className="text-sm whitespace-pre-wrap">{row.message}</p>
                     <div className="flex flex-wrap gap-2">
+                      {row.email && (
+                        <Button size="sm" onClick={() => openReply(row)}>
+                          <Mail className="w-4 h-4 mr-1" /> Reply
+                        </Button>
+                      )}
                       <Button size="sm" variant="outline" onClick={() => updateStatus(row, 'reviewing')}>Mark reviewing</Button>
                       <Button size="sm" variant="outline" onClick={() => updateStatus(row, 'resolved')}>Resolve</Button>
                       <Button size="sm" variant="ghost" onClick={() => updateStatus(row, 'closed')}>Close</Button>
@@ -125,6 +183,37 @@ const AdminSafety = () => {
           </div>
         )}
       </main>
+
+      <Dialog open={!!replyRow} onOpenChange={(open) => !open && setReplyRow(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Reply to {replyRow?.email}</DialogTitle>
+            <DialogDescription>
+              Sends via the production send-email function. Marks the item resolved on success.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <Label htmlFor="reply-subject">Subject</Label>
+              <Input id="reply-subject" value={replySubject} onChange={(e) => setReplySubject(e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="reply-body">Message</Label>
+              <Textarea id="reply-body" rows={8} value={replyBody} onChange={(e) => setReplyBody(e.target.value)} placeholder="Write your reply..." />
+            </div>
+            {replyRow && (
+              <div className="rounded-md border p-3 text-xs text-muted-foreground max-h-32 overflow-auto whitespace-pre-wrap">
+                <div className="font-medium mb-1">Original message:</div>
+                {replyRow.message}
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setReplyRow(null)} disabled={sending}>Cancel</Button>
+            <Button onClick={sendReply} disabled={sending}>{sending ? 'Sending...' : 'Send reply'}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
