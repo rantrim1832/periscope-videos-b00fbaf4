@@ -52,6 +52,7 @@ const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 const Contact = lazy(() => import("./pages/Contact"));
 const ReportIssue = lazy(() => import("./pages/ReportIssue"));
 const Legal = lazy(() => import("./pages/Legal"));
+const ManagerStart = lazy(() => import("./pages/ManagerStart"));
 
 const queryClient = new QueryClient();
 
@@ -90,6 +91,7 @@ const App = () => (
                 <Route path="/claim/:propertyId" element={<ClaimProperty />} />
                 <Route path="/creator/:id" element={<Creator />} />
                 <Route path="/welcome" element={<Welcome />} />
+                <Route path="/manager" element={<ManagerStart />} />
                 <Route path="/verify/:propertyId" element={<ProtectedRoute><Verify /></ProtectedRoute>} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/reviews" element={<Reviews />} />

@@ -7,10 +7,10 @@ import { supabase } from '@/integrations/supabase/client';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 const OPTIONS = [
-  { intent: 'renter', icon: Search, title: "I'm apartment hunting", desc: 'Look up buildings, watch real reviews, compare.', to: '/feed' },
-  { intent: 'resident', icon: PenLine, title: 'I live (or lived) somewhere', desc: 'Share the truth — text or a quick video.', to: '/contribute' },
-  { intent: 'manager', icon: Building2, title: 'I manage a property', desc: 'Claim your community and add official content.', to: '/browse' },
-  { intent: 'creator', icon: Sparkles, title: "I'm a creator / investigator", desc: 'Build an audience around apartment truth.', to: '/feed' },
+  { intent: 'renter', icon: Search, title: "I'm apartment hunting", desc: 'Start with real apartment videos, then search current or future places.', to: '/feed' },
+  { intent: 'resident', icon: PenLine, title: 'I live (or lived) somewhere', desc: 'See what people are posting, then add your own property or story.', to: '/feed' },
+  { intent: 'manager', icon: Building2, title: 'I manage a property', desc: 'Find or add your property, then claim it and connect official content.', to: '/manager' },
+  { intent: 'creator', icon: Sparkles, title: "I'm a creator / investigator", desc: 'Explore the video feed and build an audience around apartment truth.', to: '/feed' },
 ] as const;
 
 const Welcome = () => {

@@ -25,12 +25,21 @@ const Feed = () => {
       <Header />
       {/* Category rail */}
       <div className="sticky top-16 z-30 bg-background/95 backdrop-blur border-b border-border/40">
-        <div className="container mx-auto px-4 py-3 flex gap-2 overflow-x-auto">
-          {FEED_CATEGORIES.map((c) => (
-            <Button key={c} size="sm" variant={category === c ? 'default' : 'outline'} className="whitespace-nowrap" onClick={() => setCategory(c)}>
-              {c}
-            </Button>
-          ))}
+        <div className="container mx-auto px-4 py-3 space-y-3">
+          <div className="flex gap-2 overflow-x-auto">
+            {FEED_CATEGORIES.map((c) => (
+              <Button key={c} size="sm" variant={category === c ? 'default' : 'outline'} className="whitespace-nowrap" onClick={() => setCategory(c)}>
+                {c}
+              </Button>
+            ))}
+          </div>
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-muted/30 px-3 py-2 text-sm">
+            <span className="text-muted-foreground">Want to find your current or past building?</span>
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" asChild><Link to="/search">Search property</Link></Button>
+              <Button size="sm" variant="ghost" asChild><Link to="/contribute">Post your story</Link></Button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -42,7 +51,7 @@ const Feed = () => {
           <Button variant="hero" asChild><Link to="/contribute">Be the first to post</Link></Button>
         </div>
       ) : (
-        <div className="h-[calc(100vh-8rem)] overflow-y-auto snap-y snap-mandatory">
+        <div className="h-[calc(100vh-12rem)] overflow-y-auto snap-y snap-mandatory">
           {filtered.map((item) => <FeedCard key={item.id} item={item} />)}
         </div>
       )}
@@ -71,7 +80,7 @@ const FeedCard = ({ item }: { item: FeedItem }) => {
   };
 
   return (
-    <section className="snap-start h-[calc(100vh-8rem)] flex items-center justify-center bg-black relative">
+    <section className="snap-start h-[calc(100vh-12rem)] flex items-center justify-center bg-black relative">
       <div className="relative w-full max-w-sm h-full mx-auto">
         {/* Media */}
         <div className="absolute inset-0 flex items-center justify-center">
