@@ -8,8 +8,8 @@ Set these on the external Supabase project:
 
 ```bash
 RESEND_API_KEY=<resend-api-key>
-RESEND_FROM_EMAIL="Pariscope <hello@joinperiscope.com>"
-RESEND_REPLY_TO="support@joinperiscope.com"
+RESEND_FROM_EMAIL="Pariscope <team@joinperiscope.com>"
+RESEND_REPLY_TO="team@joinperiscope.com"
 ```
 
 `RESEND_API_KEY` is private and must never be placed in Lovable/Vite/frontend
