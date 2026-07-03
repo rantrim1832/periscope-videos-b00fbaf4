@@ -7,10 +7,10 @@
 //   created here. Service role bypasses RLS — never ship this to the browser.
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import { getEnv } from './env';
+import { getEnv, getPublicSupabaseUrl } from './env';
 
 export function createAdminClient(): SupabaseClient {
-  const url = getEnv('SUPABASE_URL') ?? getEnv('VITE_SUPABASE_URL');
+  const url = getEnv('SUPABASE_URL') ?? getPublicSupabaseUrl();
   const key = getEnv('SUPABASE_SERVICE_ROLE_KEY');
   if (!url || !key) {
     throw new Error(

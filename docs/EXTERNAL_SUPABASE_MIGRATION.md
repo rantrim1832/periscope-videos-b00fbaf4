@@ -68,16 +68,16 @@ the external project with the same names/policies and re-upload objects.
 
 ## 8. Point the Lovable frontend at the external project
 In the Lovable editor:
-1. Copy `.env.production.example` values into the project `.env`
-   (overwriting the Cloud-issued values):
+1. Add these external aliases to the project `.env`. Do not fight Lovable's
+   Cloud-managed `VITE_SUPABASE_*` values; the app prefers these aliases first:
    ```
-   VITE_SUPABASE_URL=https://<external-ref>.supabase.co
-   VITE_SUPABASE_PROJECT_ID=<external-ref>
-   VITE_SUPABASE_PUBLISHABLE_KEY=<external-anon-key>
+   VITE_EXTERNAL_SUPABASE_URL=https://<external-ref>.supabase.co
+   VITE_EXTERNAL_SUPABASE_PROJECT_ID=<external-ref>
+   VITE_EXTERNAL_SUPABASE_PUBLISHABLE_KEY=<external-anon-key>
+   VITE_USE_CANONICAL=false
    ```
-2. Freeze the auto-generated client so Cloud doesn't rewrite it — after the
-   switch, treat `src/integrations/supabase/client.ts` and `types.ts` as
-   manually maintained. Regenerate `types.ts` against the external project:
+2. Treat `src/integrations/supabase/client.ts` and `types.ts` as manually
+   maintained. Regenerate `types.ts` against the external project:
    ```bash
    supabase gen types typescript --project-id <external-ref> \
      > src/integrations/supabase/types.ts

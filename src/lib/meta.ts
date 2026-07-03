@@ -6,7 +6,7 @@
 // bot-detecting edge route. This helper covers JS-aware consumers and in-app
 // state; server-side injection is the documented production follow-up.
 
-import { getEnv } from '@/services/env';
+import { getPublicSupabaseUrl } from '@/services/env';
 
 function upsertMeta(attr: 'property' | 'name', key: string, content: string) {
   let el = document.head.querySelector<HTMLMetaElement>(`meta[${attr}="${key}"]`);
@@ -19,7 +19,7 @@ function upsertMeta(attr: 'property' | 'name', key: string, content: string) {
 }
 
 export function ogImageUrl(propertyId: string): string {
-  const base = getEnv('VITE_SUPABASE_URL') ?? '';
+  const base = getPublicSupabaseUrl() ?? '';
   return `${base}/functions/v1/og-image?propertyId=${encodeURIComponent(propertyId)}`;
 }
 

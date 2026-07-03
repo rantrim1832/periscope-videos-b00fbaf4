@@ -20,3 +20,15 @@ export function hasEnv(key: string): boolean {
   const v = getEnv(key);
   return v != null && v !== '';
 }
+
+export function getPublicSupabaseUrl(): string | undefined {
+  return getEnv('VITE_EXTERNAL_SUPABASE_URL') ?? getEnv('VITE_SUPABASE_URL');
+}
+
+export function getPublicSupabasePublishableKey(): string | undefined {
+  return getEnv('VITE_EXTERNAL_SUPABASE_PUBLISHABLE_KEY') ?? getEnv('VITE_SUPABASE_PUBLISHABLE_KEY');
+}
+
+export function getPublicSupabaseProjectId(): string | undefined {
+  return getEnv('VITE_EXTERNAL_SUPABASE_PROJECT_ID') ?? getEnv('VITE_SUPABASE_PROJECT_ID');
+}

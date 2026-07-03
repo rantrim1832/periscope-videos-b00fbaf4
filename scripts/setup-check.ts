@@ -3,9 +3,10 @@
  * features they unlock. Non-destructive.
  *   npx tsx scripts/setup-check.ts
  */
-const CHECKS: { key: string; enables: string; required: boolean }[] = [
-  { key: 'VITE_SUPABASE_URL', enables: 'App → Supabase connection', required: true },
-  { key: 'VITE_SUPABASE_PUBLISHABLE_KEY', enables: 'App → Supabase (anon)', required: true },
+const CHECKS: { key: string; fallback?: string; enables: string; required: boolean }[] = [
+  { key: 'VITE_EXTERNAL_SUPABASE_URL', fallback: 'VITE_SUPABASE_URL', enables: 'App → Supabase connection', required: true },
+  { key: 'VITE_EXTERNAL_SUPABASE_PUBLISHABLE_KEY', fallback: 'VITE_SUPABASE_PUBLISHABLE_KEY', enables: 'App → Supabase (anon)', required: true },
+  { key: 'VITE_EXTERNAL_SUPABASE_PROJECT_ID', fallback: 'VITE_SUPABASE_PROJECT_ID', enables: 'App → Supabase project id', required: true },
   { key: 'SUPABASE_URL', enables: 'Server/ingestion → Supabase', required: true },
   { key: 'SUPABASE_SERVICE_ROLE_KEY', enables: 'Ingestion, edge functions (admin)', required: true },
   { key: 'VITE_USE_CANONICAL', enables: 'Frontend reads canonical graph (set "true" for live data)', required: false },
@@ -23,10 +24,11 @@ const has = (k: string) => !!process.env[k] && process.env[k] !== '';
 console.log('\nPariscope — go-live readiness\n' + '='.repeat(40));
 let missingRequired = 0;
 for (const c of CHECKS) {
-  const ok = has(c.key);
+  const ok = has(c.key) || (c.fallback ? has(c.fallback) : false);
   if (!ok && c.required) missingRequired++;
   const mark = ok ? '✓' : c.required ? '✗' : '○';
-  console.log(`  ${mark} ${c.key.padEnd(30)} ${ok ? 'set' : c.required ? 'MISSING (required)' : 'not set → mock/fallback'}`);
+  const label = c.fallback ? `${c.key} / ${c.fallback}` : c.key;
+  console.log(`  ${mark} ${label.padEnd(62)} ${ok ? 'set' : c.required ? 'MISSING (required)' : 'not set → mock/fallback'}`);
   if (!ok) console.log(`      ↳ ${c.enables}`);
 }
 console.log('='.repeat(40));

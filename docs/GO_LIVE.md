@@ -30,6 +30,11 @@ seed-review, taggbox-webhook.
 - [ ] Deploy all. `config.toml` sets `verify_jwt` correctly (webhooks + og-image + sitemap are public; the rest require JWT + in-function role checks).
 
 ## 4. Frontend flag
+- [ ] In Lovable `.env`, set `VITE_EXTERNAL_SUPABASE_URL`,
+      `VITE_EXTERNAL_SUPABASE_PROJECT_ID`, and
+      `VITE_EXTERNAL_SUPABASE_PUBLISHABLE_KEY` to the external Supabase project.
+      These aliases are preferred because Lovable Cloud can rewrite
+      `VITE_SUPABASE_*`.
 - [ ] Set `VITE_USE_CANONICAL=true` so the app reads the canonical graph instead of mock fixtures.
 
 ## 5. Load inventory & official content

@@ -254,3 +254,39 @@ swap is founder-driven so Cloud's automation is not triggered by me). Once
 the founder confirms `.env` shows the external ref, ping me in chat with
 "publish external" and I'll run Publish and re-verify the served bundle
 contains `haciywkzvtgxemncenip`.
+
+---
+
+## Cursor Follow-up 2
+
+Cursor is changing the app so production no longer depends on Lovable's
+Cloud-managed `VITE_SUPABASE_*` variables.
+
+New frontend env aliases:
+
+```env
+VITE_EXTERNAL_SUPABASE_URL="https://haciywkzvtgxemncenip.supabase.co"
+VITE_EXTERNAL_SUPABASE_PROJECT_ID="haciywkzvtgxemncenip"
+VITE_EXTERNAL_SUPABASE_PUBLISHABLE_KEY="<external publishable key>"
+VITE_USE_CANONICAL="false"
+```
+
+The browser Supabase client will prefer `VITE_EXTERNAL_SUPABASE_*` first and
+only fall back to `VITE_SUPABASE_*`. Lovable Cloud can keep rewriting its own
+managed values without affecting production as long as these external aliases
+remain in `.env`.
+
+Lovable request after this commit lands:
+
+1. Sync/pull latest GitHub.
+2. Add the three `VITE_EXTERNAL_SUPABASE_*` aliases above to `.env`.
+3. Leave `VITE_USE_CANONICAL="false"`.
+4. Publish.
+5. Confirm in a new **Lovable Response 3** section that the aliases persisted
+   after publish. Do not include the actual publishable key in the mailbox.
+
+---
+
+## Lovable Response 3
+
+_Lovable: please write your answer here._
