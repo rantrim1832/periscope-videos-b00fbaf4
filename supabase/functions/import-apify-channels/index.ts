@@ -12,6 +12,7 @@ const SOCIAL_PATTERNS: [ChannelKind, RegExp][] = [
   ["youtube", /youtube\.com|youtu\.be/i],
   ["matterport", /matterport\.com/i],
 ];
+const BLOCKED_URL_HOSTS = new Set(["app.getflex.com", "stream.mux.com"]);
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -48,6 +49,9 @@ function addUrl(channels: Channel[], v: unknown, label?: string) {
   if (!raw) return;
   const url = normalizeUrl(raw);
   if (!url || channels.some((c) => c.url === url)) return;
+  try {
+    if (BLOCKED_URL_HOSTS.has(new URL(url).hostname.replace(/^www\./, ""))) return;
+  } catch { /* ignore */ }
   if (/^https?:\/\/(www\.)?google\.com\/maps\//i.test(url)) return;
   const kind = SOCIAL_PATTERNS.find(([, re]) => re.test(url))?.[0] ??
     (/\.(jpg|jpeg|png|webp)(\?|$)/i.test(url) ? "gallery" : "website");
@@ -62,6 +66,9 @@ function collect(channels: Channel[], v: unknown, label?: string) {
     const obj = v as Record<string, unknown>;
     for (const key of ["url", "link", "href", "profileUrl", "profile", "sourceUrl", "imageUrl", "thumbnailUrl"]) {
       addUrl(channels, obj[key], label ?? key);
+    }
+    for (const [key, nested] of Object.entries(obj)) {
+      if (typeof nested === "string") addUrl(channels, nested, key);
     }
   }
 }
@@ -82,11 +89,18 @@ function normalizeRow(row: Record<string, unknown>): Candidate {
   for (const key of ["socials", "socialLinks", "socialProfiles", "profiles", "images", "photos", "gallery", "media"]) {
     collect(channels, row[key], key);
   }
+  const rawAddress = first(row, ["address", "street", "fullAddress", "Billing Street"]);
+  const addressParts = rawAddress?.split(",").map((x) => x.trim()).filter(Boolean) ?? [];
+  const addressLine = addressParts[0] ?? rawAddress;
+  const cityFromAddress = addressParts.length >= 2 ? addressParts[addressParts.length - 2] : null;
+  const stateZip = addressParts.length >= 1 ? addressParts[addressParts.length - 1] : null;
+  const stateFromAddress = stateZip?.match(/\b([A-Z]{2})\b/)?.[1] ?? null;
+
   return {
     name: first(row, ["title", "name", "placeName", "businessName", "Account Name"]),
-    address: first(row, ["address", "street", "fullAddress", "Billing Street"]),
-    city: first(row, ["city", "Billing City"]),
-    state: first(row, ["state", "stateCode", "region", "Billing State/Province"]),
+    address: addressLine,
+    city: first(row, ["city", "Billing City"]) ?? cityFromAddress,
+    state: first(row, ["state", "stateCode", "region", "Billing State/Province"]) ?? stateFromAddress,
     channels,
   };
 }

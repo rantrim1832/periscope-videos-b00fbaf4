@@ -37,6 +37,8 @@ const SOCIAL_PATTERNS: [ChannelKind, RegExp][] = [
   ['matterport', /matterport\.com/i],
 ];
 
+const BLOCKED_URL_HOSTS = new Set(['app.getflex.com', 'stream.mux.com']);
+
 function parseArgs(): Args {
   const args = process.argv.slice(2);
   const get = (flag: string) => {
@@ -82,6 +84,9 @@ function pushUrl(channels: Candidate['channels'], urlLike: unknown, label?: stri
   if (!raw) return;
   const url = normalizeUrl(raw);
   if (!url) return;
+  try {
+    if (BLOCKED_URL_HOSTS.has(new URL(url).hostname.replace(/^www\./, ''))) return;
+  } catch { /* ignore */ }
   if (/^https?:\/\/(www\.)?google\.com\/maps\//i.test(url)) return;
   const kind = SOCIAL_PATTERNS.find(([, re]) => re.test(url))?.[0] ?? (/\.(jpg|jpeg|png|webp)(\?|$)/i.test(url) ? 'gallery' : 'website');
   if (!channels.some((c) => c.url === url)) channels.push({ kind, url, label });
@@ -101,6 +106,9 @@ function collectNestedUrls(channels: Candidate['channels'], value: unknown, labe
     const obj = value as Record<string, unknown>;
     for (const key of ['url', 'link', 'href', 'profileUrl', 'profile', 'sourceUrl', 'imageUrl', 'thumbnailUrl']) {
       pushUrl(channels, obj[key], label ?? key);
+    }
+    for (const [key, nested] of Object.entries(obj)) {
+      if (typeof nested === 'string') pushUrl(channels, nested, key);
     }
   }
 }
@@ -126,11 +134,18 @@ function normalizeRow(row: Record<string, unknown>): Candidate {
     collectNestedUrls(channels, row[key], key);
   }
 
+  const rawAddress = firstString(row, ['address', 'street', 'fullAddress', 'location.address', 'Billing Street']);
+  const addressParts = rawAddress?.split(',').map((x) => x.trim()).filter(Boolean) ?? [];
+  const addressLine = addressParts[0] ?? rawAddress;
+  const cityFromAddress = addressParts.length >= 2 ? addressParts[addressParts.length - 2] : null;
+  const stateZip = addressParts.length >= 1 ? addressParts[addressParts.length - 1] : null;
+  const stateFromAddress = stateZip?.match(/\b([A-Z]{2})\b/)?.[1] ?? null;
+
   return {
     name: firstString(row, ['title', 'name', 'placeName', 'businessName', 'Account Name']),
-    address: firstString(row, ['address', 'street', 'fullAddress', 'location.address', 'Billing Street']),
-    city: firstString(row, ['city', 'location.city', 'Billing City']),
-    state: firstString(row, ['state', 'stateCode', 'region', 'Billing State/Province']),
+    address: addressLine,
+    city: firstString(row, ['city', 'location.city', 'Billing City']) ?? cityFromAddress,
+    state: firstString(row, ['state', 'stateCode', 'region', 'Billing State/Province']) ?? stateFromAddress,
     channels,
   };
 }
