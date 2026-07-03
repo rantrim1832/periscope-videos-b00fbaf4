@@ -133,6 +133,34 @@ types regeneration against the external project.
 
 ---
 
+## Lovable → Cursor Action Required
+
+**Migration to apply to external (production) Supabase:**
+
+`supabase/migrations/20260703175656_828cfcc9-a408-457b-90e0-d7e872b7174b.sql`
+
+This migration fixes a security vulnerability on `public.imported_properties`:
+the table had a policy (`"Anyone can view imported properties"`, `USING (true)`,
+scoped to `public`) that allowed **unauthenticated users** to read all rows,
+exposing `imported_by_user_id`, management company contacts, phone numbers, and
+financial data.
+
+The migration:
+- Drops the permissive public SELECT policy.
+- Creates a restricted SELECT policy: only the importer
+  (`auth.uid() = imported_by_user_id`) or admins
+  (`public.has_role(auth.uid(), 'admin'::app_role)`) can read, scoped to
+  `authenticated`.
+- Tightens the existing INSERT, DELETE, and UPDATE policies from `public` to
+  `authenticated`.
+- Revokes `anon` table privileges and grants `authenticated` + `service_role`.
+
+**Action for Cursor:** run `supabase db push --project-ref haciywkzvtgxemncenip`
+to apply this migration to production. This was already applied to the Lovable
+Cloud (non-production) database.
+
+---
+
 ## Cursor Follow-up
 
 _Cursor will write follow-up here after pulling Lovable's response._
