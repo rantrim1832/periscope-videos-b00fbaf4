@@ -14,6 +14,7 @@ const CHECKS: { key: string; fallback?: string; enables: string; required: boole
   { key: 'RENTCAST_API_KEY', enables: 'Property enrichment (else mock)', required: false },
   { key: 'LOVABLE_API_KEY', enables: 'AI moderation (else fail-closed heuristic)', required: false },
   { key: 'WEBHOOK_SECRET', enables: 'seed-review / taggbox webhooks', required: false },
+  { key: 'APIFY_TOKEN', enables: 'Apify visual/source seeding', required: false },
   { key: 'CLOUDFLARE_ACCOUNT_ID', enables: 'Cloudflare Stream video upload', required: false },
   { key: 'CLOUDFLARE_STREAM_TOKEN', enables: 'Cloudflare Stream video upload', required: false },
   { key: 'SEARCH_API_KEY', enables: 'Live official-channel discovery (else mock)', required: false },

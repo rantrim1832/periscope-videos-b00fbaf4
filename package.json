@@ -10,6 +10,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "seed:channels": "tsx scripts/seed-channels.ts",
+    "import:apify": "tsx scripts/import-apify-channels.ts",
     "ingest": "tsx scripts/ingest.ts",
     "setup:check": "tsx scripts/setup-check.ts",
     "test": "vitest run"
