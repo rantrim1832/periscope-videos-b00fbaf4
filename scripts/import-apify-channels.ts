@@ -88,7 +88,8 @@ function pushUrl(channels: Candidate['channels'], urlLike: unknown, label?: stri
     if (BLOCKED_URL_HOSTS.has(new URL(url).hostname.replace(/^www\./, ''))) return;
   } catch { /* ignore */ }
   if (/^https?:\/\/(www\.)?google\.com\/maps\//i.test(url)) return;
-  const kind = SOCIAL_PATTERNS.find(([, re]) => re.test(url))?.[0] ?? (/\.(jpg|jpeg|png|webp)(\?|$)/i.test(url) ? 'gallery' : 'website');
+  const kind = SOCIAL_PATTERNS.find(([, re]) => re.test(url))?.[0] ??
+    (/vapi\.apartments\.com\/video\/play/i.test(url) ? 'gallery' : /\.(jpg|jpeg|png|webp)(\?|$)/i.test(url) ? 'gallery' : 'website');
   if (!channels.some((c) => c.url === url)) channels.push({ kind, url, label });
 }
 
@@ -113,9 +114,18 @@ function collectNestedUrls(channels: Candidate['channels'], value: unknown, labe
   }
 }
 
+function nestedString(row: Record<string, unknown>, path: string): string | null {
+  let current: unknown = row;
+  for (const part of path.split('.')) {
+    if (!current || typeof current !== 'object') return null;
+    current = (current as Record<string, unknown>)[part];
+  }
+  return asString(current);
+}
+
 function firstString(row: Record<string, unknown>, keys: string[]): string | null {
   for (const key of keys) {
-    const value = asString(row[key]);
+    const value = key.includes('.') ? nestedString(row, key) : asString(row[key]);
     if (value) return value;
   }
   return null;
@@ -125,13 +135,22 @@ function normalizeRow(row: Record<string, unknown>): Candidate {
   const channels: Candidate['channels'] = [];
 
   for (const key of [
-    'website', 'url', 'site', 'domain', 'instagram', 'facebook', 'tiktok', 'youtube',
+    'website', 'propertyWebsite', 'site', 'domain', 'instagram', 'facebook', 'tiktok', 'youtube',
     'matterport', 'virtualTour', 'virtual_tour', 'tourUrl', 'bookingUrl',
   ]) {
     pushUrl(channels, row[key], key);
   }
-  for (const key of ['socials', 'socialLinks', 'socialProfiles', 'profiles', 'images', 'photos', 'gallery', 'media']) {
+  collectNestedUrls(channels, row.url, 'source');
+  for (const key of ['socials', 'socialLinks', 'socialProfiles', 'profiles', 'images', 'gallery', 'media']) {
     collectNestedUrls(channels, row[key], key);
+  }
+  const virtualTours = Array.isArray(row.virtualTours) ? row.virtualTours.slice(0, 3) : row.virtualTours;
+  if (virtualTours) collectNestedUrls(channels, virtualTours, 'virtualTours');
+  const virtualTourExtended = Array.isArray(row.virtualTourExtended) ? row.virtualTourExtended.slice(0, 3) : row.virtualTourExtended;
+  if (virtualTourExtended) collectNestedUrls(channels, virtualTourExtended, 'virtualTourExtended');
+  const photos = Array.isArray(row.photos) ? row.photos.slice(0, 3) : row.photos;
+  if (photos) {
+    collectNestedUrls(channels, photos, 'gallery');
   }
 
   const rawAddress = firstString(row, ['address', 'street', 'fullAddress', 'location.address', 'Billing Street']);
@@ -142,10 +161,10 @@ function normalizeRow(row: Record<string, unknown>): Candidate {
   const stateFromAddress = stateZip?.match(/\b([A-Z]{2})\b/)?.[1] ?? null;
 
   return {
-    name: firstString(row, ['title', 'name', 'placeName', 'businessName', 'Account Name']),
+    name: firstString(row, ['propertyName', 'title', 'name', 'placeName', 'businessName', 'Account Name']),
     address: addressLine,
     city: firstString(row, ['city', 'location.city', 'Billing City']) ?? cityFromAddress,
-    state: firstString(row, ['state', 'stateCode', 'region', 'Billing State/Province']) ?? stateFromAddress,
+    state: firstString(row, ['state', 'stateCode', 'location.state', 'region', 'Billing State/Province']) ?? stateFromAddress,
     channels,
   };
 }

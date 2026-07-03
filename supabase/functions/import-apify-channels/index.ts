@@ -54,7 +54,7 @@ function addUrl(channels: Channel[], v: unknown, label?: string) {
   } catch { /* ignore */ }
   if (/^https?:\/\/(www\.)?google\.com\/maps\//i.test(url)) return;
   const kind = SOCIAL_PATTERNS.find(([, re]) => re.test(url))?.[0] ??
-    (/\.(jpg|jpeg|png|webp)(\?|$)/i.test(url) ? "gallery" : "website");
+    (/vapi\.apartments\.com\/video\/play/i.test(url) ? "gallery" : /\.(jpg|jpeg|png|webp)(\?|$)/i.test(url) ? "gallery" : "website");
   channels.push({ kind, url, label });
 }
 
@@ -73,9 +73,18 @@ function collect(channels: Channel[], v: unknown, label?: string) {
   }
 }
 
+function nested(row: Record<string, unknown>, path: string): string | null {
+  let current: unknown = row;
+  for (const part of path.split(".")) {
+    if (!current || typeof current !== "object") return null;
+    current = (current as Record<string, unknown>)[part];
+  }
+  return str(current);
+}
+
 function first(row: Record<string, unknown>, keys: string[]) {
   for (const key of keys) {
-    const value = str(row[key]);
+    const value = key.includes(".") ? nested(row, key) : str(row[key]);
     if (value) return value;
   }
   return null;
@@ -83,12 +92,19 @@ function first(row: Record<string, unknown>, keys: string[]) {
 
 function normalizeRow(row: Record<string, unknown>): Candidate {
   const channels: Channel[] = [];
-  for (const key of ["website", "url", "site", "domain", "instagram", "facebook", "tiktok", "youtube", "matterport", "virtualTour", "virtual_tour", "tourUrl"]) {
+  for (const key of ["website", "propertyWebsite", "site", "domain", "instagram", "facebook", "tiktok", "youtube", "matterport", "virtualTour", "virtual_tour", "tourUrl"]) {
     addUrl(channels, row[key], key);
   }
-  for (const key of ["socials", "socialLinks", "socialProfiles", "profiles", "images", "photos", "gallery", "media"]) {
+  collect(channels, row.url, "source");
+  for (const key of ["socials", "socialLinks", "socialProfiles", "profiles", "images", "gallery", "media"]) {
     collect(channels, row[key], key);
   }
+  const virtualTours = Array.isArray(row.virtualTours) ? row.virtualTours.slice(0, 3) : row.virtualTours;
+  if (virtualTours) collect(channels, virtualTours, "virtualTours");
+  const virtualTourExtended = Array.isArray(row.virtualTourExtended) ? row.virtualTourExtended.slice(0, 3) : row.virtualTourExtended;
+  if (virtualTourExtended) collect(channels, virtualTourExtended, "virtualTourExtended");
+  const photos = Array.isArray(row.photos) ? row.photos.slice(0, 3) : row.photos;
+  if (photos) collect(channels, photos, "gallery");
   const rawAddress = first(row, ["address", "street", "fullAddress", "Billing Street"]);
   const addressParts = rawAddress?.split(",").map((x) => x.trim()).filter(Boolean) ?? [];
   const addressLine = addressParts[0] ?? rawAddress;
@@ -97,10 +113,10 @@ function normalizeRow(row: Record<string, unknown>): Candidate {
   const stateFromAddress = stateZip?.match(/\b([A-Z]{2})\b/)?.[1] ?? null;
 
   return {
-    name: first(row, ["title", "name", "placeName", "businessName", "Account Name"]),
+    name: first(row, ["propertyName", "title", "name", "placeName", "businessName", "Account Name"]),
     address: addressLine,
     city: first(row, ["city", "Billing City"]) ?? cityFromAddress,
-    state: first(row, ["state", "stateCode", "region", "Billing State/Province"]) ?? stateFromAddress,
+    state: first(row, ["state", "stateCode", "location.state", "region", "Billing State/Province"]) ?? stateFromAddress,
     channels,
   };
 }
