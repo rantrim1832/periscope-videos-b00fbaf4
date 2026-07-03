@@ -48,6 +48,7 @@ function addUrl(channels: Channel[], v: unknown, label?: string) {
   if (!raw) return;
   const url = normalizeUrl(raw);
   if (!url || channels.some((c) => c.url === url)) return;
+  if (/^https?:\/\/(www\.)?google\.com\/maps\//i.test(url)) return;
   const kind = SOCIAL_PATTERNS.find(([, re]) => re.test(url))?.[0] ??
     (/\.(jpg|jpeg|png|webp)(\?|$)/i.test(url) ? "gallery" : "website");
   channels.push({ kind, url, label });

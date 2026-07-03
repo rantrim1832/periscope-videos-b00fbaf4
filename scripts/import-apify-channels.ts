@@ -82,6 +82,7 @@ function pushUrl(channels: Candidate['channels'], urlLike: unknown, label?: stri
   if (!raw) return;
   const url = normalizeUrl(raw);
   if (!url) return;
+  if (/^https?:\/\/(www\.)?google\.com\/maps\//i.test(url)) return;
   const kind = SOCIAL_PATTERNS.find(([, re]) => re.test(url))?.[0] ?? (/\.(jpg|jpeg|png|webp)(\?|$)/i.test(url) ? 'gallery' : 'website');
   if (!channels.some((c) => c.url === url)) channels.push({ kind, url, label });
 }
