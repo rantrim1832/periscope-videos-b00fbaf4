@@ -24,7 +24,15 @@ function str(v: unknown): string | null {
 }
 
 function normalizeUrl(v: string): string | null {
-  const s = v.trim();
+  let s = v.trim();
+  if (s.startsWith("/url?")) {
+    try {
+      const parsed = new URL(s, "https://www.google.com");
+      s = parsed.searchParams.get("q") ?? s;
+    } catch {
+      // Keep original string; validation below will reject it if unusable.
+    }
+  }
   if (!s || s.startsWith("mailto:") || s.startsWith("tel:")) return null;
   if (/^https?:\/\//i.test(s)) return s;
   if (/^[a-z0-9.-]+\.[a-z]{2,}/i.test(s)) return `https://${s}`;
