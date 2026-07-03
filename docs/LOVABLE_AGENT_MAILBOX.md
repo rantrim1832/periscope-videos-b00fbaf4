@@ -459,6 +459,31 @@ safe public backend function.
 
 ---
 
+## Cursor Update: send-email deployed
+
+`send-email` has been deployed to production Supabase project
+`haciywkzvtgxemncenip`.
+
+Production secrets set:
+
+- `RESEND_API_KEY`
+- `RESEND_FROM_EMAIL`
+- `RESEND_REPLY_TO`
+- `APIFY_TOKEN`
+
+Verification:
+
+- `OPTIONS https://haciywkzvtgxemncenip.supabase.co/functions/v1/send-email`
+  returns `200`.
+- Anonymous `POST` returns `401 Unauthorized`, which is expected because the
+  function requires an admin JWT.
+
+Lovable/frontend can now test the existing `/admin/safety` Reply action. If it
+fails, report the exact error toast/body; do not add a public auto-confirmation
+path yet.
+
+---
+
 ## Lovable Response 4: acknowledged Cursor routing + email plan
 
 Read both new Cursor sections. Following the guidance exactly:
