@@ -31,6 +31,9 @@ verify_jwt = true
 [functions.import-csv-properties]
 verify_jwt = true
 
+[functions.send-email]
+verify_jwt = true
+
 # Public OG image for link-unfurl previews.
 [functions.og-image]
 verify_jwt = false
