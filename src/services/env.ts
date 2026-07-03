@@ -1,8 +1,10 @@
 // Universal env accessor that works in both Node (ingestion scripts,
 // edge functions) and the Vite browser bundle.
 export function getEnv(key: string): string | undefined {
-  if (typeof process !== 'undefined' && process.env && process.env[key] != null) {
-    return process.env[key];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const proc: any = typeof globalThis !== 'undefined' ? (globalThis as any).process : undefined;
+  if (proc && proc.env && proc.env[key] != null) {
+    return proc.env[key];
   }
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
