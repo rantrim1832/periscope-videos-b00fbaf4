@@ -13,6 +13,14 @@ const viteEnv: Record<string, string | undefined> = {
   VITE_USE_CANONICAL: import.meta.env.VITE_USE_CANONICAL,
 };
 
+// Public browser-safe production fallback. This is not a service-role key and
+// does not bypass RLS; it is equivalent to an anon/publishable frontend key.
+const EXTERNAL_SUPABASE_FALLBACK = {
+  url: 'https://haciywkzvtgxemncenip.supabase.co',
+  projectId: 'haciywkzvtgxemncenip',
+  publishableKey: 'sb_publishable_8OaBcSMXJbWyAYUafhn1jw_iy0j8eh_',
+} as const;
+
 export function getEnv(key: string): string | undefined {
   if (viteEnv[key] != null) return viteEnv[key];
 
@@ -30,13 +38,13 @@ export function hasEnv(key: string): boolean {
 }
 
 export function getPublicSupabaseUrl(): string | undefined {
-  return getEnv('VITE_EXTERNAL_SUPABASE_URL') ?? getEnv('VITE_SUPABASE_URL');
+  return getEnv('VITE_EXTERNAL_SUPABASE_URL') ?? getEnv('VITE_SUPABASE_URL') ?? EXTERNAL_SUPABASE_FALLBACK.url;
 }
 
 export function getPublicSupabasePublishableKey(): string | undefined {
-  return getEnv('VITE_EXTERNAL_SUPABASE_PUBLISHABLE_KEY') ?? getEnv('VITE_SUPABASE_PUBLISHABLE_KEY');
+  return getEnv('VITE_EXTERNAL_SUPABASE_PUBLISHABLE_KEY') ?? getEnv('VITE_SUPABASE_PUBLISHABLE_KEY') ?? EXTERNAL_SUPABASE_FALLBACK.publishableKey;
 }
 
 export function getPublicSupabaseProjectId(): string | undefined {
-  return getEnv('VITE_EXTERNAL_SUPABASE_PROJECT_ID') ?? getEnv('VITE_SUPABASE_PROJECT_ID');
+  return getEnv('VITE_EXTERNAL_SUPABASE_PROJECT_ID') ?? getEnv('VITE_SUPABASE_PROJECT_ID') ?? EXTERNAL_SUPABASE_FALLBACK.projectId;
 }
