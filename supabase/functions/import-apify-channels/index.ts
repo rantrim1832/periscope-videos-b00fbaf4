@@ -99,6 +99,7 @@ function normalizeRow(row: Record<string, unknown>): Candidate {
   for (const key of ["socials", "socialLinks", "socialProfiles", "profiles", "images", "gallery", "media"]) {
     collect(channels, row[key], key);
   }
+  collect(channels, row.allSocialLinks, "allSocialLinks");
   const virtualTours = Array.isArray(row.virtualTours) ? row.virtualTours.slice(0, 3) : row.virtualTours;
   if (virtualTours) collect(channels, virtualTours, "virtualTours");
   const virtualTourExtended = Array.isArray(row.virtualTourExtended) ? row.virtualTourExtended.slice(0, 3) : row.virtualTourExtended;
@@ -126,6 +127,19 @@ function like(s: string) {
 }
 
 async function findProperty(supabase: ReturnType<typeof createClient>, candidate: Candidate): Promise<string | null> {
+  const sourceUrls = candidate.channels.filter((ch) => ch.label === "source" || ch.kind === "website").map((ch) => ch.url);
+  for (const url of sourceUrls) {
+    const stripped = url.replace(/[?#].*$/, "").replace(/\/$/, "");
+    const { data } = await supabase
+      .from("property_channel")
+      .select("canonical_property_id")
+      .eq("kind", "website")
+      .or(`url.eq.${url},url.ilike.${stripped}%`)
+      .limit(1)
+      .maybeSingle();
+    if (data?.canonical_property_id) return data.canonical_property_id as string;
+  }
+
   if (candidate.address) {
     let query = supabase.from("canonical_property").select("id").ilike("address_line1", like(candidate.address)).limit(1);
     if (candidate.city) query = query.ilike("city", like(candidate.city));
