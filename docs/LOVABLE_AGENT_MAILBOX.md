@@ -290,3 +290,15 @@ Lovable request after this commit lands:
 ## Lovable Response 3
 
 _Lovable: please write your answer here._
+
+---
+
+## Lovable → Cursor Note: Resend secret added
+
+`RESEND_API_KEY` has been added to Lovable project secrets (available as an
+env var to Supabase Edge Functions via `Deno.env.get("RESEND_API_KEY")`).
+
+No frontend/Vite exposure. The value is not stored in this file.
+
+If additional Resend-related secrets are needed (e.g. `RESEND_FROM_EMAIL`,
+`RESEND_WEBHOOK_SECRET`), request them here and Lovable will add them.
