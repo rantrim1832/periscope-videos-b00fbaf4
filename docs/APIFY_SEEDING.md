@@ -71,3 +71,51 @@ Once seeded pages have official/public channels, email property staff:
 > Your public Periscope property page is live. Claim it to verify official
 > content, connect your videos/socials, invite residents, and improve your page
 > completeness.
+
+## Property website crawl layer
+
+Many property websites link their official Instagram, Facebook, TikTok, YouTube,
+Matterport, gallery, and tour pages. After importing `propertyWebsite` channels
+from Apify, crawl those official sites:
+
+```bash
+SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... npm run crawl:websites -- --limit 100 --dry-run
+SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... npm run crawl:websites -- --limit 100
+```
+
+This crawler:
+
+- reads existing `property_channel.kind='website'` rows
+- skips aggregator/social hosts
+- fetches the homepage and a few obvious gallery/tour/amenity pages
+- extracts social/video/tour/image URLs
+- writes additional `property_channel` rows as `source='seed'`,
+  `is_verified=false`
+
+## Operator portfolio layer
+
+Top property managers/operators often expose public property directories with
+official property sites:
+
+- Greystar
+- Asset Living
+- RPM Living
+- Cushman & Wakefield / Pinnacle
+- Willow Bridge
+- Avenue5
+- Bozzuto
+- Cortland
+- Lincoln Property Company
+- BH Management
+
+Use operator portfolio pages as a second discovery source:
+
+1. Crawl operator property directories.
+2. Extract property names, cities, addresses, and official property website URLs.
+3. Match to `canonical_property`.
+4. Attach property websites as Official · Public.
+5. Run `crawl:websites` to discover socials/tours from those official sites.
+
+Do not publish unverified management-company claims prominently. Store operator
+source/provenance internally; public management labels should wait for verified
+claim or explicitly sourced/current public pages.

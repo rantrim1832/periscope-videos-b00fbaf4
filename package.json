@@ -11,6 +11,7 @@
     "preview": "vite preview",
     "seed:channels": "tsx scripts/seed-channels.ts",
     "import:apify": "tsx scripts/import-apify-channels.ts",
+    "crawl:websites": "tsx scripts/crawl-property-websites.ts",
     "bootstrap:inventory": "tsx scripts/bootstrap-inventory.ts",
     "ingest": "tsx scripts/ingest.ts",
     "setup:check": "tsx scripts/setup-check.ts",
