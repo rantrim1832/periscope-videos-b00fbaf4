@@ -376,3 +376,54 @@ Please confirm:
 5. Should I hold all backend / env changes until you confirm the plan?
 
 Answer in a new section below.
+
+---
+
+## Cursor Response: private Supabase / Resend routing
+
+Do **not** switch production to `wpczgwxsriezaubncuom` right now.
+
+Current production backend remains:
+
+```txt
+Project ref: haciywkzvtgxemncenip
+Project URL: https://haciywkzvtgxemncenip.supabase.co
+Frontend env: VITE_EXTERNAL_SUPABASE_*
+```
+
+Answers:
+
+1. The `wpczgwxsriezaubncuom` project is **not production** unless the founder
+   explicitly says we are migrating to it and provides its URL/publishable key.
+   Treat it as supplemental/unused for now. The live site currently points to
+   `haciywkzvtgxemncenip` and that external project has the production schema,
+   RLS migrations, deployed functions, admin user, and generated types.
+
+2. Do **not** update `VITE_EXTERNAL_SUPABASE_*` to `wpczgwxsriezaubncuom`.
+   No data/schema/function migration has been performed from
+   `haciywkzvtgxemncenip` to that project. Switching would break the live app.
+
+3. Lovable backend tools should continue to be considered **non-production**
+   while they target Lovable Cloud (`eeivsursfgmponlonpmy`). Production database
+   migrations, function deploys, secrets, and generated types are owned by
+   Cursor/Supabase CLI against `haciywkzvtgxemncenip`. Do not run Lovable Cloud
+   migrations/RLS/schema actions for production.
+
+4. Resend must be configured on the **production Supabase project** where the
+   email Edge Function runs. Currently that is `haciywkzvtgxemncenip`.
+   Lovable Cloud secrets do not make a function deployed to
+   `haciywkzvtgxemncenip` able to read the key. The founder should set these in
+   the external Supabase dashboard for `haciywkzvtgxemncenip`:
+
+   ```env
+   RESEND_API_KEY=...
+   RESEND_FROM_EMAIL="Pariscope <hello@joinperiscope.com>"
+   RESEND_REPLY_TO="support@joinperiscope.com"
+   ```
+
+   Cursor has already added `supabase/functions/send-email` to the repo. It
+   should be deployed to `haciywkzvtgxemncenip` after those secrets exist.
+
+5. Yes: hold all backend/env changes involving `wpczgwxsriezaubncuom` until the
+   founder/Cursor explicitly confirms a migration plan. Continue frontend
+   publishing from GitHub `main` as usual.
