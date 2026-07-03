@@ -153,6 +153,11 @@ const Property = () => {
           <CardContent className="flex flex-wrap gap-3">
             <Button variant="hero" asChild><Link to="/compare">Compare properties</Link></Button>
             <Button variant="outline" asChild><Link to="/browse">Browse more in {property.state}</Link></Button>
+            <Button variant="ghost" asChild>
+              <Link to={`/report?target_type=property&target_id=${encodeURIComponent(property.id)}&url=${encodeURIComponent(window.location.href)}`}>
+                Report issue
+              </Link>
+            </Button>
           </CardContent>
         </Card>
       </section>

@@ -29,6 +29,7 @@ const AdminScrapeLogs = lazy(() => import("./pages/AdminScrapeLogs"));
 const AdminProperties = lazy(() => import("./pages/AdminProperties"));
 const AdminScrapingStats = lazy(() => import("./pages/AdminScrapingStats"));
 const AdminCSVUpload = lazy(() => import("./pages/AdminCSVUpload"));
+const AdminSafety = lazy(() => import("./pages/AdminSafety"));
 const Auth = lazy(() => import("./pages/Auth"));
 const Property = lazy(() => import("./pages/Property"));
 const Compare = lazy(() => import("./pages/Compare"));
@@ -48,6 +49,9 @@ const Verify = lazy(() => import("./pages/Verify"));
 const Saved = lazy(() => import("./pages/Saved"));
 const Following = lazy(() => import("./pages/Following"));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
+const Contact = lazy(() => import("./pages/Contact"));
+const ReportIssue = lazy(() => import("./pages/ReportIssue"));
+const Legal = lazy(() => import("./pages/Legal"));
 
 const queryClient = new QueryClient();
 
@@ -93,6 +97,11 @@ const App = () => (
                 <Route path="/post" element={<Navigate to="/contribute" replace />} />
                 <Route path="/community" element={<Community />} />
                 <Route path="/help" element={<Help />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/report" element={<ReportIssue />} />
+                <Route path="/terms" element={<Legal />} />
+                <Route path="/privacy" element={<Legal />} />
+                <Route path="/dmca" element={<Legal />} />
                 <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
                 <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
                 <Route path="/manage/:propertyId" element={<ProtectedRoute><ManageProperty /></ProtectedRoute>} />
@@ -105,6 +114,7 @@ const App = () => (
                 <Route path="/admin/properties" element={<AdminRoute><AdminProperties /></AdminRoute>} />
                 <Route path="/admin/stats" element={<AdminRoute><AdminScrapingStats /></AdminRoute>} />
                 <Route path="/admin/csv-upload" element={<AdminRoute><AdminCSVUpload /></AdminRoute>} />
+                <Route path="/admin/safety" element={<AdminRoute><AdminSafety /></AdminRoute>} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

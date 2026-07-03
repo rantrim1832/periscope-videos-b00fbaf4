@@ -80,6 +80,17 @@ const Help = () => {
           </CardContent>
         </Card>
 
+        <Card>
+          <CardHeader><CardTitle>Safety, privacy, and legal requests</CardTitle><CardDescription>Fast paths for issues that need review.</CardDescription></CardHeader>
+          <CardContent className="flex flex-wrap gap-3">
+            <Button variant="hero" asChild><Link to="/report">Report content</Link></Button>
+            <Button variant="outline" asChild><Link to="/contact">Contact support</Link></Button>
+            <Button variant="outline" asChild><Link to="/privacy">Privacy</Link></Button>
+            <Button variant="outline" asChild><Link to="/terms">Terms</Link></Button>
+            <Button variant="outline" asChild><Link to="/dmca">DMCA</Link></Button>
+          </CardContent>
+        </Card>
+
         <Card className="bg-gradient-to-br from-primary/10 to-secondary/10 border-primary/20">
           <CardContent className="p-8 text-center space-y-4">
             <h3 className="text-2xl font-bold">Ready to help the next renter?</h3>

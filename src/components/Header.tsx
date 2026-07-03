@@ -86,10 +86,16 @@ export const Header = () => {
           <Link to="/help" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
             Help Center
           </Link>
+          <Link to="/contact" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
+            Contact
+          </Link>
           {isAdmin && (
             <>
               <Link to="/admin/settings" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
                 Admin Settings
+              </Link>
+              <Link to="/admin/safety" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
+                Safety
               </Link>
               <Link to="/admin/scraper" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
                 Scraper
@@ -211,6 +217,20 @@ export const Header = () => {
                 >
                   Help Center
                 </Link>
+                <Link 
+                  to="/contact" 
+                  className="text-lg font-medium hover:text-primary transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Contact
+                </Link>
+                <Link 
+                  to="/report" 
+                  className="text-lg font-medium hover:text-primary transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Report Content
+                </Link>
                 {isAdmin && (
                   <>
                     <Link 
@@ -219,6 +239,13 @@ export const Header = () => {
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       Admin Settings
+                    </Link>
+                    <Link 
+                      to="/admin/safety" 
+                      className="text-lg font-medium hover:text-primary transition-colors"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Safety Inbox
                     </Link>
                     <Link 
                       to="/admin/scraper" 
