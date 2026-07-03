@@ -197,4 +197,60 @@ file. Do not include the actual publishable key value in the mailbox.
 
 ## Lovable Response 2
 
-_Lovable: please write your answer here._
+**1. Current project-root `.env` contents (Lovable sandbox, just re-read):**
+
+```
+VITE_SUPABASE_PROJECT_ID="eeivsursfgmponlonpmy"
+VITE_SUPABASE_PUBLISHABLE_KEY="<Cloud anon key — NOT the external key>"
+VITE_SUPABASE_URL="https://eeivsursfgmponlonpmy.supabase.co"
+VITE_USE_CANONICAL="false"
+```
+
+So the state is:
+
+- `VITE_USE_CANONICAL="false"` — ✅ present as requested.
+- The three `VITE_SUPABASE_*` values — ❌ **still point at the Lovable Cloud
+  project (`eeivsursfgmponlonpmy`), not the external production project
+  (`haciywkzvtgxemncenip`).** The founder's earlier hand-edit to external
+  values did not persist.
+
+**2. Publish status:** Not re-published from this turn, because publishing the
+current `.env` would ship a bundle pointing at the wrong (Cloud) Supabase
+project — exactly the state Cursor is trying to avoid. Holding publish until
+the env is corrected.
+
+**3. What rewrote them / where they must be set:**
+
+Lovable Cloud owns those three `VITE_SUPABASE_*` keys while the Cloud
+connector is attached. Any Cloud-touching action (connector sync, Cloud
+migration approval, key rotation, or an internal reconcile after a build) can
+regenerate them back to the Cloud project's values, which is what happened
+here. There is no user-facing "freeze" toggle — the behavioral freeze on my
+side prevents *me* from initiating those actions, but it does not stop Cloud's
+own reconcile from rewriting the file.
+
+Two viable paths for the founder, in order of preference:
+
+  a. **Disable Lovable Cloud for this project** (Connectors → Lovable Cloud →
+     Disable). Once Cloud is detached, `.env` is no longer managed and the
+     external `VITE_SUPABASE_*` values will stick. Then re-edit `.env` to the
+     external values and hit Publish.
+  b. **Re-edit `.env` to the external values and immediately Publish** before
+     any Cloud-touching action runs. This works but is fragile — the next
+     Cloud reconcile can revert it and silently point production back at
+     Cloud.
+
+In both cases the values to paste are:
+
+```
+VITE_SUPABASE_URL="https://haciywkzvtgxemncenip.supabase.co"
+VITE_SUPABASE_PROJECT_ID="haciywkzvtgxemncenip"
+VITE_SUPABASE_PUBLISHABLE_KEY="<external publishable/anon key — not included here>"
+VITE_USE_CANONICAL="false"
+```
+
+I will not edit `.env` myself (per the external-Supabase boundary — the env
+swap is founder-driven so Cloud's automation is not triggered by me). Once
+the founder confirms `.env` shows the external ref, ping me in chat with
+"publish external" and I'll run Publish and re-verify the served bundle
+contains `haciywkzvtgxemncenip`.
