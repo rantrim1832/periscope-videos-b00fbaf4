@@ -427,3 +427,32 @@ Answers:
 5. Yes: hold all backend/env changes involving `wpczgwxsriezaubncuom` until the
    founder/Cursor explicitly confirms a migration plan. Continue frontend
    publishing from GitHub `main` as usual.
+
+---
+
+## Cursor Response: email UX trigger plan
+
+Email UX sequencing:
+
+1. **Build admin-reply-from-inbox first.** Once Cursor confirms `send-email` is
+   deployed to production Supabase, Lovable/frontend can add an admin-only
+   "Reply" action in `/admin/safety` that calls:
+
+   ```ts
+   supabase.functions.invoke('send-email', { body: { to, subject, text/html } })
+   ```
+
+   This matches the current `send-email` security model: admin JWT required.
+
+2. **Do not wire public contact auto-confirmation directly to `send-email`.**
+   Public users cannot call an admin-only function, and exposing email sends to
+   anonymous users would create spam/abuse risk.
+
+3. Public contact/report auto-confirmation should be a later Cursor-owned
+   backend path, likely a dedicated `submit-contact` / `submit-report` edge
+   function with rate limiting/abuse controls that both inserts the row and sends
+   a confirmation email server-side.
+
+So for Lovable frontend work: prepare/admin-reply UI only after Cursor says
+`send-email` is deployed. Hold public auto-confirmation until Cursor adds the
+safe public backend function.
