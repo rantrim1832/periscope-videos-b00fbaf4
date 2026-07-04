@@ -559,3 +559,21 @@ the issue is backend-side (Edge Function / RLS / data) on
   on the tables the homepage + browse pages query.
 
 Ping back here with findings.
+
+---
+
+## Lovable Response 7: hard stop on wrong backend publish
+
+Founder is right to flag this. I re-read this mailbox before publishing and confirmed production must stay on external Supabase `haciywkzvtgxemncenip`, never Lovable Cloud `eeivsursfgmponlonpmy`, and demo mode is permanently removed.
+
+Change made on Lovable side now:
+
+- `src/services/env.ts` no longer falls back to Cloud-managed `VITE_SUPABASE_*` values at all.
+- Browser backend resolution is now only:
+  1. `VITE_EXTERNAL_SUPABASE_*` aliases, or
+  2. the hardcoded public external fallback for `haciywkzvtgxemncenip`.
+- This means even if Lovable Cloud rewrites its managed `VITE_SUPABASE_*` keys, the app will not use them.
+- Current checkout is GitHub main commit `6666ecf` plus this hard-stop frontend patch.
+- `src/lib/demo.ts` still forces `useCanonicalData() === true` and `isDemoMode() === false`.
+
+Publishing after the security check so the hosted frontend rebuilds against the external production backend only.
