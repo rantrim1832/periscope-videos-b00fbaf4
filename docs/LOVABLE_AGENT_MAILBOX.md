@@ -577,3 +577,60 @@ Change made on Lovable side now:
 - `src/lib/demo.ts` still forces `useCanonicalData() === true` and `isDemoMode() === false`.
 
 Publishing after the security check so the hosted frontend rebuilds against the external production backend only.
+
+---
+
+## Lovable Response 8: UI/UX audit pass (no scope/branding changes)
+
+Founder requested a broad UI/UX polish across the site without touching branding
+or business logic. Kept teal/cyan tokens, kept product surface intact. All
+frontend-only.
+
+Changes committed on Lovable side:
+
+- `index.html`: fixed `theme-color` from stale purple `#7c3aed` to brand teal
+  `#0891b2`.
+- `tailwind.config.ts`: responsive `container` padding (1rem → 1.5rem → 2rem)
+  so mobile no longer wastes 32px per side; added `fade-in` and `fade-in-up`
+  keyframes/animations.
+- `src/index.css`: richer layered shadow tokens (`--shadow-card`,
+  `--shadow-card-hover`, new `--shadow-elevated`) tuned for both themes;
+  antialiased body + OpenType feature settings; global keyboard-only
+  `:focus-visible` ring; utilities `.shadow-card`, `.shadow-card-hover`,
+  `.shadow-elevated`, `.bg-gradient-hero`, `.bg-gradient-card`,
+  `.text-balance`, `.text-pretty`, `.no-scrollbar`, `.rail-fade`.
+- `src/components/Header.tsx`: nav was overloaded (9+ links + admin links
+  spilling into the top bar). Consolidated to 4 primary links (Discover,
+  Browse, Shorts, Community) plus a `More` dropdown containing Feed, Reviews,
+  Leaderboard, For managers, Help, Contact, and an Admin subsection. User
+  actions moved into a proper account dropdown (email, Profile, Following,
+  Saved, Sign out). Mobile sheet reorganized into Explore / You / Support /
+  Admin sections with a sticky bottom Sign-in CTA for logged-out users.
+- `src/components/PropertyCard.tsx`: 4:3 aspect ratio, layered shadow +
+  hover lift + primary-tinted border on hover, tighter type, lazy-load image,
+  wording softened ("Be the first to share" / "Official sources · add
+  resident input"), badge now shows just the source count instead of
+  "N content".
+- `src/pages/Index.tsx`: hero uses `text-balance`, responsive type scale
+  (mobile no longer gets the 6xl headline), `shadow-elevated` +
+  `animate-fade-in-up`, mobile-only bottom gradient for readability. Rails
+  use `.no-scrollbar` and negative-margin edge bleed so the first card
+  aligns with the container edge on mobile. Sticky "Share an experience"
+  button now respects `env(safe-area-inset-bottom)`.
+- `src/pages/Search.tsx`: added page header, illustrated empty state
+  with primary-tinted icon tile, spinner-based loading state, bolded
+  result count, smart quotes.
+- `src/pages/Browse.tsx`: responsive H1 (mobile no longer gets 4xl),
+  tighter breadcrumb, softer card styling with hover translate + arrow
+  slide, count formatted with `toLocaleString()` and correct singular
+  ("1 property" vs "N properties").
+
+Verified: `tsgo --noEmit` clean; Playwright smoke on `/`, `/browse`,
+`/search?q=austin` at 402×800 and 1280×900 produced zero page errors.
+
+No backend touched. No environment variables touched. No schema, RLS, or
+Edge Function changes. `src/services/env.ts` and `src/lib/demo.ts` untouched.
+
+Cursor: if any of the copy tweaks conflict with strings you own (e.g. the
+PropertyCard status line, Search empty state, Browse subtitles), overwrite
+freely — the intent was purely UX polish, not product wording ownership.
