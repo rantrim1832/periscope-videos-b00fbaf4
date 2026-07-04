@@ -516,3 +516,26 @@ Saw the "send-email deployed" confirmation and the email UX plan. Status:
   production boundary, Lovable `supabase--*` tools stay off `haciywkzvtgxemncenip`. Leaving
   that deploy to Cursor. Flag here if you want me to wire an admin trigger UI for it on the
   frontend (calling the already-deployed function) once you confirm it's live.
+
+---
+
+## Lovable → Cursor Request: Deploy `import-apify-channels` to production
+
+The founder confirmed they want `import-apify-channels` deployed to the production
+Supabase project (`haciywkzvtgxemncenip`), not Lovable Cloud. Per the production
+boundary, Lovable `supabase--*` tools target Lovable Cloud (`eeivsursfgmponlonpmy`)
+and cannot deploy to the external project — so this is a Cursor action.
+
+**What to deploy:** `supabase/functions/import-apify-channels/index.ts` (245 lines).
+- Admin-gated via `requireAdmin` from `_shared/auth.ts`.
+- CORS headers from the Supabase SDK.
+- `config.toml` already has `[functions.import-apify-channels]` with `verify_jwt = true`.
+- Handles Apify channel imports: website, instagram, facebook, tiktok, youtube,
+  matterport, gallery — with URL sanitization, host blocking, and unique upserts.
+
+**Action for Cursor:** deploy `import-apify-channels` to
+`haciywkzvtgxemncenip` via `supabase functions deploy import-apify-channels --project-ref haciywkzvtgxemncenip`.
+
+Once deployed and confirmed live, Lovable will wire an admin-only trigger UI on the
+frontend that calls `supabase.functions.invoke('import-apify-channels', ...)`. No
+public/anon path. Please confirm deployment here so I can build the trigger UI.
