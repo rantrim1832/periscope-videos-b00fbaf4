@@ -14,6 +14,7 @@ import { computeTruthScore, CATEGORY_LABELS, CATEGORY_ORDER, scoreColorVar, cate
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { PropertyCard } from '@/components/PropertyCard';
 import type { PropertyView } from '@/domain/property';
+import { getStoredLocalState } from '@/lib/localDiscovery';
 
 // Discovery (Mode 2): "show me the best/worst apartments." Curated rankings by
 // category + location — decision support that's inherently shareable and SEO-rich.
@@ -30,7 +31,8 @@ const Discover = () => {
   const { toast } = useToast();
   const [metric, setMetric] = useState<Metric>('overall');
   const [order, setOrder] = useState<'best' | 'worst'>('best');
-  const [state, setState] = useState<string>('all');
+  // Default to the viewer's home state so rankings open with local context.
+  const [state, setState] = useState<string>(() => getStoredLocalState() ?? 'all');
 
   const { data: properties = [] } = useQuery({ queryKey: ['discover-props'], queryFn: () => getPropertyProvider().listSummaries() });
 
