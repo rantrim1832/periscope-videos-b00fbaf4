@@ -31,7 +31,7 @@ export function computeStory(property: PropertyView): StoryCompleteness {
   const slots: StorySlot[] = [
     { key: 'exterior', label: 'Exterior', filledBy: 'management', filled: property.latitude != null || hasKind('gallery') },
     { key: 'amenities', label: 'Amenities', filledBy: 'management', filled: officialMedia || hasKind('youtube') },
-    { key: 'pool', label: 'Pool', filledBy: 'management', filled: cat('Luxury tours') },
+    { key: 'pool', label: 'Pool', filledBy: 'management', filled: cat('Property tours') },
     { key: 'clubhouse', label: 'Clubhouse', filledBy: 'management', filled: false },
     { key: 'floorplans', label: 'Floorplans', filledBy: 'management', filled: hasKind('matterport') || hasKind('website') },
     { key: 'resident_events', label: 'Resident Events', filledBy: 'management', filled: false },
@@ -75,7 +75,7 @@ const RESIDENT_SUGGESTIONS = [
 ];
 
 const CREATOR_SUGGESTIONS = [
-  'Apartment reality check', 'Would you live here?', 'Luxury versus reality',
+  'Apartment reality check', 'Community verdicts', 'Luxury versus reality',
   'Deposit horror stories', 'Best apartments under $X', 'Hidden fees',
   'Management changes', 'Maintenance investigation', 'Neighborhood guide',
 ];

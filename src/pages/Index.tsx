@@ -37,7 +37,7 @@ const Index = () => {
     ? cityRows.find((row) => row.city.toLowerCase().includes(localCity.city.toLowerCase()))
     : null;
   const photoItems = feed.filter((i) => i.thumbnailUrl).slice(0, 18);
-  const tourItems = feed.filter((i) => i.embedUrl || i.platform === 'matterport' || i.category === 'Luxury tours').slice(0, 18);
+  const tourItems = feed.filter((i) => i.embedUrl || i.platform === 'matterport' || i.category === 'Property tours').slice(0, 18);
   const needTruth = properties.slice(0, 18);
   const trending = feed.filter((i) => i.thumbnailUrl).slice(0, 10);
   const mosaic = feed.filter((i) => i.thumbnailUrl).slice(0, 9);
@@ -60,14 +60,14 @@ const Index = () => {
 
           <main className="container pt-6 pb-10 space-y-12 md:space-y-16">
             {trending.length > 0 && <TrendingRail items={trending} />}
-            {localRow && <PosterRail title={`Near ${localCity?.label}`} subtitle="Local official photos, tours, and resident posts." items={localRow.items} accent />}
-            {tourItems.length > 0 && <PosterRail title="Official tours & walkthroughs" subtitle="Real property tours and sourced visual context" items={tourItems} />}
+            {localRow && <PosterRail title={`Near ${localCity?.label}`} subtitle="Official photos, tours, and verified resident posts near you." items={localRow.items} accent />}
+            {tourItems.length > 0 && <PosterRail title="Official tours and walkthroughs" subtitle="Verified property tours from official channels" items={tourItems} />}
             {mosaic.length >= 6 && <PhotoMosaic items={mosaic} />}
             {cityRows.slice(0, 3).map((row) => (
               <PosterRail key={row.city} title={`Popular in ${row.city}`} items={row.items} />
             ))}
-            {photoItems.length > 0 && <PosterRail title="Photos that make pages feel real" subtitle="Official and public imagery from property sources" items={photoItems} />}
-            <PropertyRail title="Help complete these pages" properties={needTruth} />
+            {photoItems.length > 0 && <PosterRail title="Verified property photography" subtitle="Official and sourced imagery" items={photoItems} />}
+            <PropertyRail title="Properties seeking resident input" properties={needTruth} />
           </main>
         </>
       )}
@@ -125,10 +125,10 @@ const CinematicHero = ({ item, q, setQ, runSearch }: { item: FeedItem; q: string
     <div className="relative z-10 container h-full flex flex-col justify-end pb-10 md:pb-16">
       <div className="max-w-2xl space-y-4 md:space-y-5 animate-fade-in-up">
         <Badge className="bg-white/15 text-white border-white/25 backdrop-blur-md gap-1.5">
-          <Sparkles className="w-3 h-3" /> Featured this week
+          <Sparkles className="w-3 h-3" /> Featured property
         </Badge>
         <h1 className="text-4xl md:text-6xl lg:text-7xl font-black leading-[1.02] tracking-tight text-balance drop-shadow-[0_2px_20px_rgba(0,0,0,0.6)]">
-          See the place<br className="hidden md:block" /> before you sign the lease.
+          See the property<br className="hidden md:block" /> before you sign the lease.
         </h1>
         <p className="text-white/85 text-base md:text-lg line-clamp-2 max-w-xl">{item.title}</p>
         <p className="text-white/70 text-sm flex items-center gap-2">
@@ -234,7 +234,7 @@ const TrendingRail = ({ items }: { items: FeedItem[] }) => (
         <h2 className="text-2xl md:text-3xl font-black tracking-tight flex items-center gap-2">
           <Flame className="w-6 h-6 text-primary" /> Trending now
         </h2>
-        <p className="text-sm text-muted-foreground mt-0.5">What renters are watching this week</p>
+        <p className="text-sm text-muted-foreground mt-0.5">Most-watched listings this week</p>
       </div>
       <Link to="/feed" className="text-sm font-medium text-primary hover:underline flex items-center gap-0.5 shrink-0">See all <ChevronRight className="w-4 h-4" /></Link>
     </div>
@@ -319,9 +319,9 @@ const PhotoMosaic = ({ items }: { items: FeedItem[] }) => {
       <div className="mb-4 flex items-end justify-between gap-4">
         <div>
           <h2 className="text-xl md:text-2xl font-bold tracking-tight flex items-center gap-2">
-            <Heart className="w-5 h-5 text-primary" /> Explore
+            <Heart className="w-5 h-5 text-primary" /> Latest across the network
           </h2>
-          <p className="text-xs md:text-sm text-muted-foreground mt-0.5">Fresh photos, tours, and posts across the network</p>
+          <p className="text-xs md:text-sm text-muted-foreground mt-0.5">Recent photos, tours, and resident posts</p>
         </div>
         <Link to="/feed" className="text-sm font-medium text-primary hover:underline flex items-center gap-0.5 shrink-0">See all <ChevronRight className="w-4 h-4" /></Link>
       </div>

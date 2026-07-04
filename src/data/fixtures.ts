@@ -44,14 +44,14 @@ const richReviews: ReviewView[] = [
 ];
 
 const richMedia: MediaItem[] = [
-  { id: 'm1', source: 'resident', title: 'Move-out deposit dispute walkthrough', city: 'Los Angeles, CA', verified: true, isPositive: false, category: 'Deposit nightmares' },
-  { id: 'm2', source: 'resident', title: 'Ceiling leak — 2 weeks unfixed', city: 'Los Angeles, CA', verified: true, isPositive: false, category: 'Maintenance disasters' },
-  { id: 'm3', source: 'resident', title: 'The pool & gym are unreal', city: 'Los Angeles, CA', isPositive: true, category: 'Luxury tours' },
-  { id: 'm4', source: 'official', title: 'Official amenity tour', city: 'Los Angeles, CA', category: 'Luxury tours' },
-  { id: 'm5', source: 'official', title: 'Renovated 2BR walkthrough', city: 'Los Angeles, CA', category: 'Luxury tours' },
+  { id: 'm1', source: 'resident', title: 'Move-out deposit dispute walkthrough', city: 'Los Angeles, CA', verified: true, isPositive: false, category: 'Deposit disputes' },
+  { id: 'm2', source: 'resident', title: 'Ceiling leak — 2 weeks unfixed', city: 'Los Angeles, CA', verified: true, isPositive: false, category: 'Maintenance issues' },
+  { id: 'm3', source: 'resident', title: 'The pool & gym are unreal', city: 'Los Angeles, CA', isPositive: true, category: 'Property tours' },
+  { id: 'm4', source: 'official', title: 'Official amenity tour', city: 'Los Angeles, CA', category: 'Property tours' },
+  { id: 'm5', source: 'official', title: 'Renovated 2BR walkthrough', city: 'Los Angeles, CA', category: 'Property tours' },
   {
     id: 'm6', source: 'imported', title: 'Imported: resident apartment tour (YouTube)',
-    city: 'Los Angeles, CA', platform: 'youtube', category: 'Would you live here?',
+    city: 'Los Angeles, CA', platform: 'youtube', category: 'Community verdicts',
     embedUrl: 'https://www.youtube.com/embed/aqz-KE-bpKQ',
   },
 ];
