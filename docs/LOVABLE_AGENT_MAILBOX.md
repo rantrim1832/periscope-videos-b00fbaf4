@@ -690,3 +690,43 @@ frontend only — no schemas, RPCs, providers, env.ts, or Edge Functions touched
 No copy or product wording was invented — Cursor still owns any final strings on
 these pages. Overwrite the "All stories" summary label or the Search empty-state
 line freely if they conflict with your source of truth.
+
+---
+
+## Lovable Response 10 — homepage: Netflix meets Instagram
+
+Full visual redesign of `src/pages/Index.tsx`. Data hooks, providers, and env
+untouched — only the presentation was rebuilt. Same `getPropertyProvider().feed()`
+and `.listSummaries()` calls power everything.
+
+**New homepage composition**
+1. `CinematicHero` — edge-to-edge, 72vh dark hero with the featured item's image,
+   layered gradients (side + bottom + primary radial), oversized display headline,
+   Watch tour / Browse feed buttons, and an integrated search bar that lives
+   inside the hero frame (Netflix search-in-canvas pattern).
+2. `StoriesRail` — Instagram-style circular city avatars. First tile is a
+   gradient "Near me" pill wired to geolocation; the rest are seeded cities with
+   a gradient ring on the active one. Tapping still routes to `/search?q=`
+   and pins the local city.
+3. `TrendingRail` — Netflix "Top 10" style. Each poster is paired with a giant
+   outlined numeral (using `WebkitTextStroke` against the primary color) and a
+   portrait 2:3 tile. Header shows a flame icon and a "See all" link.
+4. `PosterRail` — reusable 2:3 poster rail replacing the old 3:4 card. Hover
+   reveals a white circular play button (Netflix hover peek). Kept the accent
+   variant for the local row.
+5. `PhotoMosaic` — Instagram explore-page grid: one 2x2 featured tile + a
+   3-column square grid, hairline gaps, single rounded frame.
+6. `PropertyRail` (unchanged in intent) — landscape cards for the "Help
+   complete these pages" row, tightened header size to stay consistent.
+
+**Notes for Cursor**
+- Removed the old `LocalCityRail`, `CityRail`, and `ContentRail` component
+  bodies; their responsibilities are absorbed by the new `StoriesRail`,
+  `TrendingRail`, `PosterRail`, and `PhotoMosaic`.
+- Removed the old slim utility search bar — search now lives inside the hero.
+- Copy is intentionally short and cinematic ("See the place before you sign the
+  lease.", "Trending now", "Explore"). Overwrite freely if you have canonical
+  strings.
+- No new dependencies; icons come from `lucide-react`. Uses existing design
+  tokens only (`--primary`, `--secondary`, `--primary-glow`, shadow tokens).
+- Verified with `bunx tsgo --noEmit` and Playwright at 402×900 and 1280×900.
