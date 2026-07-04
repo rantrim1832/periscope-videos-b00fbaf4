@@ -14,6 +14,10 @@ const SOCIAL_PATTERNS: [ChannelKind, RegExp][] = [
 ];
 const BLOCKED_URL_HOSTS = new Set(["app.getflex.com", "stream.mux.com"]);
 
+function cleanText(value: string): string {
+  return value.replace(/[\uD800-\uDFFF]/g, "").trim();
+}
+
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
     status,
@@ -25,7 +29,7 @@ function str(v: unknown): string | null {
 }
 
 function normalizeUrl(v: string): string | null {
-  let s = v.trim();
+  let s = cleanText(v);
   if (s.startsWith("/url?")) {
     try {
       const parsed = new URL(s, "https://www.google.com");
@@ -55,7 +59,7 @@ function addUrl(channels: Channel[], v: unknown, label?: string) {
   if (/^https?:\/\/(www\.)?google\.com\/maps\//i.test(url)) return;
   const kind = SOCIAL_PATTERNS.find(([, re]) => re.test(url))?.[0] ??
     (/vapi\.apartments\.com\/video\/play/i.test(url) ? "gallery" : /\.(jpg|jpeg|png|webp)(\?|$)/i.test(url) ? "gallery" : "website");
-  channels.push({ kind, url, label });
+  channels.push({ kind, url, label: label ? cleanText(label) : undefined });
 }
 
 function collect(channels: Channel[], v: unknown, label?: string) {
@@ -219,7 +223,7 @@ Deno.serve(async (req) => {
         canonical_property_id: propertyId,
         kind: channel.kind,
         url: channel.url,
-        label: channel.label ?? "Apify public source",
+        label: cleanText(channel.label ?? "Apify public source"),
         is_verified: false,
         source: "seed",
       });

@@ -40,6 +40,10 @@ const SOCIAL_PATTERNS: [ChannelKind, RegExp][] = [
 
 const BLOCKED_URL_HOSTS = new Set(['app.getflex.com', 'stream.mux.com']);
 
+function cleanText(value: string): string {
+  return value.replace(/[\uD800-\uDFFF]/g, '').trim();
+}
+
 function parseArgs(): Args {
   const args = process.argv.slice(2);
   const get = (flag: string) => {
@@ -61,7 +65,7 @@ function asString(v: unknown): string | null {
 }
 
 function normalizeUrl(url: string): string | null {
-  let s = url.trim();
+  let s = cleanText(url);
   if (s.startsWith('/url?')) {
     try {
       const parsed = new URL(s, 'https://www.google.com');
@@ -91,7 +95,7 @@ function pushUrl(channels: Candidate['channels'], urlLike: unknown, label?: stri
   if (/^https?:\/\/(www\.)?google\.com\/maps\//i.test(url)) return;
   const kind = SOCIAL_PATTERNS.find(([, re]) => re.test(url))?.[0] ??
     (/vapi\.apartments\.com\/video\/play/i.test(url) ? 'gallery' : /\.(jpg|jpeg|png|webp)(\?|$)/i.test(url) ? 'gallery' : 'website');
-  if (!channels.some((c) => c.url === url)) channels.push({ kind, url, label });
+  if (!channels.some((c) => c.url === url)) channels.push({ kind, url, label: label ? cleanText(label) : undefined });
 }
 
 function collectNestedUrls(channels: Candidate['channels'], value: unknown, label?: string) {
@@ -274,7 +278,7 @@ async function main() {
         canonical_property_id: propertyId,
         kind: ch.kind,
         url: ch.url,
-        label: ch.label ?? 'Apify public source',
+        label: cleanText(ch.label ?? 'Apify public source'),
         is_verified: false,
         source: 'seed',
       });
