@@ -74,7 +74,7 @@ export const ReviewsByLifeStage = ({ property, onContribute }: { property: Prope
       {property.reviews.length === 0 ? (
         <Card className="p-8 text-center bg-muted/30 border-dashed mt-4">
           <p className="text-muted-foreground mb-4">
-            No reviews yet. Lived here? Your honest take could save someone from a costly mistake.
+            No resident reviews yet. Lived here? Your experience could help someone make a more confident decision.
           </p>
           <Button variant="hero" onClick={onContribute}>Be the first to review</Button>
         </Card>

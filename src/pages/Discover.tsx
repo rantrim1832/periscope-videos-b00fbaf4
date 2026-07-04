@@ -105,7 +105,7 @@ const Discover = () => {
             <div className="space-y-4">
               <div>
                 <h2 className="text-xl font-bold">Most complete official pages{state !== 'all' ? ` in ${state}` : ''}</h2>
-                <p className="text-sm text-muted-foreground">Truth Scores need resident signal. Until then, start with places that have official photos, tours, and social content.</p>
+                <p className="text-sm text-muted-foreground">Resident scores need enough input. Until then, start with places that have official photos, tours, and social content.</p>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {contentRich.map(({ p, count }) => (

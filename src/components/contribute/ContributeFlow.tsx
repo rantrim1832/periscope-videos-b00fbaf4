@@ -65,7 +65,7 @@ export const ContributeFlow = ({ propertyId, propertyName }: { propertyId: strin
   };
 
   const share = async () => {
-    const text = `I just shared the truth about ${propertyName} on Periscope`;
+    const text = `I just shared a renter experience for ${propertyName} on Periscope`;
     try {
       if (navigator.share) await navigator.share({ title: propertyName, text, url: `${window.location.origin}/property/${propertyId}` });
       else {
@@ -84,7 +84,7 @@ export const ContributeFlow = ({ propertyId, propertyName }: { propertyId: strin
       {step === 1 && (
         <Card>
           <CardHeader>
-            <CardTitle>How do you want to share the truth?</CardTitle>
+            <CardTitle>How do you want to share your experience?</CardTitle>
             <CardDescription>Video is the most trusted — but every honest contribution helps.</CardDescription>
           </CardHeader>
           <CardContent className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -273,7 +273,7 @@ export const ContributeFlow = ({ propertyId, propertyName }: { propertyId: strin
             <div className="flex justify-between">
               <Button variant="outline" onClick={() => setStep(3)}>Back</Button>
               <Button variant="hero" onClick={submit} disabled={submitting}>
-                {submitting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Posting…</> : 'Post my truth'}
+                {submitting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Posting…</> : 'Post my experience'}
               </Button>
             </div>
           </CardContent>
@@ -295,7 +295,7 @@ const ResultScreen = ({ result, propertyId, onShare }: { result: SubmissionResul
   const map = {
     published: {
       icon: PartyPopper, color: 'text-success',
-      title: 'Your truth is live 🎉', desc: 'Thank you — this could save someone from a costly mistake. You just earned points toward your next badge; watch the views roll in.',
+      title: 'Your experience is live 🎉', desc: 'Thank you — your context can help another renter make a more informed decision. You just earned points toward your next badge.',
     },
     pending: {
       icon: Clock, color: 'text-warning',

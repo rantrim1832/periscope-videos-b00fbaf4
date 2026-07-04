@@ -27,7 +27,7 @@ async function getLeaders(): Promise<Row[]> {
 const MEDAL = ['🥇', '🥈', '🥉'];
 
 const Leaderboard = () => {
-  useDocumentTitle('Top contributors | Periscope', 'The renters and creators contributing the most verified truth.');
+  useDocumentTitle('Top contributors | Periscope', 'The renters and creators contributing helpful property context.');
   const { data: rows = [], isLoading } = useQuery({ queryKey: ['leaderboard'], queryFn: getLeaders });
 
   return (
@@ -35,10 +35,10 @@ const Leaderboard = () => {
       <Header />
       <div className="container mx-auto px-4 py-8 max-w-3xl">
         <h1 className="text-3xl font-bold mb-1 flex items-center gap-2"><Trophy className="w-7 h-7 text-warning" /> Top contributors</h1>
-        <p className="text-muted-foreground mb-6">The renters and creators exposing the most truth. Contribute to climb.</p>
+        <p className="text-muted-foreground mb-6">The renters and creators helping others understand places before they lease.</p>
 
         {isDemoMode() || (!isLoading && rows.length === 0) ? (
-          <EmptyState icon={Trophy} title="The leaderboard is wide open" description="Be one of the first contributors — publish reviews to earn points, badges, and a spot at the top." primary={{ label: 'Add your truth', to: '/contribute' }} />
+          <EmptyState icon={Trophy} title="The leaderboard is wide open" description="Be one of the first contributors — publish reviews to earn points, badges, and a spot at the top." primary={{ label: 'Share an experience', to: '/contribute' }} />
         ) : isLoading ? (
           <p className="text-muted-foreground">Loading…</p>
         ) : (

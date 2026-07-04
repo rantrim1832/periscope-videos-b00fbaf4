@@ -87,7 +87,7 @@ export const PropertyCard = ({
             </div>
           ) : (
             <div className="text-xs text-muted-foreground">
-              {videoCount > 0 ? 'Official content seeded · resident truth needed' : 'Be the first to add resident truth'}
+              {videoCount > 0 ? 'Official sources found · resident input welcome' : 'No resident input yet'}
             </div>
           )}
         </div>

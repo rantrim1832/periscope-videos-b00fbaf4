@@ -37,7 +37,7 @@ const StoryProgress = ({ property }: { property: PropertyView }) => {
           <span className="text-[11px] text-muted-foreground tracking-wide">STORY COMPLETE</span>
         </div>
       </div>
-      <p className="mt-3 text-sm font-medium text-center max-w-[16rem]">Gathering resident data — the Truth Score appears as reviews arrive</p>
+      <p className="mt-3 text-sm font-medium text-center max-w-[16rem]">Gathering resident context — scores appear when there is enough signal</p>
     </div>
   );
 };
@@ -72,7 +72,7 @@ export const VerdictHero = ({ property, result, onWatch, onContribute }: Props) 
 
             <p className="text-muted-foreground max-w-xl">
               {isEmpty
-                ? 'No one has shared the truth about this place yet. Be the first to expose or defend it.'
+                ? 'No resident experiences have been added yet. If you know this place, your context can help future renters.'
                 : `Based on ${result.verifiedResidentCount} verified residents, ${result.reviewCount} reviews, and ${result.videoCount} videos.`}
             </p>
 
@@ -83,7 +83,7 @@ export const VerdictHero = ({ property, result, onWatch, onContribute }: Props) 
                 </Button>
               )}
               <Button variant={isEmpty ? 'hero' : 'outline'} size="lg" onClick={onContribute}>
-                <PenLine className="w-5 h-5 mr-2" /> {isEmpty ? 'Be the first to add your truth' : 'Add your truth'}
+                <PenLine className="w-5 h-5 mr-2" /> {isEmpty ? 'Share an experience' : 'Add your experience'}
               </Button>
               <AddToCompareButton property={property} score={result.score} />
               <SaveButton property={property} />

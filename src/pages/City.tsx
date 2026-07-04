@@ -22,7 +22,7 @@ const visualCount = (p: PropertyView) =>
   p.officialChannels?.filter((c) => ['gallery', 'matterport', 'instagram', 'tiktok', 'youtube'].includes(c.kind)).length ?? 0;
 
 // City landing page — an indexable, shareable local hub tying together the
-// city's properties, best/worst Truth Scores, and local content.
+  // City's properties, scored resident context, and local official/public content.
 const City = () => {
   const { state = '', city = '' } = useParams();
   const cityName = decodeURIComponent(city);
@@ -62,12 +62,12 @@ const City = () => {
           <div className="flex gap-2 shrink-0 mt-1">
             <WatchButton type="city" id={`${stateName}|${cityName}`} label={`${cityName}, ${stateName}`} size="sm" />
             <Button variant="outline" size="sm" onClick={async () => {
-              const res = await shareContent({ title: `Apartments in ${cityName}`, text: `Apartment truth for ${cityName}, ${stateName} on Periscope` });
+              const res = await shareContent({ title: `Apartments in ${cityName}`, text: `Apartment context for ${cityName}, ${stateName} on Periscope` });
               if (res === 'copied') toast({ title: 'Link copied' });
             }}><Share2 className="w-4 h-4 mr-2" /> Share</Button>
           </div>
         </div>
-        <p className="text-muted-foreground mt-2 mb-8">{properties.length} communities · verified resident truth with video proof.</p>
+        <p className="text-muted-foreground mt-2 mb-8">{properties.length} communities · official sources, resident experiences, and visual context.</p>
 
         {isLoading ? (
           <p className="text-muted-foreground">Loading…</p>
@@ -139,7 +139,7 @@ const City = () => {
 
       <div className="fixed bottom-4 inset-x-0 z-30 flex justify-center pointer-events-none">
         <Button variant="hero" className="pointer-events-auto shadow-lg" asChild>
-          <Link to="/contribute"><PenLine className="w-4 h-4 mr-2" /> Add your truth</Link>
+          <Link to="/contribute"><PenLine className="w-4 h-4 mr-2" /> Share an experience</Link>
         </Button>
       </div>
     </div>

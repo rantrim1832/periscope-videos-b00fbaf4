@@ -75,7 +75,7 @@ const Index = () => {
             {cityRows.slice(0, 4).map((row) => (
               <ContentRail key={row.city} title={`Popular in ${row.city}`} items={row.items} />
             ))}
-            <PropertyRail title="Pages that need resident truth" properties={needTruth} />
+            <PropertyRail title="Help complete these pages" properties={needTruth} />
           </>
         )}
       </main>
@@ -83,7 +83,7 @@ const Index = () => {
       {/* One small nudge — no manifesto */}
       <div className="fixed bottom-4 inset-x-0 z-30 flex justify-center pointer-events-none">
         <Button variant="hero" className="pointer-events-auto shadow-lg" asChild>
-          <Link to="/contribute"><PenLine className="w-4 h-4 mr-2" /> Add your truth</Link>
+          <Link to="/contribute"><PenLine className="w-4 h-4 mr-2" /> Share an experience</Link>
         </Button>
       </div>
     </div>
@@ -98,10 +98,9 @@ const POPULAR_CITIES = [
 // action-forward — never a blank page.
 const ColdStart = () => (
   <div className="text-center py-12 max-w-2xl mx-auto">
-    <h2 className="text-3xl font-bold mb-3">Be the first to expose or defend your building</h2>
+    <h2 className="text-3xl font-bold mb-3">Help the next renter understand this place</h2>
     <p className="text-muted-foreground mb-8">
-      Periscope is brand new in your area. Look up where you live, drop a 15-second video or a quick review,
-      and start the truth for the next renter.
+      Look up a place you know, add a quick note or short video, and make the next renter’s decision a little easier.
     </p>
     <div className="flex flex-wrap justify-center gap-2 mb-8">
       {POPULAR_CITIES.map((c) => (
@@ -111,7 +110,7 @@ const ColdStart = () => (
       ))}
     </div>
     <div className="flex flex-col sm:flex-row gap-3 justify-center">
-      <Button variant="hero" size="lg" asChild><Link to="/contribute"><PenLine className="w-5 h-5 mr-2" /> Add the first truth</Link></Button>
+      <Button variant="hero" size="lg" asChild><Link to="/contribute"><PenLine className="w-5 h-5 mr-2" /> Add a renter note</Link></Button>
       <Button variant="outline" size="lg" asChild><Link to="/welcome">How it works</Link></Button>
     </div>
   </div>
@@ -123,7 +122,7 @@ const HeroFeature = ({ item }: { item: FeedItem }) => (
     <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/55 to-black/15" />
     <div className="relative z-10 max-w-2xl p-6 md:p-10 text-white space-y-4">
       <Badge className="bg-white/15 text-white border-white/20"><Sparkles className="w-3 h-3 mr-1" /> Featured official source</Badge>
-      <h1 className="text-4xl md:text-6xl font-black leading-tight">See the public story before you sign.</h1>
+      <h1 className="text-4xl md:text-6xl font-black leading-tight">Get a clearer look before you tour or apply.</h1>
       <p className="text-white/80 text-lg line-clamp-3">{item.title}</p>
       <p className="text-white/75 flex items-center gap-2"><MapPin className="w-4 h-4" /> {item.propertyName} · {item.location}</p>
       <div className="flex flex-wrap gap-3">

@@ -28,7 +28,7 @@ const SECTIONS = [
   },
   {
     icon: Building2, title: "How property managers participate",
-    body: "Managers can claim a property, add official content, and respond to reviews. They can never edit, delete, or suppress resident reviews — that's enforced at the database level. You'll always see resident truth alongside official context.",
+    body: "Managers can claim a property, add official content, and respond to reviews. They can never edit, delete, or suppress resident reviews — that's enforced at the database level. You'll always see resident experiences alongside official context.",
   },
   {
     icon: Lock, title: "What stays private",
@@ -40,7 +40,7 @@ const FAQS = [
   { q: "Do I need to show my face in a video?", a: "No. Post anonymously — film the apartment, not yourself. Verification is about residency, not identity." },
   { q: "Can a landlord remove a negative review?", a: "No. Managers can respond and add context, but the platform never lets them delete or hide honest resident reviews." },
   { q: "Why is a score missing on some properties?", a: "We only show a Truth Score once there's enough verified signal. Until then you'll see the property's story completeness and an invitation to be the first to review." },
-  { q: "Is this free for renters?", a: "Yes. Renters never pay to see the truth. We monetize property-manager tools and aggregated data — never the public-good layer." },
+  { q: "Is this free for renters?", a: "Yes. Renters never pay to view property context or resident experiences. We monetize property-manager tools and aggregated, non-tenant-screening insights." },
 ];
 
 const Help = () => {
@@ -51,7 +51,7 @@ const Help = () => {
       <div className="container mx-auto px-4 py-10 max-w-4xl space-y-8">
         <div className="text-center space-y-3">
           <h1 className="text-4xl font-bold">How Periscope works</h1>
-          <p className="text-lg text-muted-foreground">Truth you can trust — and exactly how we keep it that way.</p>
+          <p className="text-lg text-muted-foreground">Clearer rental decisions — and how we keep sources separated and labeled.</p>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
@@ -95,7 +95,7 @@ const Help = () => {
           <CardContent className="p-8 text-center space-y-4">
             <h3 className="text-2xl font-bold">Ready to help the next renter?</h3>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Button variant="hero" asChild><Link to="/contribute">Add your truth</Link></Button>
+              <Button variant="hero" asChild><Link to="/contribute">Share an experience</Link></Button>
               <Button variant="outline" asChild><Link to="/feed">Explore the feed</Link></Button>
             </div>
           </CardContent>

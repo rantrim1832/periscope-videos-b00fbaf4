@@ -50,10 +50,10 @@ const Feed = () => {
             ))}
           </div>
           <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-muted/30 px-3 py-2 text-sm">
-            <span className="text-muted-foreground">Want to find your current or past building?</span>
+            <span className="text-muted-foreground">Looking for a place you know?</span>
             <div className="flex gap-2">
               <Button size="sm" variant="outline" asChild><Link to="/search">Search property</Link></Button>
-              <Button size="sm" variant="ghost" asChild><Link to="/contribute">Post your story</Link></Button>
+              <Button size="sm" variant="ghost" asChild><Link to="/contribute">Share an experience</Link></Button>
             </div>
           </div>
         </div>
@@ -64,7 +64,7 @@ const Feed = () => {
       ) : filtered.length === 0 ? (
         <div className="text-center py-20">
           <p className="text-muted-foreground mb-4">No {category === 'All' ? '' : `“${category}” `}content yet.</p>
-          <Button variant="hero" asChild><Link to="/contribute">Be the first to post</Link></Button>
+          <Button variant="hero" asChild><Link to="/contribute">Share an experience</Link></Button>
         </div>
       ) : (
         <div className="h-[calc(100vh-12rem)] overflow-y-auto snap-y snap-mandatory">
@@ -141,7 +141,7 @@ const FeedCard = ({ item }: { item: FeedItem }) => {
           )}
           <div className="flex gap-2 pt-1">
             <Button size="sm" variant="secondary" onClick={share}><Share2 className="w-4 h-4 mr-1" /> Share</Button>
-            <Button size="sm" variant="hero" asChild><Link to={`/contribute/${item.propertyId}`}><PenLine className="w-4 h-4 mr-1" /> Add your truth</Link></Button>
+            <Button size="sm" variant="hero" asChild><Link to={`/contribute/${item.propertyId}`}><PenLine className="w-4 h-4 mr-1" /> Share your experience</Link></Button>
           </div>
         </div>
       </div>

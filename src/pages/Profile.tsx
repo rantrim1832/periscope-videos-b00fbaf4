@@ -100,7 +100,7 @@ const Profile = () => {
               {profile.contributions.length === 0 ? (
                 <div className="text-center py-8">
                   <p className="text-muted-foreground mb-4">No contributions yet.</p>
-                  <Button variant="hero" asChild><Link to="/contribute">Add your first truth</Link></Button>
+                  <Button variant="hero" asChild><Link to="/contribute">Share your first experience</Link></Button>
                 </div>
               ) : (
                 <div className="space-y-2">
