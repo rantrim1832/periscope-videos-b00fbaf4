@@ -15,6 +15,17 @@ const KIND_LABEL: Record<ChannelKind, string> = {
   youtube: 'YouTube', matterport: '3D tour', gallery: 'Photos',
 };
 
+function youtubeEmbed(url: string): string | null {
+  const watch = url.match(/[?&]v=([^&]+)/)?.[1];
+  const short = url.match(/youtu\.be\/([^?]+)/)?.[1];
+  const id = watch ?? short;
+  return id ? `https://www.youtube.com/embed/${id}` : null;
+}
+
+function isInstagramPost(url: string): boolean {
+  return /instagram\.com\/(p|reel|tv)\//i.test(url);
+}
+
 // Official content from the property's own channels. Labeled by trust:
 // "Official · Public" (embedded/linked from their public channels, pre-claim)
 // vs "Official · Verified" (post-claim, operator-managed). Never implies
@@ -22,7 +33,17 @@ const KIND_LABEL: Record<ChannelKind, string> = {
 export const OfficialContent = ({ property }: { property: PropertyView }) => {
   const channels = property.officialChannels ?? [];
   const verified = channels.some((c) => c.verified);
-  const embeds = channels.filter((c) => c.embedUrl);
+  const gallery = channels.filter((c) => c.kind === 'gallery' && /\.(jpg|jpeg|png|webp)(\?|$)/i.test(c.url)).slice(0, 9);
+  const tours = channels.filter((c) => c.kind === 'matterport' || /matterport\.com|panoskin\.com/i.test(c.url)).slice(0, 4);
+  const youtube = channels.filter((c) => c.kind === 'youtube' && youtubeEmbed(c.url)).slice(0, 2);
+  const instagramPosts = channels.filter((c) => c.kind === 'instagram' && isInstagramPost(c.url)).slice(0, 8);
+  const profiles = channels.filter((c) =>
+    !gallery.includes(c) &&
+    !tours.includes(c) &&
+    !youtube.includes(c) &&
+    !instagramPosts.includes(c) &&
+    !c.embedUrl,
+  ).slice(0, 16);
   const isManager = useIsManager(property.id);
 
   return (
@@ -51,9 +72,56 @@ export const OfficialContent = ({ property }: { property: PropertyView }) => {
         </Card>
       ) : (
         <div className="space-y-4">
-          {embeds.length > 0 && (
+          {(gallery.length > 0 || tours.length > 0 || youtube.length > 0 || instagramPosts.length > 0) && (
+            <div className="grid gap-4">
+              {gallery.length > 0 && (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {gallery.map((c) => (
+                    <a key={c.id} href={c.url} target="_blank" rel="noopener noreferrer nofollow" className="group relative overflow-hidden rounded-lg border bg-muted aspect-[4/3]">
+                      <img src={c.url} alt={c.label ?? `${property.name} official photo`} className="w-full h-full object-cover transition-transform group-hover:scale-105" loading="lazy" />
+                      <span className="absolute left-2 top-2 rounded-full bg-black/60 px-2 py-0.5 text-xs text-white">Official photo</span>
+                    </a>
+                  ))}
+                </div>
+              )}
+
+              {(tours.length > 0 || youtube.length > 0) && (
+                <div className="grid sm:grid-cols-2 gap-4">
+                  {tours.map((c) => (
+                    <Card key={c.id} className="overflow-hidden">
+                      <iframe title={c.label ?? 'Official tour'} src={c.url} className="w-full h-64 border-0" allowFullScreen loading="lazy" />
+                      <CardContent className="p-3"><p className="text-sm font-medium">Official 3D / virtual tour</p></CardContent>
+                    </Card>
+                  ))}
+                  {youtube.map((c) => (
+                    <Card key={c.id} className="overflow-hidden">
+                      <iframe title={c.label ?? 'Official YouTube'} src={youtubeEmbed(c.url) ?? c.url} className="w-full h-64 border-0" allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen loading="lazy" />
+                      <CardContent className="p-3"><p className="text-sm font-medium">Official YouTube</p></CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+
+              {instagramPosts.length > 0 && (
+                <Card>
+                  <CardHeader><CardTitle className="text-base">Recent official Instagram posts</CardTitle></CardHeader>
+                  <CardContent className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    {instagramPosts.map((c) => (
+                      <a key={c.id} href={c.url} target="_blank" rel="noopener noreferrer nofollow" className="rounded-lg border p-3 hover:border-primary transition-colors">
+                        <Instagram className="w-5 h-5 text-primary mb-2" />
+                        <p className="text-sm font-medium line-clamp-3">{c.label?.replace(/^Instagram post · /, '') || 'Instagram post'}</p>
+                        <p className="text-xs text-muted-foreground mt-2">Open on Instagram</p>
+                      </a>
+                    ))}
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          )}
+
+          {channels.filter((c) => c.embedUrl).length > 0 && (
             <div className="grid sm:grid-cols-2 gap-4">
-              {embeds.map((c) => (
+              {channels.filter((c) => c.embedUrl).map((c) => (
                 <Card key={c.id} className="overflow-hidden">
                   <iframe title={c.label ?? KIND_LABEL[c.kind]} src={c.embedUrl} className="w-full h-64 border-0" allowFullScreen loading="lazy" />
                   <CardContent className="p-3"><p className="text-sm font-medium">{c.label ?? KIND_LABEL[c.kind]}</p></CardContent>
@@ -64,7 +132,7 @@ export const OfficialContent = ({ property }: { property: PropertyView }) => {
           <Card>
             <CardHeader><CardTitle className="text-base">Official channels</CardTitle></CardHeader>
             <CardContent className="flex flex-wrap gap-2">
-              {channels.filter((c) => !c.embedUrl).map((c: OfficialChannel) => {
+              {profiles.map((c: OfficialChannel) => {
                 const Icon = ICON[c.kind];
                 return (
                   <Button key={c.id} variant="outline" size="sm" asChild>

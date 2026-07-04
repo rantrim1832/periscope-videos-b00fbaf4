@@ -238,7 +238,7 @@ export class CanonicalPropertyProvider implements PropertyDataProvider {
       .or('media_asset_id.not.is.null,embed_url.not.is.null')
       .order('created_at', { ascending: false })
       .limit(60);
-    return (data ?? []).map((r: any) => ({
+    const reviewItems = (data ?? []).map((r: any) => ({
       id: r.id,
       source: r.embed_url ? 'imported' : (r.source === 'official' ? 'official' : 'resident'),
       title: r.title,
@@ -251,6 +251,40 @@ export class CanonicalPropertyProvider implements PropertyDataProvider {
       location: [r.canonical_property?.city, r.canonical_property?.state].filter(Boolean).join(', '),
       creatorId: r.resident_id ?? undefined,
       creatorName: r.resident?.display_name ?? r.resident?.pseudonym ?? r.author_pseudonym ?? undefined,
+    }));
+    if (reviewItems.length > 0) return reviewItems;
+
+    // Launch fallback: until resident videos exist, make the entertainment feed
+    // alive with official/public seeded visuals. These are clearly official
+    // source items, not resident truth and not Truth Score inputs.
+    const { data: channels } = await this.db
+      .from('property_channel')
+      .select('id, kind, url, label, created_at, canonical_property:canonical_property_id(id, name, city, state)')
+      .in('kind', ['gallery', 'matterport', 'youtube', 'instagram', 'tiktok'])
+      .order('created_at', { ascending: false })
+      .limit(80);
+
+    const visual = (channels ?? []).filter((c: any) =>
+      c.kind === 'matterport' ||
+      c.kind === 'youtube' ||
+      c.kind === 'tiktok' ||
+      (c.kind === 'instagram' && /instagram\.com\/(p|reel|tv)\//i.test(c.url)) ||
+      (c.kind === 'gallery' && /\.(jpg|jpeg|png|webp)(\?|$)/i.test(c.url)),
+    );
+
+    return visual.map((c: any) => ({
+      id: c.id,
+      source: 'official',
+      title: c.label && !String(c.label).startsWith('Apify') ? c.label : `${c.canonical_property?.name ?? 'Property'} official ${c.kind}`,
+      thumbnailUrl: c.kind === 'gallery' ? c.url : undefined,
+      embedUrl: c.kind === 'matterport' ? c.url : undefined,
+      platform: c.kind,
+      category: c.kind === 'gallery' || c.kind === 'matterport' ? 'Luxury tours' : 'Would you live here?',
+      verified: false,
+      propertyId: c.canonical_property?.id ?? '',
+      propertyName: c.canonical_property?.name ?? 'Property',
+      location: [c.canonical_property?.city, c.canonical_property?.state].filter(Boolean).join(', '),
+      creatorName: 'Official · Public source',
     }));
   }
 }

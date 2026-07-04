@@ -66,6 +66,7 @@ const FeedCard = ({ item }: { item: FeedItem }) => {
 
   const play = async () => {
     if (item.embedUrl) { setPlaying(true); return; }
+    if (item.thumbnailUrl && !item.playbackUrl) return;
     const p = await getVideoProvider().getPlayback(item.playbackUrl ?? item.id);
     setSrc(p.hlsUrl);
     setPlaying(true);
@@ -92,8 +93,12 @@ const FeedCard = ({ item }: { item: FeedItem }) => {
             ) : null
           ) : (
             <button onClick={play} className="w-full h-full bg-gradient-to-br from-primary/25 to-secondary/25 flex flex-col items-center justify-center gap-3">
+              {item.thumbnailUrl && (
+                <img src={item.thumbnailUrl} alt={item.title} className="absolute inset-0 w-full h-full object-cover opacity-80" loading="lazy" />
+              )}
+              <div className="absolute inset-0 bg-black/25" />
               <div className="w-16 h-16 rounded-full bg-white/90 flex items-center justify-center"><Play className="w-7 h-7 text-black ml-1" /></div>
-              <span className="text-white/80 text-sm">Tap to play</span>
+              <span className="text-white/80 text-sm z-10">{item.thumbnailUrl && !item.embedUrl ? 'Official photo' : 'Tap to play'}</span>
             </button>
           )}
         </div>
