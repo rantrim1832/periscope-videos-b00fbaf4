@@ -6,7 +6,6 @@
 import type { ContributionDraft, SubmissionResult, SubmissionStatus } from '@/domain/contribution';
 import { getModerationProvider, type ModerationProvider } from './providers/moderation';
 import { getVideoProvider, type VideoProvider } from './providers/video';
-import { getEnv } from './env';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface ContributionSink {
@@ -78,12 +77,9 @@ export type ContributionService = ReturnType<typeof createContributionService>;
 const mockService = createContributionService();
 
 export async function submitContribution(draft: ContributionDraft): Promise<SubmissionResult> {
-  if (getEnv('VITE_USE_CANONICAL') === 'true') {
-    const { data, error } = await supabase.functions.invoke('submit-review', { body: draft });
-    if (error) throw error;
-    return data as SubmissionResult;
-  }
-  return mockService.submit(draft);
+  const { data, error } = await supabase.functions.invoke('submit-review', { body: draft });
+  if (error) throw error;
+  return data as SubmissionResult;
 }
 
 export async function createContributionUpload() {

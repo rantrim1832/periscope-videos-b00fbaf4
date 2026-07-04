@@ -86,7 +86,8 @@ serve(async (req) => {
     const text = [draft.title, draft.body].filter(Boolean).join('\n').trim();
     const mod = await moderate(text || draft.title);
     const uncertain = mod.flags.some((f: string) => MODERATION_UNCERTAIN.includes(f));
-    const status = uncertain ? 'pending' : mod.approved ? 'approved' : 'rejected';
+    const moderationStatus = uncertain ? 'pending' : mod.approved ? 'approved' : 'rejected';
+    const resultStatus = moderationStatus === 'approved' ? 'published' : moderationStatus;
 
     const embed = draft.type === 'import' ? parseEmbed(draft.importUrl ?? '') : null;
 
@@ -108,7 +109,7 @@ serve(async (req) => {
         embed_platform: embed?.platform ?? null,
         has_video: draft.type === 'video' || !!embed,
         source: 'resident',
-        moderation_status: status,
+        moderation_status: moderationStatus,
         moderation_score: mod.score,
         ai_flags: mod.flags,
       })
@@ -118,7 +119,7 @@ serve(async (req) => {
 
     // Truth Score recompute is handled automatically by the DB trigger.
     return new Response(
-      JSON.stringify({ status, reviewId: data.id, reason: mod.reason }),
+      JSON.stringify({ status: resultStatus, reviewId: data.id, reason: mod.reason }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
   } catch (err) {
