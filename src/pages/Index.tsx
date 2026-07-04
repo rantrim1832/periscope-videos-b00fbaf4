@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
@@ -68,6 +68,7 @@ const Index = () => {
             ))}
             {photoItems.length > 0 && <PosterRail title="Verified property photography" subtitle="Official and sourced imagery" items={photoItems} />}
             <PropertyRail title="Properties seeking resident input" properties={needTruth} />
+            <InfiniteFeed items={feed} />
           </main>
         </>
       )}
@@ -371,6 +372,69 @@ const PropertyRail = ({ title, properties }: { title: string; properties: Proper
             </Link>
           );
         })}
+      </div>
+    </section>
+  );
+};
+
+// Instagram-style infinite scroll: pages through the full feed 12 items at a
+// time as the sentinel enters the viewport. Purely client-side pagination over
+// the already-loaded feed (no extra network).
+const InfiniteFeed = ({ items }: { items: FeedItem[] }) => {
+  const pool = useMemo(() => items.filter((i) => i.thumbnailUrl), [items]);
+  const PAGE = 12;
+  const [count, setCount] = useState(PAGE);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const hasMore = count < pool.length;
+
+  useEffect(() => {
+    if (!hasMore) return;
+    const el = sentinelRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setCount((c) => Math.min(c + PAGE, pool.length));
+        }
+      },
+      { rootMargin: '600px 0px' },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [hasMore, pool.length]);
+
+  if (pool.length === 0) return null;
+  const visible = pool.slice(0, count);
+
+  return (
+    <section>
+      <div className="mb-4 flex items-end justify-between gap-4">
+        <div>
+          <h2 className="text-xl md:text-2xl font-bold tracking-tight">Keep scrolling</h2>
+          <p className="text-xs md:text-sm text-muted-foreground mt-0.5">More properties from across the network</p>
+        </div>
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-3">
+        {visible.map((item) => (
+          <Link key={item.id} to={`/property/${item.propertyId}`} className="group relative aspect-square rounded-xl overflow-hidden bg-muted shadow-card hover:shadow-card-hover transition-all">
+            {item.thumbnailUrl && (
+              <img src={item.thumbnailUrl} alt={item.title} loading="lazy" className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.06]" />
+            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-transparent" />
+            <div className="absolute bottom-0 inset-x-0 p-2.5 text-white">
+              <p className="font-semibold text-xs md:text-sm line-clamp-1">{item.propertyName}</p>
+              <p className="text-white/70 text-[10px] md:text-xs truncate">{item.location}</p>
+            </div>
+          </Link>
+        ))}
+      </div>
+
+      <div ref={sentinelRef} className="h-16 flex items-center justify-center mt-4">
+        {hasMore ? (
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-r-transparent" />
+        ) : (
+          <p className="text-xs text-muted-foreground">You&apos;re all caught up.</p>
+        )}
       </div>
     </section>
   );
