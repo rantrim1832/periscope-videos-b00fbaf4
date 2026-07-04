@@ -30,7 +30,7 @@ export function setPropertyMeta(opts: {
   score: number | null;
 }) {
   const title = `${opts.name} — Truth Score${opts.score != null ? ` ${opts.score}/100` : ''} | Periscope`;
-  const description = `See verified resident reviews, video proof, and the Truth Score for ${opts.name}${opts.location ? `, ${opts.location}` : ''} before you sign.`;
+  const description = `Resident reviews, videos, and Truth Score for ${opts.name}${opts.location ? `, ${opts.location}` : ''}.`;
   const image = ogImageUrl(opts.propertyId);
 
   document.title = title;
