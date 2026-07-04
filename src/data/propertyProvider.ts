@@ -28,11 +28,11 @@ export interface PropertyDataProvider {
 
 // Derive an entertainment-feed category from review signals.
 export function deriveCategory(lifeStage: string | null, isPositive: boolean | null, hasEmbed: boolean): string {
-  if (lifeStage === 'deposit') return 'Deposit nightmares';
-  if (lifeStage === 'maintenance') return 'Maintenance disasters';
-  if (isPositive) return 'Luxury tours';
-  if (hasEmbed) return 'Would you live here?';
-  return 'Horror stories';
+  if (lifeStage === 'deposit') return 'Deposit disputes';
+  if (lifeStage === 'maintenance') return 'Maintenance issues';
+  if (isPositive) return 'Property tours';
+  if (hasEmbed) return 'Community verdicts';
+  return 'Resident warnings';
 }
 
 function tally<T>(rows: T[], key: (r: T) => string | null | undefined): { value: string; count: number }[] {
@@ -450,7 +450,7 @@ export class CanonicalPropertyProvider implements PropertyDataProvider {
       thumbnailUrl: c.kind === 'gallery' ? c.url : undefined,
       embedUrl: c.kind === 'matterport' ? c.url : undefined,
       platform: c.kind,
-      category: c.kind === 'gallery' || c.kind === 'matterport' ? 'Luxury tours' : 'Would you live here?',
+      category: c.kind === 'gallery' || c.kind === 'matterport' ? 'Property tours' : 'Community verdicts',
       verified: false,
       propertyId: c.canonical_property?.id ?? '',
       propertyName: c.canonical_property?.name ?? 'Property',

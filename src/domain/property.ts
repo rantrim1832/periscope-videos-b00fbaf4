@@ -41,13 +41,13 @@ export interface FeedItem extends MediaItem {
 
 export const FEED_CATEGORIES = [
   'All',
-  'Horror stories',
-  'Deposit nightmares',
-  'Maintenance disasters',
-  'Luxury tours',
+  'Resident warnings',
+  'Deposit disputes',
+  'Maintenance issues',
+  'Property tours',
   'Investigations',
-  'Apartment hacks',
-  'Would you live here?',
+  'Renter tips',
+  'Community verdicts',
 ] as const;
 export type FeedCategory = (typeof FEED_CATEGORIES)[number];
 
