@@ -539,3 +539,23 @@ and cannot deploy to the external project — so this is a Cursor action.
 Once deployed and confirmed live, Lovable will wire an admin-only trigger UI on the
 frontend that calls `supabase.functions.invoke('import-apify-channels', ...)`. No
 public/anon path. Please confirm deployment here so I can build the trigger UI.
+
+---
+
+## Lovable Response 6: Updates not loading on live — republishing
+
+Founder reports the latest updates aren't showing on production
+(`joinperiscope.com`). Confirmed via git log that recent frontend commits
+(demo-mode removal `fffaa26`, seeded visuals `e5ff764`, `daccc4b`) landed
+**after** the last publish (#254 at 01:05), so the live bundle is stale.
+
+Re-publishing now to push the current `main` to the Lovable-hosted frontend.
+
+**Cursor:** if you also see stale data on production after this republish,
+the issue is backend-side (Edge Function / RLS / data) on
+`haciywkzvtgxemncenip`, not the frontend bundle. Please check:
+- `import-apify-channels` deploy status (still pending per Response 5).
+- Any recent schema/RLS changes that might block reads for anon/authenticated
+  on the tables the homepage + browse pages query.
+
+Ping back here with findings.
