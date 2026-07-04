@@ -23,10 +23,10 @@ import { CATEGORY_LABELS } from '@/domain/truthScore';
 import { submitContribution, createContributionUpload } from '@/services/contributionService';
 
 const TYPES: { key: ContributionType; icon: typeof Video; title: string; desc: string }[] = [
-  { key: 'video', icon: Video, title: 'Video', desc: 'The strongest proof — show the reality' },
-  { key: 'import', icon: Link2, title: 'Import a post', desc: 'Already posted on TikTok/YouTube? Link it' },
-  { key: 'photo', icon: Camera, title: 'Photo', desc: 'A picture worth a thousand reviews' },
-  { key: 'text', icon: FileText, title: 'Written', desc: 'Tell it in your words' },
+  { key: 'video', icon: Video, title: 'Video', desc: 'Record or upload a video of the property.' },
+  { key: 'import', icon: Link2, title: 'Import a post', desc: 'Link an existing TikTok, YouTube, or Instagram post.' },
+  { key: 'photo', icon: Camera, title: 'Photo', desc: 'Upload a photo of the unit, amenity, or issue.' },
+  { key: 'text', icon: FileText, title: 'Written', desc: 'Submit a written review.' },
 ];
 
 const STAGES: LifeStage[] = ['moveIn', 'living', 'maintenance', 'moveOut', 'deposit'];
@@ -65,7 +65,7 @@ export const ContributeFlow = ({ propertyId, propertyName }: { propertyId: strin
   };
 
   const share = async () => {
-    const text = `I just shared a renter experience for ${propertyName} on Periscope`;
+    const text = `I reviewed ${propertyName} on Periscope.`;
     try {
       if (navigator.share) await navigator.share({ title: propertyName, text, url: `${window.location.origin}/property/${propertyId}` });
       else {
@@ -84,8 +84,8 @@ export const ContributeFlow = ({ propertyId, propertyName }: { propertyId: strin
       {step === 1 && (
         <Card>
           <CardHeader>
-            <CardTitle>How do you want to share your experience?</CardTitle>
-            <CardDescription>Video is the most trusted — but every honest contribution helps.</CardDescription>
+            <CardTitle>How do you want to submit?</CardTitle>
+            <CardDescription>Video contributions carry the most weight.</CardDescription>
           </CardHeader>
           <CardContent className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {TYPES.map((t) => {
@@ -110,8 +110,8 @@ export const ContributeFlow = ({ propertyId, propertyName }: { propertyId: strin
       {step === 2 && (
         <Card>
           <CardHeader>
-            <CardTitle>Your experience at {propertyName}</CardTitle>
-            <CardDescription>Tell future renters what really happened.</CardDescription>
+            <CardTitle>Review {propertyName}</CardTitle>
+            <CardDescription>Include details that help renters evaluate this property.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
             <div>
@@ -137,7 +137,7 @@ export const ContributeFlow = ({ propertyId, propertyName }: { propertyId: strin
                 />
                 {draft.importUrl && (
                   parseEmbed(draft.importUrl)
-                    ? <p className="text-xs text-success">✓ {parseEmbed(draft.importUrl)!.platform} video detected — we’ll embed it with attribution (we never re-host).</p>
+                    ? <p className="text-xs text-success">{parseEmbed(draft.importUrl)!.platform} video detected — will be embedded with attribution (not re-hosted).</p>
                     : <p className="text-xs text-destructive">Unrecognized link. Supported: YouTube, TikTok, Instagram.</p>
                 )}
               </div>
@@ -155,7 +155,7 @@ export const ContributeFlow = ({ propertyId, propertyName }: { propertyId: strin
                 }}>
                   Choose file
                 </Button>
-                {draft.mediaAssetId && <p className="text-xs text-success mt-2">✓ Media attached</p>}
+                {draft.mediaAssetId && <p className="text-xs text-success mt-2">Media attached</p>}
               </div>
             )}
 
@@ -167,7 +167,7 @@ export const ContributeFlow = ({ propertyId, propertyName }: { propertyId: strin
 
             <div>
               <Label htmlFor="body">Details</Label>
-              <Textarea id="body" className="mt-1.5 min-h-[100px]" placeholder="What should future renters know?"
+              <Textarea id="body" className="mt-1.5 min-h-[100px]" placeholder="Describe conditions, management, charges, or other relevant details."
                 value={draft.body} onChange={(e) => set({ body: e.target.value })} />
             </div>
 
@@ -273,7 +273,7 @@ export const ContributeFlow = ({ propertyId, propertyName }: { propertyId: strin
             <div className="flex justify-between">
               <Button variant="outline" onClick={() => setStep(3)}>Back</Button>
               <Button variant="hero" onClick={submit} disabled={submitting}>
-                {submitting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Posting…</> : 'Post my experience'}
+                {submitting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Submitting…</> : 'Submit review'}
               </Button>
             </div>
           </CardContent>
@@ -295,7 +295,7 @@ const ResultScreen = ({ result, propertyId, onShare }: { result: SubmissionResul
   const map = {
     published: {
       icon: PartyPopper, color: 'text-success',
-      title: 'Your experience is live 🎉', desc: 'Thank you — your context can help another renter make a more informed decision. You just earned points toward your next badge.',
+      title: 'Review submitted', desc: 'Your review is now visible on the property page.',
     },
     pending: {
       icon: Clock, color: 'text-warning',
@@ -317,8 +317,8 @@ const ResultScreen = ({ result, propertyId, onShare }: { result: SubmissionResul
         <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
           {result.status === 'published' && (
             <>
-              <Button variant="hero" onClick={onShare}><Share2 className="w-4 h-4 mr-2" /> Share your review</Button>
-              <Button variant="outline" asChild><Link to="/profile">See your points &amp; badges</Link></Button>
+              <Button variant="hero" onClick={onShare}><Share2 className="w-4 h-4 mr-2" /> Share</Button>
+              <Button variant="outline" asChild><Link to="/profile">View profile</Link></Button>
             </>
           )}
           <Button variant="outline" asChild><Link to={`/property/${propertyId}`}>Back to property</Link></Button>
