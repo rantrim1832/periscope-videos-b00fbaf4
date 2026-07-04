@@ -3,7 +3,7 @@ import { authErrorResponse, corsHeaders, requireAdmin } from "../_shared/auth.ts
 
 type ChannelKind = "website" | "instagram" | "facebook" | "tiktok" | "youtube" | "matterport" | "gallery";
 type Channel = { kind: ChannelKind; url: string; label?: string };
-type Candidate = { name: string | null; address: string | null; city: string | null; state: string | null; channels: Channel[] };
+type Candidate = { name: string | null; address: string | null; city: string | null; state: string | null; sourceProfileUrl?: string | null; channels: Channel[] };
 
 const SOCIAL_PATTERNS: [ChannelKind, RegExp][] = [
   ["instagram", /instagram\.com/i],
@@ -92,6 +92,15 @@ function first(row: Record<string, unknown>, keys: string[]) {
 
 function normalizeRow(row: Record<string, unknown>): Candidate {
   const channels: Channel[] = [];
+  const scrapedUsername = first(row, ["scraped_username", "username", "ownerUsername"]);
+  const postUrl = first(row, ["post_url", "url", "permalink", "shortCodeUrl"]);
+  if (scrapedUsername) addUrl(channels, `https://www.instagram.com/${scrapedUsername}`, "profile-source");
+  if (postUrl && /instagram\.com\/(p|reel|tv)\//i.test(postUrl)) {
+    const caption = first(row, ["caption.text", "caption", "text"]);
+    const label = caption ? `Instagram post · ${caption.slice(0, 80)}${caption.length > 80 ? "..." : ""}` : "Instagram post";
+    addUrl(channels, postUrl, label);
+  }
+
   for (const key of ["website", "propertyWebsite", "site", "domain", "instagram", "facebook", "tiktok", "youtube", "matterport", "virtualTour", "virtual_tour", "tourUrl"]) {
     addUrl(channels, row[key], key);
   }
@@ -118,6 +127,7 @@ function normalizeRow(row: Record<string, unknown>): Candidate {
     address: addressLine,
     city: first(row, ["city", "Billing City"]) ?? cityFromAddress,
     state: first(row, ["state", "stateCode", "location.state", "region", "Billing State/Province"]) ?? stateFromAddress,
+    sourceProfileUrl: scrapedUsername ? `https://www.instagram.com/${scrapedUsername}` : null,
     channels,
   };
 }
@@ -127,7 +137,10 @@ function like(s: string) {
 }
 
 async function findProperty(supabase: ReturnType<typeof createClient>, candidate: Candidate): Promise<string | null> {
-  const sourceUrls = candidate.channels.filter((ch) => ch.label === "source" || ch.kind === "website").map((ch) => ch.url);
+  const sourceUrls = [
+    ...(candidate.sourceProfileUrl ? [candidate.sourceProfileUrl] : []),
+    ...candidate.channels.filter((ch) => ch.label === "source" || ch.label === "profile-source" || ch.kind === "website").map((ch) => ch.url),
+  ];
   for (const url of sourceUrls) {
     const stripped = url.replace(/[?#].*$/, "").replace(/\/$/, "");
     const { data } = await supabase

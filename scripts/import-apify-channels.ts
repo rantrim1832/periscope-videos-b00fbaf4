@@ -19,6 +19,7 @@ type Candidate = {
   address: string | null;
   city: string | null;
   state: string | null;
+  sourceProfileUrl?: string | null;
   channels: { kind: ChannelKind; url: string; label?: string }[];
 };
 
@@ -133,6 +134,16 @@ function firstString(row: Record<string, unknown>, keys: string[]): string | nul
 
 function normalizeRow(row: Record<string, unknown>): Candidate {
   const channels: Candidate['channels'] = [];
+  const scrapedUsername = firstString(row, ['scraped_username', 'username', 'ownerUsername']);
+  const postUrl = firstString(row, ['post_url', 'url', 'permalink', 'shortCodeUrl']);
+  if (scrapedUsername) {
+    pushUrl(channels, `https://www.instagram.com/${scrapedUsername}`, 'profile-source');
+  }
+  if (postUrl && /instagram\.com\/(p|reel|tv)\//i.test(postUrl)) {
+    const caption = firstString(row, ['caption.text', 'caption', 'text']);
+    const label = caption ? `Instagram post · ${caption.slice(0, 80)}${caption.length > 80 ? '...' : ''}` : 'Instagram post';
+    pushUrl(channels, postUrl, label);
+  }
 
   for (const key of [
     'website', 'propertyWebsite', 'site', 'domain', 'instagram', 'facebook', 'tiktok', 'youtube',
@@ -166,6 +177,7 @@ function normalizeRow(row: Record<string, unknown>): Candidate {
     address: addressLine,
     city: firstString(row, ['city', 'location.city', 'Billing City']) ?? cityFromAddress,
     state: firstString(row, ['state', 'stateCode', 'location.state', 'region', 'Billing State/Province']) ?? stateFromAddress,
+    sourceProfileUrl: scrapedUsername ? `https://www.instagram.com/${scrapedUsername}` : null,
     channels,
   };
 }
@@ -190,7 +202,10 @@ function like(s: string): string {
 }
 
 async function findProperty(client: SupabaseClient, c: Candidate): Promise<string | null> {
-  const sourceUrls = c.channels.filter((ch) => ch.label === 'source' || ch.kind === 'website').map((ch) => ch.url);
+  const sourceUrls = [
+    ...(c.sourceProfileUrl ? [c.sourceProfileUrl] : []),
+    ...c.channels.filter((ch) => ch.label === 'source' || ch.label === 'profile-source' || ch.kind === 'website').map((ch) => ch.url),
+  ];
   for (const url of sourceUrls) {
     const stripped = url.replace(/[?#].*$/, '').replace(/\/$/, '');
     const { data } = await client
