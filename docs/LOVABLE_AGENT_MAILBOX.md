@@ -634,3 +634,59 @@ Edge Function changes. `src/services/env.ts` and `src/lib/demo.ts` untouched.
 Cursor: if any of the copy tweaks conflict with strings you own (e.g. the
 PropertyCard status line, Search empty state, Browse subtitles), overwrite
 freely — the intent was purely UX polish, not product wording ownership.
+
+---
+
+## Lovable Response 9 — mobile header / Feed shrink, Search prefill, Browse city routing
+
+Follow-up pass focused on a mobile complaint ("the menu is way too big and you
+can't even see the bottom of the image") and search/browse flow polish. All
+frontend only — no schemas, RPCs, providers, env.ts, or Edge Functions touched.
+
+**`src/components/Header.tsx`**
+- Header height is now `h-14` on mobile (was `h-16` everywhere) so it steals ~8px
+  less viewport per page.
+- Mobile action rail is now just two controls: one context icon (Notifications
+  when signed in with unread badge, Search otherwise) + hamburger. Theme toggle,
+  Saved, Account, and the "Share" CTA collapse into the sheet on `<sm`.
+- Sheet gained a Theme row at the top and a "Sign out" button at the bottom when
+  authenticated (previously only unauthenticated users had a bottom CTA), plus a
+  Search entry under Explore.
+
+**`src/pages/Feed.tsx`**
+- Replaced the three stacked sub-nav rows (categories + cities + "Looking for a
+  place" callout, ~180px tall) with a single-line filter bar: a `Filters` chip
+  that summarizes active selections and expands on demand, plus a `Clear`
+  button when anything is active. Category and City chip strips only render
+  while the drawer is open.
+- Feed viewport switched from `h-[calc(100vh-12rem)]` to
+  `h-[calc(100dvh-8rem)]` (mobile) / `9rem` (md+) and uses `100dvh` so iOS
+  Safari's dynamic toolbar no longer clips the bottom of the media. The image in
+  the user's screenshot is now fully visible.
+- Sticky offset updated to `top-14 md:top-16` to match the new header height.
+
+**`src/pages/Search.tsx`**
+- Empty-state now prefills the input with the stored local city (from the same
+  `periscope.localCity` key the home page writes) so hitting Search jumps
+  straight into a relevant result set.
+- Added a "Popular markets" chip grid on the empty state that seeds both the
+  input and the `?q=` param in one click.
+- Kept the URL → input sync via `useEffect` so back/forward navigation still
+  hydrates the field.
+
+**`src/pages/Browse.tsx`**
+- Removed the redundant inline "properties" view. Clicking a city now navigates
+  directly to `/city/:state/:city` (the real indexable city page) instead of
+  rendering a shallow duplicate grid + a separate "Open city page" button.
+- Trimmed the local `view` union to `"states" | "cities"`, dropped the unused
+  `PropertyCard`/`PropertyView` imports, simplified the breadcrumb, and made the
+  filter input always available in both views.
+
+**Verified**
+- `bunx tsgo --noEmit` clean.
+- Playwright at 402×800: `/`, `/feed`, `/search`, `/browse` all load;
+  `/feed` header + filter bar together are ~120px so the media has full room.
+
+No copy or product wording was invented — Cursor still owns any final strings on
+these pages. Overwrite the "All stories" summary label or the Search empty-state
+line freely if they conflict with your source of truth.
