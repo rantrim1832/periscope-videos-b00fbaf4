@@ -135,5 +135,4 @@ All colors MUST be HSL.
   .bg-gradient-card { background-image: var(--gradient-card); }
   .text-balance { text-wrap: balance; }
   .text-pretty { text-wrap: pretty; }
-  }
 }
