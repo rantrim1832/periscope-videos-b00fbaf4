@@ -215,6 +215,28 @@ export class CanonicalPropertyProvider implements PropertyDataProvider {
     });
   }
 
+  private topIdsFromChannels(rows: any[], limit: number): string[] {
+    const counts = new Map<string, number>();
+    const weights: Record<string, number> = {
+      gallery: 3,
+      matterport: 5,
+      instagram: 4,
+      tiktok: 5,
+      youtube: 5,
+      facebook: 2,
+      website: 1,
+    };
+    for (const row of rows ?? []) {
+      const id = row.canonical_property_id;
+      if (!id) continue;
+      counts.set(id, (counts.get(id) ?? 0) + (weights[row.kind] ?? 1));
+    }
+    return [...counts.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, limit)
+      .map(([id]) => id);
+  }
+
   private async enrichSummaries(props: any[]): Promise<PropertyView[]> {
     const ids = props.map((p) => p.id);
     if (ids.length === 0) return [];
@@ -238,6 +260,21 @@ export class CanonicalPropertyProvider implements PropertyDataProvider {
   }
 
   async listSummaries(): Promise<PropertyView[]> {
+    const { data: channelRows } = await this.db
+      .from('property_channel')
+      .select('canonical_property_id, kind')
+      .limit(5000);
+    const ids = this.topIdsFromChannels(channelRows ?? [], 200);
+    if (ids.length > 0) {
+      const { data } = await this.db
+        .from('canonical_property')
+        .select('*')
+        .in('id', ids)
+        .eq('status', 'active');
+      const byId = new Map((data ?? []).map((p: any) => [p.id, p]));
+      const ordered = ids.map((id) => byId.get(id)).filter(Boolean);
+      return this.sortContentFirst(await this.enrichSummaries(ordered)).slice(0, 24);
+    }
     const { data } = await this.db
       .from('canonical_property').select('*').eq('status', 'active').limit(200);
     return this.sortContentFirst(await this.enrichSummaries(data ?? [])).slice(0, 24);
@@ -250,12 +287,22 @@ export class CanonicalPropertyProvider implements PropertyDataProvider {
     if (!q) return [];
     const term = `%${q}%`;
 
+    const channelCity = q.length >= 3
+      ? await this.db
+        .from('property_channel')
+        .select('canonical_property_id, kind, canonical_property!inner(city,status)')
+        .ilike('canonical_property.city', q)
+        .eq('canonical_property.status', 'active')
+        .limit(1000)
+      : { data: [] };
+    const channelCityIds = this.topIdsFromChannels(channelCity.data ?? [], 200);
+
     const cityExact = q.length >= 3
       ? await this.db
         .from('canonical_property').select('*')
         .eq('status', 'active')
         .ilike('city', q)
-        .limit(300)
+        .limit(1000)
       : { data: [] };
 
     const { data: direct } = await this.db
@@ -263,7 +310,17 @@ export class CanonicalPropertyProvider implements PropertyDataProvider {
       .eq('status', 'active')
       .or(`name.ilike.${term},address_line1.ilike.${term},city.ilike.${term}`)
       .limit(cityExact.data?.length ? 100 : 60);
-    const results: any[] = [...(cityExact.data ?? []), ...(direct ?? [])];
+    let results: any[] = [];
+    if (channelCityIds.length > 0) {
+      const { data: channelProps } = await this.db
+        .from('canonical_property')
+        .select('*')
+        .in('id', channelCityIds)
+        .eq('status', 'active');
+      const byId = new Map((channelProps ?? []).map((p: any) => [p.id, p]));
+      results.push(...channelCityIds.map((id) => byId.get(id)).filter(Boolean));
+    }
+    results.push(...(cityExact.data ?? []), ...(direct ?? []));
     const seen = new Set(results.map((r) => r.id));
 
     const { data: aliasRows } = await this.db
@@ -289,9 +346,22 @@ export class CanonicalPropertyProvider implements PropertyDataProvider {
     return tally(data ?? [], (r: any) => r.city).map((t) => ({ city: t.value, count: t.count }));
   }
   async listByLocation(state: string, city: string): Promise<PropertyView[]> {
+    const { data: richRows } = await this.db
+      .from('property_channel')
+      .select('canonical_property_id, kind, canonical_property!inner(city,state,status)')
+      .eq('canonical_property.status', 'active')
+      .eq('canonical_property.state', state)
+      .eq('canonical_property.city', city)
+      .limit(1500);
+    const richIds = this.topIdsFromChannels(richRows ?? [], 300);
     const { data } = await this.db
-      .from('canonical_property').select('*').eq('status', 'active').eq('state', state).eq('city', city).limit(300);
-    return this.sortContentFirst(await this.enrichSummaries(data ?? [])).slice(0, 60);
+      .from('canonical_property').select('*').eq('status', 'active').eq('state', state).eq('city', city).limit(1000);
+    const byId = new Map((data ?? []).map((p: any) => [p.id, p]));
+    const ordered = [
+      ...richIds.map((id) => byId.get(id)).filter(Boolean),
+      ...(data ?? []).filter((p: any) => !richIds.includes(p.id)),
+    ];
+    return this.sortContentFirst(await this.enrichSummaries(ordered)).slice(0, 60);
   }
 
   async feed(): Promise<FeedItem[]> {
@@ -326,8 +396,7 @@ export class CanonicalPropertyProvider implements PropertyDataProvider {
       .from('property_channel')
       .select('id, kind, url, label, created_at, canonical_property:canonical_property_id(id, name, city, state)')
       .in('kind', ['gallery', 'matterport', 'youtube', 'instagram', 'tiktok'])
-      .order('created_at', { ascending: false })
-      .limit(80);
+      .limit(500);
 
     const visual = (channels ?? []).filter((c: any) =>
       c.kind === 'matterport' ||
@@ -337,7 +406,12 @@ export class CanonicalPropertyProvider implements PropertyDataProvider {
       (c.kind === 'gallery' && /\.(jpg|jpeg|png|webp)(\?|$)/i.test(c.url)),
     );
 
-    return visual.map((c: any) => ({
+    const sortedVisual = visual.sort((a: any, b: any) => {
+      const rank = (x: any) => x.kind === 'gallery' ? 5 : x.kind === 'matterport' ? 4 : x.kind === 'instagram' ? 3 : 2;
+      return rank(b) - rank(a);
+    }).slice(0, 120);
+
+    return sortedVisual.map((c: any) => ({
       id: c.id,
       source: 'official',
       title: c.label && !String(c.label).startsWith('Apify') ? c.label : `${c.canonical_property?.name ?? 'Property'} official ${c.kind}`,

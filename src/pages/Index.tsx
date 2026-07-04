@@ -148,7 +148,12 @@ const HookCard = ({ hook }: { hook: Hook }) => {
       <Link to={`/property/${item.propertyId}`}>
         <Card className="overflow-hidden group hover:shadow-xl transition-all">
           <div className="relative aspect-[4/5] bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
-            <Play className="w-12 h-12 text-foreground/70 group-hover:scale-110 transition-transform" />
+            {item.thumbnailUrl ? (
+              <img src={item.thumbnailUrl} alt={item.title} className="absolute inset-0 w-full h-full object-cover transition-transform group-hover:scale-105" loading="lazy" />
+            ) : (
+              <Play className="w-12 h-12 text-foreground/70 group-hover:scale-110 transition-transform" />
+            )}
+            <div className="absolute inset-0 bg-black/20" />
             {item.category && <Badge className="absolute top-2 left-2 bg-black/50 text-white border-0 text-[11px]">{item.category}</Badge>}
             <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/85 to-transparent p-3">
               <p className="text-white font-semibold leading-snug line-clamp-3">{item.title}</p>
