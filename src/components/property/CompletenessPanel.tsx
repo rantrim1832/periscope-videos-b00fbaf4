@@ -38,11 +38,11 @@ export const CompletenessPanel = ({ property }: { property: PropertyView }) => {
 
         {!density.items.find((i) => i.key === 'resident_truth')?.present && (
           <Button variant="hero" size="sm" className="w-full" onClick={() => navigate(`/contribute/${property.id}`)}>
-            Add the first resident truth
+            Add the first review
           </Button>
         )}
         <p className="text-xs text-muted-foreground">
-          Resident reviews and official property data, together.
+          Resident reviews and official property data.
         </p>
       </CardContent>
     </Card>
