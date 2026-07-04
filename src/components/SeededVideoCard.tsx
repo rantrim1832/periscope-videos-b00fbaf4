@@ -1,6 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Eye, Sparkles } from "lucide-react";
+import { MapPin } from "lucide-react";
 
 interface SeededVideoCardProps {
   id: string;
@@ -26,14 +26,11 @@ export const SeededVideoCard = ({
           <p className="text-sm text-muted-foreground px-4 text-center">Video Preview</p>
         </div>
         <div className="absolute top-2 right-2">
-          <Badge variant="default" className="bg-accent text-accent-foreground backdrop-blur-sm">
-            <Sparkles className="w-3 h-3 mr-1" />
-            Sample
-          </Badge>
+          <Badge variant="default" className="bg-accent text-accent-foreground backdrop-blur-sm">Sample</Badge>
         </div>
         {is_positive && (
           <div className="absolute top-2 left-2">
-            <Badge variant="success">✓ Positive</Badge>
+            <Badge variant="success">Positive</Badge>
           </div>
         )}
       </div>
@@ -57,7 +54,7 @@ export const SeededVideoCard = ({
         </div>
         <div className="pt-1">
           <Badge variant="outline" className="text-xs border-primary/50 text-primary">
-            Community Sample – Add Yours!
+            Sample data
           </Badge>
         </div>
       </CardContent>
