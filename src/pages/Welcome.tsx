@@ -1,16 +1,16 @@
 import { useNavigate } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { Card, CardContent } from '@/components/ui/card';
-import { Search, PenLine, Building2, Sparkles } from 'lucide-react';
+import { Search, PenLine, Building2, Video } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 const OPTIONS = [
-  { intent: 'renter', icon: Search, title: "I'm apartment hunting", desc: 'Start with real apartment videos, then search current or future places.', to: '/feed' },
-  { intent: 'resident', icon: PenLine, title: 'I live (or lived) somewhere', desc: 'See what people are posting, then add your own property or story.', to: '/feed' },
-  { intent: 'manager', icon: Building2, title: 'I manage a property', desc: 'Find or add your property, then claim it and connect official content.', to: '/manager' },
-  { intent: 'creator', icon: Sparkles, title: "I'm a creator / investigator", desc: 'Explore the video feed and build an audience around apartment truth.', to: '/feed' },
+  { intent: 'renter', icon: Search, title: "I'm apartment hunting", desc: 'Browse apartment videos and search properties.', to: '/feed' },
+  { intent: 'resident', icon: PenLine, title: 'I live (or lived) somewhere', desc: 'Add a review for a property you\'ve lived at.', to: '/feed' },
+  { intent: 'manager', icon: Building2, title: 'I manage a property', desc: 'Find or add your property, claim it, and connect official content.', to: '/manager' },
+  { intent: 'creator', icon: Video, title: "I'm a creator / investigator", desc: 'Publish apartment reviews and investigation content.', to: '/feed' },
 ] as const;
 
 const Welcome = () => {
