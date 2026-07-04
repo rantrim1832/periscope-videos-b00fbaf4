@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, ShieldCheck, Building2, Share2, PenLine, Play } from 'lucide-react';
+import { MapPin, ShieldCheck, Building2, Share2, PenLine, Play, SlidersHorizontal, X } from 'lucide-react';
 import { getPropertyProvider } from '@/data/propertyProvider';
 import { getVideoProvider } from '@/services/providers/video';
 import { VideoPlayer } from '@/components/property/VideoPlayer';
@@ -22,41 +22,66 @@ const Feed = () => {
   const stored = getStoredLocalCity();
   const preferredLocation = stored ? `${stored.city}, ${stored.state}` : 'All';
   const [city, setCity] = useState<string>(preferredLocation);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   const effectiveCity = city === 'All' || cities.includes(city) ? city : 'All';
   const filtered = items.filter((i) =>
     (category === 'All' || i.category === category) &&
     (effectiveCity === 'All' || i.location === effectiveCity),
   );
+  const activeCount = (category !== 'All' ? 1 : 0) + (effectiveCity !== 'All' ? 1 : 0);
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      {/* Category rail */}
-      <div className="sticky top-16 z-30 bg-background/95 backdrop-blur border-b border-border/40">
-        <div className="container mx-auto px-4 py-3 space-y-3">
-          <div className="flex gap-2 overflow-x-auto">
-            {FEED_CATEGORIES.map((c) => (
-              <Button key={c} size="sm" variant={category === c ? 'default' : 'outline'} className="whitespace-nowrap" onClick={() => setCategory(c)}>
-                {c}
-              </Button>
-            ))}
+      {/* Compact single-line filter bar. Expands on demand so it never eats the video. */}
+      <div className="sticky top-14 md:top-16 z-30 bg-background/95 backdrop-blur border-b border-border/40">
+        <div className="container px-4 py-2 flex items-center gap-2">
+          <Button
+            size="sm"
+            variant={filtersOpen || activeCount > 0 ? 'default' : 'outline'}
+            className="shrink-0"
+            onClick={() => setFiltersOpen((v) => !v)}
+          >
+            <SlidersHorizontal className="w-4 h-4" />
+            Filters{activeCount > 0 ? ` · ${activeCount}` : ''}
+          </Button>
+          <div className="flex-1 flex gap-1.5 overflow-x-auto no-scrollbar text-xs text-muted-foreground items-center min-w-0">
+            <span className="truncate">
+              {category === 'All' ? 'All stories' : category}
+              {effectiveCity !== 'All' ? ` · ${effectiveCity}` : ''}
+            </span>
           </div>
-          <div className="flex gap-2 overflow-x-auto">
-            {['All', ...cities].map((c) => (
-              <Button key={c} size="sm" variant={effectiveCity === c ? 'default' : 'outline'} className="whitespace-nowrap" onClick={() => setCity(c)}>
-                {c === 'All' ? 'All cities' : c}
-              </Button>
-            ))}
-          </div>
-          <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-muted/30 px-3 py-2 text-sm">
-            <span className="text-muted-foreground">Looking for a place you know?</span>
-            <div className="flex gap-2">
-              <Button size="sm" variant="outline" asChild><Link to="/search">Search property</Link></Button>
-              <Button size="sm" variant="ghost" asChild><Link to="/contribute">Share an experience</Link></Button>
+          {activeCount > 0 && (
+            <Button size="sm" variant="ghost" className="shrink-0 h-8 px-2" onClick={() => { setCategory('All'); setCity('All'); }}>
+              <X className="w-3.5 h-3.5" /> Clear
+            </Button>
+          )}
+        </div>
+        {filtersOpen && (
+          <div className="container px-4 pb-3 space-y-2 border-t border-border/40 pt-3">
+            <div>
+              <p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground mb-1.5">Category</p>
+              <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
+                {FEED_CATEGORIES.map((c) => (
+                  <Button key={c} size="sm" variant={category === c ? 'default' : 'outline'} className="whitespace-nowrap h-8" onClick={() => setCategory(c)}>
+                    {c}
+                  </Button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground mb-1.5">City</p>
+              <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
+                {['All', ...cities].map((c) => (
+                  <Button key={c} size="sm" variant={effectiveCity === c ? 'default' : 'outline'} className="whitespace-nowrap h-8" onClick={() => setCity(c)}>
+                    {c === 'All' ? 'All cities' : c}
+                  </Button>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
 
       {isLoading ? (
@@ -67,7 +92,7 @@ const Feed = () => {
           <Button variant="hero" asChild><Link to="/contribute">Share an experience</Link></Button>
         </div>
       ) : (
-        <div className="h-[calc(100vh-12rem)] overflow-y-auto snap-y snap-mandatory">
+        <div className="h-[calc(100dvh-8rem)] md:h-[calc(100dvh-9rem)] overflow-y-auto snap-y snap-mandatory">
           {filtered.map((item) => <FeedCard key={item.id} item={item} />)}
         </div>
       )}
@@ -97,7 +122,7 @@ const FeedCard = ({ item }: { item: FeedItem }) => {
   };
 
   return (
-    <section className="snap-start h-[calc(100vh-12rem)] flex items-center justify-center bg-black relative">
+    <section className="snap-start h-[calc(100dvh-8rem)] md:h-[calc(100dvh-9rem)] flex items-center justify-center bg-black relative">
       <div className="relative w-full max-w-sm h-full mx-auto">
         {/* Media */}
         <div className="absolute inset-0 flex items-center justify-center">
