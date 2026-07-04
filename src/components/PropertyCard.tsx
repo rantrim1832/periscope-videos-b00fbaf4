@@ -43,7 +43,7 @@ export const PropertyCard = ({
         <div className="absolute top-2 right-2 flex gap-2">
           <Badge variant="default" className="bg-background/90 text-foreground backdrop-blur-sm">
             <Video className="w-3 h-3 mr-1" />
-            {videoCount}
+            {videoCount} content
           </Badge>
         </div>
         {verified && (
