@@ -75,7 +75,7 @@ const RESIDENT_SUGGESTIONS = [
 ];
 
 const CREATOR_SUGGESTIONS = [
-  'Apartment reality check', 'Community verdicts', 'Luxury versus reality',
+  'Apartment comparison', 'Resident interview', 'Luxury vs reality',
   'Deposit horror stories', 'Best apartments under $X', 'Hidden fees',
   'Management changes', 'Maintenance investigation', 'Neighborhood guide',
 ];
