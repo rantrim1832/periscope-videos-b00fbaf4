@@ -12,7 +12,7 @@ import { useAdmin } from "@/hooks/useAdmin";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 import { getPropertyProvider } from "@/data/propertyProvider";
 import { type FeedItem, type PropertyView } from "@/domain/property";
-import { getStoredLocalCity, nearestSeededCity, SEEDED_CITIES, setStoredLocalCity, type LocalCity } from "@/lib/localDiscovery";
+import { getStoredLocalCity, nearestSeededCity, SEEDED_CITIES, setStoredLocalCity, sortByLocalState, stateFromLocation, type LocalCity } from "@/lib/localDiscovery";
 
 // Homepage vibe: Netflix meets Instagram. Cinematic edge-to-edge hero,
 // IG-style circular city "stories", Netflix-style horizontal poster rails
@@ -24,6 +24,13 @@ const Index = () => {
   const [localCity, setLocalCity] = useState<LocalCity | null>(() => getStoredLocalCity());
   const { user, isManager } = useViewer();
   const { isAdmin } = useAdmin();
+  // Signed-in renters land on the Feed — that's the primary experience for
+  // them. Managers and admins keep the Index dashboard.
+  useEffect(() => {
+    if (user && !isAdmin && !isManager) {
+      navigate('/feed', { replace: true });
+    }
+  }, [user, isAdmin, isManager, navigate]);
   const runSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (q.trim()) navigate(`/search?q=${encodeURIComponent(q.trim())}`);
@@ -33,18 +40,29 @@ const Index = () => {
   const { data: properties = [], isLoading: propsLoading } = useQuery({ queryKey: ["home-props"], queryFn: () => getPropertyProvider().listSummaries() });
   const loading = feedLoading || propsLoading;
 
+  const localState = localCity?.state ?? null;
+  const localFeed = useMemo(() => sortByLocalState(feed, (i) => i.location, localState), [feed, localState]);
+  const localProperties = useMemo(() => sortByLocalState(properties, (p) => [p.city, p.state].filter(Boolean).join(', '), localState), [properties, localState]);
+
   const cityRows = useMemo(() => {
-    const cities = [...new Set(feed.map((i) => i.location).filter(Boolean))].slice(0, 10);
-    return cities.map((city) => ({ city, items: feed.filter((i) => i.location === city).slice(0, 12) }));
-  }, [feed]);
+    // Prefer cities in the viewer's state so rails don't lead with far-away metros.
+    const allCities = [...new Set(feed.map((i) => i.location).filter(Boolean))];
+    const ordered = localState
+      ? [
+          ...allCities.filter((c) => stateFromLocation(c) === localState),
+          ...allCities.filter((c) => stateFromLocation(c) !== localState),
+        ]
+      : allCities;
+    return ordered.slice(0, 10).map((city) => ({ city, items: feed.filter((i) => i.location === city).slice(0, 12) }));
+  }, [feed, localState]);
   const localRow = localCity
     ? cityRows.find((row) => row.city.toLowerCase().includes(localCity.city.toLowerCase()))
     : null;
-  const photoItems = feed.filter((i) => i.thumbnailUrl).slice(0, 18);
-  const tourItems = feed.filter((i) => i.embedUrl || i.platform === 'matterport' || i.category === 'Property tours').slice(0, 18);
-  const needTruth = properties.slice(0, 18);
-  const trending = feed.filter((i) => i.thumbnailUrl).slice(0, 10);
-  const mosaic = feed.filter((i) => i.thumbnailUrl).slice(0, 9);
+  const photoItems = localFeed.filter((i) => i.thumbnailUrl).slice(0, 18);
+  const tourItems = localFeed.filter((i) => i.embedUrl || i.platform === 'matterport' || i.category === 'Property tours').slice(0, 18);
+  const needTruth = localProperties.slice(0, 18);
+  const trending = localFeed.filter((i) => i.thumbnailUrl).slice(0, 10);
+  const mosaic = localFeed.filter((i) => i.thumbnailUrl).slice(0, 9);
 
   return (
     <div className="min-h-screen bg-background pb-24">
