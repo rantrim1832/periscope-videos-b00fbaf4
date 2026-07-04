@@ -26,7 +26,7 @@ const Contribute = () => {
             <Search className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
             <h1 className="text-2xl font-bold mb-2">Find your property</h1>
             <p className="text-muted-foreground mb-6">
-              Search for a place you know, then share what the experience was like. Can't find it? You can add it.
+              Search for a property, then submit your review. Can't find it? Add it.
             </p>
             <Button variant="hero" asChild><Link to="/browse">Browse properties</Link></Button>
           </Card>
@@ -44,8 +44,8 @@ const Contribute = () => {
         ) : (
           <>
             <div className="max-w-2xl mx-auto mb-6">
-              <h1 className="text-3xl font-bold">Add a review</h1>
-              <p className="text-muted-foreground">Sharing your experience at <span className="font-medium text-foreground">{property.name}</span></p>
+              <h1 className="text-3xl font-bold">Write a review</h1>
+              <p className="text-muted-foreground">Reviewing <span className="font-medium text-foreground">{property.name}</span></p>
             </div>
             <ContributeFlow propertyId={property.id} propertyName={property.name} />
           </>
