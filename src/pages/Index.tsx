@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
@@ -68,6 +68,7 @@ const Index = () => {
             ))}
             {photoItems.length > 0 && <PosterRail title="Verified property photography" subtitle="Official and sourced imagery" items={photoItems} />}
             <PropertyRail title="Properties seeking resident input" properties={needTruth} />
+            <InfiniteFeed items={feed} />
           </main>
         </>
       )}
