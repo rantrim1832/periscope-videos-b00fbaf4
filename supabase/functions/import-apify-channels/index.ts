@@ -190,9 +190,9 @@ Deno.serve(async (req) => {
 
   const candidates = rows.map(normalizeRow).filter((c) => c.channels.length > 0);
   let matched = 0;
-  let attached = 0;
   let unmatched = 0;
   const samples: unknown[] = [];
+  const channelRows: Array<Record<string, unknown>> = [];
 
   for (const candidate of candidates) {
     const propertyId = await findProperty(supabase, candidate);
@@ -203,14 +203,7 @@ Deno.serve(async (req) => {
     }
     matched++;
     for (const channel of candidate.channels) {
-      const { data: existing } = await supabase
-        .from("property_channel")
-        .select("id")
-        .eq("canonical_property_id", propertyId)
-        .eq("url", channel.url)
-        .maybeSingle();
-      if (existing?.id) continue;
-      const { error } = await supabase.from("property_channel").insert({
+      channelRows.push({
         canonical_property_id: propertyId,
         kind: channel.kind,
         url: channel.url,
@@ -218,9 +211,18 @@ Deno.serve(async (req) => {
         is_verified: false,
         source: "seed",
       });
-      if (error) return json({ error: "Insert failed", detail: error.message }, 500);
-      attached++;
     }
+  }
+
+  const unique = [...new Map(channelRows.map((r) => [`${r.canonical_property_id}|${r.url}`, r])).values()];
+  let attached = 0;
+  for (let i = 0; i < unique.length; i += 1000) {
+    const { data, error } = await supabase
+      .from("property_channel")
+      .upsert(unique.slice(i, i + 1000), { onConflict: "canonical_property_id,url", ignoreDuplicates: true })
+      .select("id");
+    if (error) return json({ error: "Insert failed", detail: error.message }, 500);
+    attached += data?.length ?? 0;
   }
 
   return json({ ok: true, rows: rows.length, candidates: candidates.length, matched, attached, unmatched, samples });

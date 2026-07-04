@@ -220,26 +220,6 @@ async function findProperty(client: SupabaseClient, c: Candidate): Promise<strin
   return null;
 }
 
-async function attach(client: SupabaseClient, propertyId: string, channel: Candidate['channels'][number]) {
-  const { data: existing } = await client
-    .from('property_channel')
-    .select('id')
-    .eq('canonical_property_id', propertyId)
-    .eq('url', channel.url)
-    .maybeSingle();
-  if (existing?.id) return false;
-  const { error } = await client.from('property_channel').insert({
-    canonical_property_id: propertyId,
-    kind: channel.kind,
-    url: channel.url,
-    label: channel.label ?? 'Apify public source',
-    is_verified: false,
-    source: 'seed',
-  });
-  if (error) throw error;
-  return true;
-}
-
 async function main() {
   const args = parseArgs();
   const rawItems = (await loadItems(args)).slice(0, args.limit);
@@ -259,8 +239,15 @@ async function main() {
   const client = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
 
   let matched = 0;
-  let attached = 0;
   let unmatched = 0;
+  const channelRows: Array<{
+    canonical_property_id: string;
+    kind: ChannelKind;
+    url: string;
+    label: string;
+    is_verified: boolean;
+    source: string;
+  }> = [];
   for (const c of candidates) {
     const propertyId = await findProperty(client, c);
     if (!propertyId) {
@@ -269,8 +256,26 @@ async function main() {
     }
     matched++;
     for (const ch of c.channels) {
-      if (await attach(client, propertyId, ch)) attached++;
+      channelRows.push({
+        canonical_property_id: propertyId,
+        kind: ch.kind,
+        url: ch.url,
+        label: ch.label ?? 'Apify public source',
+        is_verified: false,
+        source: 'seed',
+      });
     }
+  }
+  const unique = Array.from(new Map(channelRows.map((r) => [`${r.canonical_property_id}|${r.url}`, r])).values());
+  let attached = 0;
+  for (let i = 0; i < unique.length; i += 1000) {
+    const batch = unique.slice(i, i + 1000);
+    const { data, error } = await client
+      .from('property_channel')
+      .upsert(batch, { onConflict: 'canonical_property_id,url', ignoreDuplicates: true })
+      .select('id');
+    if (error) throw error;
+    attached += data?.length ?? 0;
   }
   console.log(`Matched properties: ${matched}`);
   console.log(`Channels attached: ${attached}`);
