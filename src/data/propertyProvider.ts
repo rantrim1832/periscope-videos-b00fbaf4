@@ -85,6 +85,20 @@ export class CanonicalPropertyProvider implements PropertyDataProvider {
   readonly name = 'canonical';
   private db = supabase as any;
 
+  private async fetchAll(table: string, select: string, configure: (q: any) => any = (q) => q): Promise<any[]> {
+    const pageSize = 1000;
+    const rows: any[] = [];
+    for (let from = 0; ; from += pageSize) {
+      const to = from + pageSize - 1;
+      const query = configure(this.db.from(table).select(select).range(from, to));
+      const { data, error } = await query;
+      if (error) throw error;
+      rows.push(...(data ?? []));
+      if (!data || data.length < pageSize) break;
+    }
+    return rows;
+  }
+
   private mapReview(r: any): ReviewView {
     return {
       id: r.id,
@@ -356,12 +370,12 @@ export class CanonicalPropertyProvider implements PropertyDataProvider {
   }
 
   async listStates(): Promise<LocationCount[]> {
-    const { data } = await this.db.from('canonical_property').select('state').eq('status', 'active');
-    return tally(data ?? [], (r: any) => r.state).map((t) => ({ state: t.value, count: t.count }));
+    const rows = await this.fetchAll('canonical_property', 'state', (q) => q.eq('status', 'active'));
+    return tally(rows, (r: any) => r.state).map((t) => ({ state: t.value, count: t.count }));
   }
   async listCities(state: string): Promise<LocationCount[]> {
-    const { data } = await this.db.from('canonical_property').select('city').eq('status', 'active').eq('state', state);
-    return tally(data ?? [], (r: any) => r.city).map((t) => ({ city: t.value, count: t.count }));
+    const rows = await this.fetchAll('canonical_property', 'city', (q) => q.eq('status', 'active').eq('state', state));
+    return tally(rows, (r: any) => r.city).map((t) => ({ city: t.value, count: t.count }));
   }
   async listByLocation(state: string, city: string): Promise<PropertyView[]> {
     const { data: richRows } = await this.db
