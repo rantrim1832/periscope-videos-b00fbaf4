@@ -7,7 +7,6 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { CompareProvider } from "./context/CompareContext";
 import { SavedProvider } from "./context/SavedContext";
 import { CompareBar } from "./components/property/CompareBar";
-import { DemoBanner } from "./components/DemoBanner";
 import { AdminRoute } from "./components/AdminRoute";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { ErrorBoundary } from "./components/ErrorBoundary";
@@ -72,7 +71,6 @@ const App = () => (
           <CompareProvider>
             <SavedProvider>
             <ScrollToTop />
-            <DemoBanner />
             <Suspense fallback={<PageFallback />}>
               <Routes>
                 <Route path="/" element={<Index />} />
