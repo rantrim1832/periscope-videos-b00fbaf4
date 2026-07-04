@@ -5,8 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, Play, MapPin, PenLine, Building2, Sparkles, Heart, Flame, ChevronRight } from "lucide-react";
+import { Search, Play, MapPin, PenLine, Building2, Heart, Flame, ChevronRight, Shield, Building, UserCheck } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useAdmin } from "@/hooks/useAdmin";
+import type { User as SupabaseUser } from "@supabase/supabase-js";
 import { getPropertyProvider } from "@/data/propertyProvider";
 import { type FeedItem, type PropertyView } from "@/domain/property";
 import { getStoredLocalCity, nearestSeededCity, SEEDED_CITIES, setStoredLocalCity, type LocalCity } from "@/lib/localDiscovery";
@@ -19,6 +22,8 @@ const Index = () => {
   const navigate = useNavigate();
   const [q, setQ] = useState("");
   const [localCity, setLocalCity] = useState<LocalCity | null>(() => getStoredLocalCity());
+  const { user, isManager } = useViewer();
+  const { isAdmin } = useAdmin();
   const runSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (q.trim()) navigate(`/search?q=${encodeURIComponent(q.trim())}`);
@@ -28,7 +33,6 @@ const Index = () => {
   const { data: properties = [], isLoading: propsLoading } = useQuery({ queryKey: ["home-props"], queryFn: () => getPropertyProvider().listSummaries() });
   const loading = feedLoading || propsLoading;
 
-  const hero = feed[0];
   const cityRows = useMemo(() => {
     const cities = [...new Set(feed.map((i) => i.location).filter(Boolean))].slice(0, 10);
     return cities.map((city) => ({ city, items: feed.filter((i) => i.location === city).slice(0, 12) }));
@@ -50,12 +54,19 @@ const Index = () => {
         <div className="flex justify-center py-40">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent" />
         </div>
-      ) : !hero && properties.length === 0 ? (
+      ) : feed.length === 0 && properties.length === 0 ? (
         <main className="container py-6"><ColdStart /></main>
       ) : (
         <>
-          {hero && <CinematicHero item={hero} q={q} setQ={setQ} runSearch={runSearch} />}
-
+          <PersonalizedTopBar
+            user={user}
+            isAdmin={isAdmin}
+            isManager={isManager}
+            localCity={localCity}
+            q={q}
+            setQ={setQ}
+            runSearch={runSearch}
+          />
           <StoriesRail localCity={localCity} onChange={setLocalCity} />
 
           <main className="container pt-6 pb-10 space-y-12 md:space-y-16">
@@ -82,6 +93,116 @@ const Index = () => {
         </Button>
       </div>
     </div>
+  );
+};
+
+// Lightweight viewer detection: signed in? has any managed property?
+const useViewer = () => {
+  const [user, setUser] = useState<SupabaseUser | null>(null);
+  const [isManager, setIsManager] = useState(false);
+  useEffect(() => {
+    let active = true;
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!active) return;
+      setUser(user);
+      if (!user) return;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data } = await (supabase as any)
+        .from('property_manager').select('id').eq('user_id', user.id).limit(1).maybeSingle();
+      if (active) setIsManager(!!data);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
+      setUser(session?.user ?? null);
+    });
+    return () => { active = false; subscription.unsubscribe(); };
+  }, []);
+  return { user, isManager };
+};
+
+// Compact personalized top bar — replaces the oversized cinematic hero.
+// Greeting, primary CTA, and inline search adapt to the viewer's role.
+const PersonalizedTopBar = ({
+  user, isAdmin, isManager, localCity, q, setQ, runSearch,
+}: {
+  user: SupabaseUser | null;
+  isAdmin: boolean;
+  isManager: boolean;
+  localCity: LocalCity | null;
+  q: string;
+  setQ: (v: string) => void;
+  runSearch: (e: React.FormEvent) => void;
+}) => {
+  const firstName = (user?.user_metadata?.full_name || user?.email || '').toString().split(/[\s@]/)[0];
+  const locale = localCity?.city;
+
+  let icon = <Heart className="w-4 h-4" />;
+  let eyebrow = 'For renters';
+  let headline = locale
+    ? `What renters really think in ${locale}.`
+    : 'What renters really think — before you sign.';
+  let sub = 'Real tours, verified photos, and honest resident stories from large apartment buildings.';
+  let cta: { to: string; label: string; icon: React.ReactNode } = {
+    to: '/contribute', label: 'Share an experience', icon: <PenLine className="w-4 h-4" />,
+  };
+
+  if (isAdmin) {
+    icon = <Shield className="w-4 h-4" />;
+    eyebrow = 'Admin';
+    headline = firstName ? `Welcome back, ${firstName}.` : 'Welcome back.';
+    sub = 'Jump into moderation, claims, and property operations.';
+    cta = { to: '/admin/settings', label: 'Open admin', icon: <Shield className="w-4 h-4" /> };
+  } else if (isManager) {
+    icon = <Building className="w-4 h-4" />;
+    eyebrow = 'Property manager';
+    headline = firstName ? `Welcome back, ${firstName}.` : 'Manage your properties.';
+    sub = 'Respond to reviews, publish official content, and keep your listing accurate.';
+    cta = { to: '/manager/start', label: 'Manager tools', icon: <Building className="w-4 h-4" /> };
+  } else if (user) {
+    icon = <UserCheck className="w-4 h-4" />;
+    eyebrow = firstName ? `Welcome back, ${firstName}` : 'Welcome back';
+    headline = locale
+      ? `Fresh from renters near ${locale}.`
+      : 'Fresh from renters across the network.';
+    sub = 'Pick up where you left off, or add a note about a place you know.';
+    cta = { to: '/contribute', label: 'Share an experience', icon: <PenLine className="w-4 h-4" /> };
+  }
+
+  return (
+    <section className="border-b border-border/40 bg-gradient-to-b from-primary/[0.06] via-background to-background">
+      <div className="container py-5 md:py-7">
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 md:gap-6">
+          <div className="min-w-0">
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-primary/90 mb-2">
+              {icon} {eyebrow}
+            </span>
+            <h1 className="text-2xl md:text-3xl font-black tracking-tight text-balance leading-tight">
+              {headline}
+            </h1>
+            <p className="text-sm text-muted-foreground mt-1.5 max-w-xl">{sub}</p>
+          </div>
+          <div className="shrink-0">
+            <Button variant="hero" size="sm" asChild>
+              <Link to={cta.to}>{cta.icon} {cta.label}</Link>
+            </Button>
+          </div>
+        </div>
+
+        <form onSubmit={runSearch} className="mt-4 md:mt-5">
+          <div className="relative">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+            <Input
+              placeholder={locale ? `Search apartments in ${locale} or anywhere…` : 'Search any apartment, city, or address…'}
+              className="pl-10 pr-24 h-11"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+            />
+            <Button type="submit" size="sm" variant="hero" className="absolute right-1.5 top-1/2 -translate-y-1/2 h-8">
+              Search
+            </Button>
+          </div>
+        </form>
+      </div>
+    </section>
   );
 };
 
