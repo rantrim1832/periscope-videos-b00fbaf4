@@ -44,7 +44,7 @@ const Contribute = () => {
         ) : (
           <>
             <div className="max-w-2xl mx-auto mb-6">
-              <h1 className="text-3xl font-bold">Share your experience</h1>
+              <h1 className="text-3xl font-bold">Add a review</h1>
               <p className="text-muted-foreground">Sharing your experience at <span className="font-medium text-foreground">{property.name}</span></p>
             </div>
             <ContributeFlow propertyId={property.id} propertyName={property.name} />

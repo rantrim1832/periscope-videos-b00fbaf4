@@ -69,7 +69,7 @@ export const OfficialContent = ({ property }: { property: PropertyView }) => {
         )}
       </div>
       <p className="text-muted-foreground mb-4">
-        Resident truth + official context = the complete picture. {verified ? 'Managed by the verified operator.' : 'From the property’s public channels (unverified).'}
+        Resident reviews and official property data, together. {verified ? 'Managed by the verified operator.' : 'From the property’s public channels (unverified).'}
       </p>
 
       {channels.length === 0 ? (

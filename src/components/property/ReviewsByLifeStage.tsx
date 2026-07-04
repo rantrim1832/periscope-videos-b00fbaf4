@@ -53,7 +53,7 @@ export const ReviewsByLifeStage = ({ property, onContribute }: { property: Prope
       <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
         <h2 className="text-2xl font-bold">What residents say</h2>
         <Button variant="outline" size="sm" onClick={onContribute}>
-          <Video className="w-4 h-4 mr-2" /> Add your experience
+          <Video className="w-4 h-4 mr-2" /> Add a review
         </Button>
       </div>
 

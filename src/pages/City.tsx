@@ -141,7 +141,7 @@ const City = () => {
 
       <div className="fixed bottom-4 inset-x-0 z-30 flex justify-center pointer-events-none">
         <Button variant="hero" className="pointer-events-auto shadow-lg" asChild>
-          <Link to="/contribute"><PenLine className="w-4 h-4 mr-2" /> Share an experience</Link>
+          <Link to="/contribute"><PenLine className="w-4 h-4 mr-2" /> Add a review</Link>
         </Button>
       </div>
     </div>

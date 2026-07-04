@@ -38,7 +38,7 @@ const Leaderboard = () => {
         <p className="text-muted-foreground mb-6">The renters and creators helping others understand places before they lease.</p>
 
         {isDemoMode() || (!isLoading && rows.length === 0) ? (
-          <EmptyState icon={Trophy} title="The leaderboard is wide open" description="Be one of the first contributors — publish reviews to earn points, badges, and a spot at the top." primary={{ label: 'Share an experience', to: '/contribute' }} />
+          <EmptyState icon={Trophy} title="The leaderboard is wide open" description="Be one of the first contributors — publish reviews to earn points, badges, and a spot at the top." primary={{ label: 'Add a review', to: '/contribute' }} />
         ) : isLoading ? (
           <p className="text-muted-foreground">Loading…</p>
         ) : (

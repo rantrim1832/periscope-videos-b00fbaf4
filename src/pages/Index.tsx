@@ -89,7 +89,7 @@ const Index = () => {
         style={{ bottom: 'max(1rem, env(safe-area-inset-bottom))' }}
       >
         <Button variant="hero" className="pointer-events-auto shadow-elevated" asChild>
-          <Link to="/contribute"><PenLine className="w-4 h-4" /> Share an experience</Link>
+          <Link to="/contribute"><PenLine className="w-4 h-4" /> Add a review</Link>
         </Button>
       </div>
     </div>
@@ -142,7 +142,7 @@ const PersonalizedTopBar = ({
     : 'What renters really think — before you sign.';
   let sub = 'Real tours, verified photos, and honest resident stories from large apartment buildings.';
   let cta: { to: string; label: string; icon: React.ReactNode } = {
-    to: '/contribute', label: 'Share an experience', icon: <PenLine className="w-4 h-4" />,
+    to: '/contribute', label: 'Add a review', icon: <PenLine className="w-4 h-4" />,
   };
 
   if (isAdmin) {
@@ -164,7 +164,7 @@ const PersonalizedTopBar = ({
       ? `Fresh from renters near ${locale}.`
       : 'Fresh from renters across the network.';
     sub = 'Pick up where you left off, or add a note about a place you know.';
-    cta = { to: '/contribute', label: 'Share an experience', icon: <PenLine className="w-4 h-4" /> };
+    cta = { to: '/contribute', label: 'Add a review', icon: <PenLine className="w-4 h-4" /> };
   }
 
   return (

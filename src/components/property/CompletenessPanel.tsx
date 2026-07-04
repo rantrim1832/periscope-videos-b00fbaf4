@@ -42,7 +42,7 @@ export const CompletenessPanel = ({ property }: { property: PropertyView }) => {
           </Button>
         )}
         <p className="text-xs text-muted-foreground">
-          Resident truth + official context = the complete picture.
+          Resident reviews and official property data, together.
         </p>
       </CardContent>
     </Card>

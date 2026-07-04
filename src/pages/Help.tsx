@@ -95,7 +95,7 @@ const Help = () => {
           <CardContent className="p-8 text-center space-y-4">
             <h3 className="text-2xl font-bold">Ready to help the next renter?</h3>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Button variant="hero" asChild><Link to="/contribute">Share an experience</Link></Button>
+              <Button variant="hero" asChild><Link to="/contribute">Add a review</Link></Button>
               <Button variant="outline" asChild><Link to="/feed">Explore the feed</Link></Button>
             </div>
           </CardContent>

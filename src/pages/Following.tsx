@@ -27,7 +27,7 @@ const Following = () => {
         ) : !data || data.watchedProperties.length === 0 ? (
           <EmptyState icon={Bell} title="You're not following anything yet" description="Tap Follow on any property or city to get notified about new reviews, videos, and Truth Score changes." primary={{ label: 'Browse properties', to: '/browse' }} secondary={{ label: 'Discover rankings', to: '/discover' }} />
         ) : data.activity.length === 0 ? (
-          <EmptyState icon={Bell} title="No new activity yet" description={`You're following ${data.watchedProperties.length} propert${data.watchedProperties.length === 1 ? 'y' : 'ies'}. New reviews and score changes will appear here.`} primary={{ label: 'Share an experience', to: '/contribute' }} />
+          <EmptyState icon={Bell} title="No new activity yet" description={`You're following ${data.watchedProperties.length} propert${data.watchedProperties.length === 1 ? 'y' : 'ies'}. New reviews and score changes will appear here.`} primary={{ label: 'Add a review', to: '/contribute' }} />
         ) : (
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">Recent activity from {data.watchedProperties.length} propert{data.watchedProperties.length === 1 ? 'y' : 'ies'} you follow</p>

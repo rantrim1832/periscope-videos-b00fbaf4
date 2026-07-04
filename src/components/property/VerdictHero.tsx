@@ -83,7 +83,7 @@ export const VerdictHero = ({ property, result, onWatch, onContribute }: Props) 
                 </Button>
               )}
               <Button variant={isEmpty ? 'hero' : 'outline'} size="lg" onClick={onContribute}>
-                <PenLine className="w-5 h-5 mr-2" /> {isEmpty ? 'Share an experience' : 'Add your experience'}
+                <PenLine className="w-5 h-5 mr-2" /> {isEmpty ? 'Add a review' : 'Add a review'}
               </Button>
               <AddToCompareButton property={property} score={result.score} />
               <SaveButton property={property} />
