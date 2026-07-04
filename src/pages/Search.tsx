@@ -35,13 +35,17 @@ const Search = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <div className="container mx-auto px-4 py-8 max-w-5xl">
+      <div className="container py-8 max-w-5xl">
+        <div className="mb-6">
+          <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Search</h1>
+          <p className="text-sm text-muted-foreground mt-1">Look up any apartment, address, or city.</p>
+        </div>
         <form onSubmit={submit} className="flex gap-3 mb-8">
           <div className="flex-1 relative">
             <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-5 w-5" />
             <Input
               autoFocus
-              placeholder="Search by property name, address, or city…"
+              placeholder="Property name, address, or city…"
               className="pl-10 h-12"
               value={input}
               onChange={(e) => setInput(e.target.value)}
@@ -51,23 +55,32 @@ const Search = () => {
         </form>
 
         {!q ? (
-          <p className="text-muted-foreground text-center py-16">
-            Search any apartment in America to see its Truth Score.
-          </p>
+          <div className="text-center py-16 max-w-md mx-auto">
+            <div className="mx-auto w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
+              <SearchIcon className="w-6 h-6 text-primary" />
+            </div>
+            <h2 className="text-lg font-semibold mb-1">Find your next apartment</h2>
+            <p className="text-sm text-muted-foreground">Search any building in America to see its Truth Score, videos, and resident context.</p>
+          </div>
         ) : isLoading ? (
-          <p className="text-muted-foreground">Searching…</p>
+          <div className="flex items-center gap-3 text-muted-foreground">
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-r-transparent" />
+            <span className="text-sm">Searching…</span>
+          </div>
         ) : results.length === 0 ? (
           <Card className="p-10 text-center bg-muted/30 border-dashed">
             <MapPin className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
-            <h2 className="text-xl font-semibold mb-2">No match for “{q}”</h2>
+            <h2 className="text-xl font-semibold mb-2">No match for &ldquo;{q}&rdquo;</h2>
             <p className="text-muted-foreground mb-4">
-              It may not be in our graph yet — you can add it and be the first to review it.
+              It may not be in our graph yet — add it and be the first to share context.
             </p>
             <Button variant="hero" asChild><a href="/contribute">Add this property</a></Button>
           </Card>
         ) : (
           <>
-            <p className="text-sm text-muted-foreground mb-4">{results.length} result{results.length === 1 ? '' : 's'} for “{q}”</p>
+            <p className="text-sm text-muted-foreground mb-4">
+              <span className="font-medium text-foreground">{results.length}</span> result{results.length === 1 ? '' : 's'} for &ldquo;{q}&rdquo;
+            </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {results.map((p) => (
                 <PropertyCard
