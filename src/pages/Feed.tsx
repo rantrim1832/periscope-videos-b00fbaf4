@@ -10,26 +10,42 @@ import { getVideoProvider } from '@/services/providers/video';
 import { VideoPlayer } from '@/components/property/VideoPlayer';
 import { FEED_CATEGORIES, type FeedItem } from '@/domain/property';
 import { useToast } from '@/hooks/use-toast';
-import { getStoredLocalCity } from '@/lib/localDiscovery';
+import { getStoredLocalCity, sortByLocalState, stateFromLocation } from '@/lib/localDiscovery';
 
 const Feed = () => {
-  const [category, setCategory] = useState<string>('All');
   const { data: items = [], isLoading } = useQuery({
     queryKey: ['feed'],
     queryFn: () => getPropertyProvider().feed(),
   });
-  const cities = [...new Set(items.map((i) => i.location).filter(Boolean))].slice(0, 12);
   const stored = getStoredLocalCity();
+  const localState = stored?.state ?? null;
   const preferredLocation = stored ? `${stored.city}, ${stored.state}` : 'All';
+  const [category, setCategory] = useState<string>('All');
   const [city, setCity] = useState<string>(preferredLocation);
+  // State chip narrows the feed to the viewer's home state by default, so a
+  // Southern California renter doesn't get a wall of Texas content.
+  const [stateFilter, setStateFilter] = useState<string>(localState ?? 'All');
   const [filtersOpen, setFiltersOpen] = useState(false);
 
-  const effectiveCity = city === 'All' || cities.includes(city) ? city : 'All';
-  const filtered = items.filter((i) =>
+  const statesList = [...new Set(items.map((i) => stateFromLocation(i.location)).filter(Boolean))] as string[];
+  const citiesForState = [...new Set(
+    items
+      .filter((i) => stateFilter === 'All' || stateFromLocation(i.location) === stateFilter)
+      .map((i) => i.location)
+      .filter(Boolean),
+  )].slice(0, 24);
+  const effectiveCity = city === 'All' || citiesForState.includes(city) ? city : 'All';
+  const filteredRaw = items.filter((i) =>
     (category === 'All' || i.category === category) &&
+    (stateFilter === 'All' || stateFromLocation(i.location) === stateFilter) &&
     (effectiveCity === 'All' || i.location === effectiveCity),
   );
-  const activeCount = (category !== 'All' ? 1 : 0) + (effectiveCity !== 'All' ? 1 : 0);
+  // When "All states" is picked but the viewer has a home state, still float
+  // local content to the top instead of shuffling in far-away metros first.
+  const filtered = stateFilter === 'All'
+    ? sortByLocalState(filteredRaw, (i) => i.location, localState)
+    : filteredRaw;
+  const activeCount = (category !== 'All' ? 1 : 0) + (effectiveCity !== 'All' ? 1 : 0) + (stateFilter !== (localState ?? 'All') ? 1 : 0);
 
   return (
     <div className="min-h-screen bg-background">
@@ -49,11 +65,12 @@ const Feed = () => {
           <div className="flex-1 flex gap-1.5 overflow-x-auto no-scrollbar text-xs text-muted-foreground items-center min-w-0">
             <span className="truncate">
               {category === 'All' ? 'All stories' : category}
+              {stateFilter !== 'All' ? ` · ${stateFilter}` : ''}
               {effectiveCity !== 'All' ? ` · ${effectiveCity}` : ''}
             </span>
           </div>
           {activeCount > 0 && (
-            <Button size="sm" variant="ghost" className="shrink-0 h-8 px-2" onClick={() => { setCategory('All'); setCity('All'); }}>
+            <Button size="sm" variant="ghost" className="shrink-0 h-8 px-2" onClick={() => { setCategory('All'); setCity('All'); setStateFilter(localState ?? 'All'); }}>
               <X className="w-3.5 h-3.5" /> Clear
             </Button>
           )}
@@ -71,9 +88,19 @@ const Feed = () => {
               </div>
             </div>
             <div>
+              <p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground mb-1.5">State</p>
+              <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
+                {['All', ...statesList].map((s) => (
+                  <Button key={s} size="sm" variant={stateFilter === s ? 'default' : 'outline'} className="whitespace-nowrap h-8" onClick={() => { setStateFilter(s); setCity('All'); }}>
+                    {s === 'All' ? 'All states' : s}
+                  </Button>
+                ))}
+              </div>
+            </div>
+            <div>
               <p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground mb-1.5">City</p>
               <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
-                {['All', ...cities].map((c) => (
+                {['All', ...citiesForState].map((c) => (
                   <Button key={c} size="sm" variant={effectiveCity === c ? 'default' : 'outline'} className="whitespace-nowrap h-8" onClick={() => setCity(c)}>
                     {c === 'All' ? 'All cities' : c}
                   </Button>
