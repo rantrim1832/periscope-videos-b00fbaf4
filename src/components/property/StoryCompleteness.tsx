@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import type { PropertyView } from '@/domain/property';
 import { computeStory } from '@/domain/story';
 
-// "Help complete this property's story" — collaborative framing, not "leave a review".
+// Listing-completeness meter for a property page.
 export const StoryCompleteness = ({ property }: { property: PropertyView }) => {
   const navigate = useNavigate();
   const story = computeStory(property);
@@ -15,7 +15,7 @@ export const StoryCompleteness = ({ property }: { property: PropertyView }) => {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
-          <span>Property story</span>
+          <span>Listing completeness</span>
           <span className="text-sm font-normal text-muted-foreground tabular-nums">{story.pct}%</span>
         </CardTitle>
       </CardHeader>
@@ -34,7 +34,7 @@ export const StoryCompleteness = ({ property }: { property: PropertyView }) => {
           ))}
         </div>
         <Button variant="hero" size="sm" className="w-full" onClick={() => navigate(`/contribute/${property.id}`)}>
-          Help complete this property's story
+          Add a review
         </Button>
       </CardContent>
     </Card>
