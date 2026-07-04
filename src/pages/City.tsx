@@ -120,7 +120,9 @@ const City = () => {
                       reviewCount={0}
                       videoCount={visualCount(p)}
                       imageUrl={cardImage(p)}
-                      to={`/property/${p.id}`}
+                      propertyId={p.id}
+                  units={p.unitsCount}
+                  to={`/property/${p.id}`}
                     />
                   ))}
                 </div>

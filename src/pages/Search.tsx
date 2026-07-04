@@ -119,6 +119,8 @@ const Search = () => {
                   reviewCount={0}
                   videoCount={visualCount(p)}
                   imageUrl={cardImage(p)}
+                  propertyId={p.id}
+                  units={p.unitsCount}
                   to={`/property/${p.id}`}
                 />
               ))}
