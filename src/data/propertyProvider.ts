@@ -178,13 +178,42 @@ export class CanonicalPropertyProvider implements PropertyDataProvider {
       reviews: [],
       media: [],
       timeline: [],
+      officialChannels: prop.officialChannels ?? [],
     };
+  }
+
+  private mapChannel(c: any): OfficialChannel {
+    return {
+      id: c.id,
+      kind: c.kind as ChannelKind,
+      url: c.url,
+      embedUrl: c.embed_url ?? undefined,
+      label: c.label ?? undefined,
+      verified: !!c.is_verified,
+    };
+  }
+
+  private async enrichSummaries(props: any[]): Promise<PropertyView[]> {
+    const ids = props.map((p) => p.id);
+    if (ids.length === 0) return [];
+    const { data: channelRows } = await this.db
+      .from('property_channel')
+      .select('*')
+      .in('canonical_property_id', ids)
+      .limit(ids.length * 12);
+    const byProperty = new Map<string, OfficialChannel[]>();
+    for (const row of channelRows ?? []) {
+      const list = byProperty.get(row.canonical_property_id) ?? [];
+      if (list.length < 12) list.push(this.mapChannel(row));
+      byProperty.set(row.canonical_property_id, list);
+    }
+    return props.map((p) => this.mapSummary({ ...p, officialChannels: byProperty.get(p.id) ?? [] }));
   }
 
   async listSummaries(): Promise<PropertyView[]> {
     const { data } = await this.db
       .from('canonical_property').select('*').eq('status', 'active').limit(24);
-    return (data ?? []).map((p: any) => this.mapSummary(p));
+    return this.enrichSummaries(data ?? []);
   }
 
   // Alias-aware search: direct match on canonical fields OR any alias name,
@@ -194,12 +223,20 @@ export class CanonicalPropertyProvider implements PropertyDataProvider {
     if (!q) return [];
     const term = `%${q}%`;
 
+    const cityExact = q.length >= 3
+      ? await this.db
+        .from('canonical_property').select('*')
+        .eq('status', 'active')
+        .ilike('city', q)
+        .limit(36)
+      : { data: [] };
+
     const { data: direct } = await this.db
       .from('canonical_property').select('*')
       .eq('status', 'active')
       .or(`name.ilike.${term},address_line1.ilike.${term},city.ilike.${term}`)
       .limit(20);
-    const results: any[] = direct ?? [];
+    const results: any[] = [...(cityExact.data ?? []), ...(direct ?? [])];
     const seen = new Set(results.map((r) => r.id));
 
     const { data: aliasRows } = await this.db
@@ -210,9 +247,10 @@ export class CanonicalPropertyProvider implements PropertyDataProvider {
     if (aliasIds.length > 0) {
       const { data: viaAlias } = await this.db
         .from('canonical_property').select('*').in('id', aliasIds).eq('status', 'active');
-      results.push(...(viaAlias ?? []));
+      results.push(...(viaAlias ?? []).filter((p: any) => !seen.has(p.id)));
     }
-    return results.map((p) => this.mapSummary(p));
+    const deduped = [...new Map(results.map((p) => [p.id, p])).values()];
+    return this.enrichSummaries(deduped);
   }
 
   async listStates(): Promise<LocationCount[]> {
@@ -226,7 +264,7 @@ export class CanonicalPropertyProvider implements PropertyDataProvider {
   async listByLocation(state: string, city: string): Promise<PropertyView[]> {
     const { data } = await this.db
       .from('canonical_property').select('*').eq('status', 'active').eq('state', state).eq('city', city).limit(60);
-    return (data ?? []).map((p: any) => this.mapSummary(p));
+    return this.enrichSummaries(data ?? []);
   }
 
   async feed(): Promise<FeedItem[]> {

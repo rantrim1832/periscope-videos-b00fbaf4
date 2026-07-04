@@ -9,6 +9,12 @@ import { Link } from "react-router-dom";
 import { getPropertyProvider, type LocationCount } from "@/data/propertyProvider";
 import type { PropertyView } from "@/domain/property";
 
+const cardImage = (p: PropertyView) =>
+  p.officialChannels?.find((c) => c.kind === 'gallery' && /\.(jpg|jpeg|png|webp)(\?|$)/i.test(c.url))?.url;
+
+const visualCount = (p: PropertyView) =>
+  p.officialChannels?.filter((c) => ['gallery', 'matterport', 'instagram', 'tiktok', 'youtube'].includes(c.kind)).length ?? 0;
+
 const Browse = () => {
   const [view, setView] = useState<"states" | "cities" | "properties">("states");
   const [selectedState, setSelectedState] = useState<string>("");
@@ -132,7 +138,18 @@ const Browse = () => {
             properties.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {properties.map((p) => (
-                  <PropertyCard key={p.id} name={p.name} address={p.addressLine1 ?? ''} city={p.city ?? ''} state={p.state ?? ''} rating={0} reviewCount={0} videoCount={0} to={`/property/${p.id}`} />
+                  <PropertyCard
+                    key={p.id}
+                    name={p.name}
+                    address={p.addressLine1 ?? ''}
+                    city={p.city ?? ''}
+                    state={p.state ?? ''}
+                    rating={0}
+                    reviewCount={0}
+                    videoCount={visualCount(p)}
+                    imageUrl={cardImage(p)}
+                    to={`/property/${p.id}`}
+                  />
                 ))}
               </div>
             ) : (

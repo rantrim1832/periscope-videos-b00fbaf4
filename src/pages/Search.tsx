@@ -8,6 +8,13 @@ import { Card } from '@/components/ui/card';
 import { PropertyCard } from '@/components/PropertyCard';
 import { Search as SearchIcon, MapPin } from 'lucide-react';
 import { getPropertyProvider } from '@/data/propertyProvider';
+import type { PropertyView } from '@/domain/property';
+
+const cardImage = (p: PropertyView) =>
+  p.officialChannels?.find((c) => c.kind === 'gallery' && /\.(jpg|jpeg|png|webp)(\?|$)/i.test(c.url))?.url;
+
+const visualCount = (p: PropertyView) =>
+  p.officialChannels?.filter((c) => ['gallery', 'matterport', 'instagram', 'tiktok', 'youtube'].includes(c.kind)).length ?? 0;
 
 const Search = () => {
   const [params, setParams] = useSearchParams();
@@ -73,7 +80,8 @@ const Search = () => {
                   bathrooms={undefined}
                   rating={0}
                   reviewCount={0}
-                  videoCount={0}
+                  videoCount={visualCount(p)}
+                  imageUrl={cardImage(p)}
                   to={`/property/${p.id}`}
                 />
               ))}
