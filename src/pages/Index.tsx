@@ -5,20 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, Play, TrendingDown, TrendingUp, MapPin, PenLine } from "lucide-react";
+import { Search, Play, MapPin, PenLine, Building2, Sparkles } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { getPropertyProvider } from "@/data/propertyProvider";
-import { computeTruthScore, scoreColorVar, scoreLabel } from "@/domain/truthScore";
 import { FEED_CATEGORIES, type FeedItem, type PropertyView } from "@/domain/property";
 
 // The homepage answers one question in <10s: "What's the most interesting thing
 // happening in apartment living right now?" Content-hook-first (TikTok + Zillow +
 // Consumer Reports + Reddit). Discover by using, not by reading.
-
-type Hook =
-  | { kind: "clip"; id: string; item: FeedItem }
-  | { kind: "score"; id: string; property: PropertyView; score: number; verdict: string }
-  | { kind: "drama"; id: string; propertyId: string; propertyName: string; label: string; delta: number };
 
 const Index = () => {
   const navigate = useNavigate();
@@ -32,30 +26,14 @@ const Index = () => {
   const { data: properties = [], isLoading: propsLoading } = useQuery({ queryKey: ["home-props"], queryFn: () => getPropertyProvider().listSummaries() });
   const loading = feedLoading || propsLoading;
 
-  const hooks = useMemo<Hook[]>(() => {
-    const scoreHooks: Hook[] = properties
-      .map((p) => ({ p, r: computeTruthScore(p.reviews) }))
-      .filter((x) => x.r.score != null)
-      .map((x) => ({ kind: "score" as const, id: `s-${x.p.id}`, property: x.p, score: x.r.score!, verdict: scoreLabel(x.r) }));
-
-    const dramaHooks: Hook[] = properties.flatMap((p) =>
-      (p.timeline ?? [])
-        .filter((e) => e.kind === "score_change" && typeof e.delta === "number")
-        .map((e) => ({ kind: "drama" as const, id: `d-${e.id}`, propertyId: p.id, propertyName: p.name, label: e.label, delta: e.delta! })),
-    );
-
-    const clipHooks: Hook[] = feed.map((item) => ({ kind: "clip" as const, id: `c-${item.id}`, item }));
-
-    // Interleave for a varied, scrollable wall.
-    const out: Hook[] = [];
-    const max = Math.max(scoreHooks.length, dramaHooks.length, clipHooks.length);
-    for (let i = 0; i < max; i++) {
-      if (clipHooks[i]) out.push(clipHooks[i]);
-      if (scoreHooks[i]) out.push(scoreHooks[i]);
-      if (dramaHooks[i]) out.push(dramaHooks[i]);
-    }
-    return out;
-  }, [feed, properties]);
+  const hero = feed[0];
+  const cityRows = useMemo(() => {
+    const cities = [...new Set(feed.map((i) => i.location).filter(Boolean))].slice(0, 10);
+    return cities.map((city) => ({ city, items: feed.filter((i) => i.location === city).slice(0, 12) }));
+  }, [feed]);
+  const photoItems = feed.filter((i) => i.thumbnailUrl).slice(0, 18);
+  const tourItems = feed.filter((i) => i.embedUrl || i.platform === 'matterport' || i.category === 'Luxury tours').slice(0, 18);
+  const needTruth = properties.slice(0, 18);
 
   return (
     <div className="min-h-screen bg-background pb-16">
@@ -74,33 +52,24 @@ const Index = () => {
         </div>
       </div>
 
-      {/* Category chips — jump into the interesting stuff */}
-      <div className="container mx-auto px-4 pt-5">
-        <div className="flex gap-2 overflow-x-auto pb-1">
-          {FEED_CATEGORIES.filter((c) => c !== "All").map((c) => (
-            <Button key={c} size="sm" variant="outline" className="whitespace-nowrap" asChild>
-              <Link to="/feed">{c}</Link>
-            </Button>
-          ))}
-        </div>
-      </div>
-
-      {/* The wall — content is the hero */}
-      <main className="container mx-auto px-4 py-6">
+      <main className="container mx-auto px-4 py-6 space-y-8">
         {loading ? (
           <div className="flex justify-center py-20">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent" />
           </div>
-        ) : hooks.length === 0 ? (
+        ) : !hero && properties.length === 0 ? (
           <ColdStart />
         ) : (
-          <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 [column-fill:_balance]">
-            {hooks.map((h) => (
-              <div key={h.id} className="mb-4 break-inside-avoid">
-                <HookCard hook={h} />
-              </div>
+          <>
+            {hero && <HeroFeature item={hero} />}
+            <CityRail />
+            <ContentRail title="Official tours & walkthroughs" subtitle="Real property tours and sourced visual context" items={tourItems} />
+            <ContentRail title="Photos that make pages feel real" subtitle="Seeded official/public imagery from property sources" items={photoItems} />
+            {cityRows.slice(0, 4).map((row) => (
+              <ContentRail key={row.city} title={`Popular in ${row.city}`} items={row.items} />
             ))}
-          </div>
+            <PropertyRail title="Pages that need resident truth" properties={needTruth} />
+          </>
         )}
       </main>
 
@@ -115,7 +84,7 @@ const Index = () => {
 };
 
 const POPULAR_CITIES = [
-  'Los Angeles', 'Austin', 'Chicago', 'Phoenix', 'Atlanta', 'Denver', 'Seattle', 'Miami',
+  'Phoenix', 'Dallas', 'Atlanta', 'Los Angeles', 'Austin', 'Chicago', 'Denver', 'Seattle', 'Miami', 'Charlotte',
 ];
 
 // Shown when there's no content yet (nationwide launch reality). Curiosity- and
@@ -141,66 +110,105 @@ const ColdStart = () => (
   </div>
 );
 
-const HookCard = ({ hook }: { hook: Hook }) => {
-  if (hook.kind === "clip") {
-    const { item } = hook;
-    return (
-      <Link to={`/property/${item.propertyId}`}>
-        <Card className="overflow-hidden group hover:shadow-xl transition-all">
-          <div className="relative aspect-[4/5] bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
-            {item.thumbnailUrl ? (
-              <img src={item.thumbnailUrl} alt={item.title} className="absolute inset-0 w-full h-full object-cover transition-transform group-hover:scale-105" loading="lazy" />
-            ) : (
-              <Play className="w-12 h-12 text-foreground/70 group-hover:scale-110 transition-transform" />
-            )}
-            <div className="absolute inset-0 bg-black/20" />
-            {item.category && <Badge className="absolute top-2 left-2 bg-black/50 text-white border-0 text-[11px]">{item.category}</Badge>}
-            <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/85 to-transparent p-3">
-              <p className="text-white font-semibold leading-snug line-clamp-3">{item.title}</p>
-              <p className="text-white/70 text-xs mt-1 flex items-center gap-1"><MapPin className="w-3 h-3" /> {item.propertyName}</p>
-            </div>
-          </div>
-        </Card>
-      </Link>
-    );
-  }
+const HeroFeature = ({ item }: { item: FeedItem }) => (
+  <section className="relative overflow-hidden rounded-3xl border bg-card min-h-[420px]">
+    {item.thumbnailUrl && <img src={item.thumbnailUrl} alt={item.title} className="absolute inset-0 h-full w-full object-cover" />}
+    <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/55 to-black/15" />
+    <div className="relative z-10 max-w-2xl p-6 md:p-10 text-white space-y-4">
+      <Badge className="bg-white/15 text-white border-white/20"><Sparkles className="w-3 h-3 mr-1" /> Featured official source</Badge>
+      <h1 className="text-4xl md:text-6xl font-black leading-tight">See the public story before you sign.</h1>
+      <p className="text-white/80 text-lg line-clamp-3">{item.title}</p>
+      <p className="text-white/75 flex items-center gap-2"><MapPin className="w-4 h-4" /> {item.propertyName} · {item.location}</p>
+      <div className="flex flex-wrap gap-3">
+        <Button variant="secondary" size="lg" asChild><Link to={`/property/${item.propertyId}`}><Play className="w-5 h-5 mr-2" /> View property</Link></Button>
+        <Button variant="outline" size="lg" className="bg-white/10 border-white/30 text-white hover:bg-white/20" asChild><Link to="/feed">Browse feed</Link></Button>
+      </div>
+    </div>
+  </section>
+);
 
-  if (hook.kind === "score") {
-    const color = scoreColorVar(hook.score);
-    return (
-      <Link to={`/property/${hook.property.id}`}>
-        <Card className="hover:shadow-xl transition-all" style={{ borderColor: color }}>
-          <CardContent className="p-5">
-            <div className="flex items-center gap-3 mb-2">
-              <span className="text-5xl font-extrabold tabular-nums" style={{ color }}>{hook.score}</span>
-              <div>
-                <p className="text-xs text-muted-foreground font-semibold tracking-wide">TRUTH SCORE</p>
-                <p className="font-medium leading-tight">{hook.verdict}</p>
-              </div>
-            </div>
-            <p className="font-semibold truncate">{hook.property.name}</p>
-            <p className="text-sm text-muted-foreground truncate">{[hook.property.city, hook.property.state].filter(Boolean).join(", ")}</p>
-          </CardContent>
-        </Card>
-      </Link>
-    );
-  }
+const CityRail = () => (
+  <section>
+    <div className="flex items-center justify-between mb-3">
+      <div>
+        <h2 className="text-2xl font-bold">Start with a city</h2>
+        <p className="text-sm text-muted-foreground">Jump into markets with seeded official photos, tours, and social posts.</p>
+      </div>
+    </div>
+    <div className="flex gap-3 overflow-x-auto pb-2">
+      {POPULAR_CITIES.map((city) => (
+        <Button key={city} variant="outline" className="h-20 min-w-36 flex-col gap-1" asChild>
+          <Link to={`/search?q=${encodeURIComponent(city)}`}><MapPin className="w-5 h-5" /> {city}</Link>
+        </Button>
+      ))}
+    </div>
+  </section>
+);
 
-  // drama
-  const down = hook.delta < 0;
+const ContentRail = ({ title, subtitle, items }: { title: string; subtitle?: string; items: FeedItem[] }) => {
+  if (items.length === 0) return null;
   return (
-    <Link to={`/property/${hook.propertyId}`}>
-      <Card className="hover:shadow-xl transition-all bg-gradient-to-br from-card to-muted/40">
-        <CardContent className="p-5 space-y-2">
-          <Badge variant={down ? "destructive" : "success"} className="gap-1">
-            {down ? <TrendingDown className="w-3 h-3" /> : <TrendingUp className="w-3 h-3" />}
-            {hook.delta > 0 ? `+${hook.delta}` : hook.delta} Truth Score
-          </Badge>
-          <p className="font-semibold leading-snug">{hook.label}</p>
-          <p className="text-sm text-muted-foreground truncate">{hook.propertyName}</p>
-        </CardContent>
-      </Card>
-    </Link>
+    <section>
+      <div className="mb-3">
+        <h2 className="text-2xl font-bold">{title}</h2>
+        {subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
+      </div>
+      <div className="flex gap-4 overflow-x-auto pb-3">
+        {items.map((item) => <PosterCard key={item.id} item={item} />)}
+      </div>
+    </section>
+  );
+};
+
+const PosterCard = ({ item }: { item: FeedItem }) => (
+  <Link to={`/property/${item.propertyId}`} className="group shrink-0 w-44 md:w-56">
+    <Card className="overflow-hidden hover:shadow-xl transition-all bg-card">
+      <div className="relative aspect-[3/4] bg-gradient-to-br from-primary/20 to-secondary/20 overflow-hidden">
+        {item.thumbnailUrl ? (
+          <img src={item.thumbnailUrl} alt={item.title} className="absolute inset-0 h-full w-full object-cover transition-transform group-hover:scale-105" loading="lazy" />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center"><Building2 className="w-10 h-10 text-muted-foreground" /></div>
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-transparent" />
+        {item.category && <Badge className="absolute top-2 left-2 bg-black/55 text-white border-0 text-[10px]">{item.category}</Badge>}
+        <div className="absolute bottom-0 inset-x-0 p-3">
+          <p className="text-white font-semibold text-sm line-clamp-2">{item.propertyName}</p>
+          <p className="text-white/70 text-xs truncate">{item.location}</p>
+        </div>
+      </div>
+      <CardContent className="p-3">
+        <p className="text-sm line-clamp-2 text-muted-foreground">{item.title}</p>
+      </CardContent>
+    </Card>
+  </Link>
+);
+
+const PropertyRail = ({ title, properties }: { title: string; properties: PropertyView[] }) => {
+  if (properties.length === 0) return null;
+  return (
+    <section>
+      <h2 className="text-2xl font-bold mb-3">{title}</h2>
+      <div className="flex gap-4 overflow-x-auto pb-3">
+        {properties.map((p) => {
+          const count = p.officialChannels?.filter((c) => ['gallery', 'matterport', 'instagram', 'tiktok', 'youtube'].includes(c.kind)).length ?? 0;
+          const img = p.officialChannels?.find((c) => c.kind === 'gallery' && /\.(jpg|jpeg|png|webp)(\?|$)/i.test(c.url))?.url;
+          return (
+            <Link key={p.id} to={`/property/${p.id}`} className="shrink-0 w-56">
+              <Card className="overflow-hidden hover:shadow-xl transition-all">
+                <div className="aspect-video bg-muted relative">
+                  {img && <img src={img} alt={p.name} className="w-full h-full object-cover" loading="lazy" />}
+                  {count > 0 && <Badge className="absolute right-2 top-2 bg-background/90 text-foreground">{count} content</Badge>}
+                </div>
+                <CardContent className="p-3">
+                  <p className="font-semibold truncate">{p.name}</p>
+                  <p className="text-xs text-muted-foreground truncate">{[p.city, p.state].filter(Boolean).join(', ')}</p>
+                </CardContent>
+              </Card>
+            </Link>
+          );
+        })}
+      </div>
+    </section>
   );
 };
 
