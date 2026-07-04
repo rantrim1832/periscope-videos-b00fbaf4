@@ -70,11 +70,11 @@ const Search = () => {
             <div className="mx-auto w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
               <SearchIcon className="w-6 h-6 text-primary" />
             </div>
-            <h2 className="text-lg font-semibold mb-1">Find your next apartment</h2>
+            <h2 className="text-lg font-semibold mb-1">Search for a property</h2>
             <p className="text-sm text-muted-foreground mb-6">
               {stored
                 ? `We prefilled ${stored.label} — hit Search, or try a popular market below.`
-                : 'Search any building in America to see its Truth Score, videos, and resident context.'}
+                : 'Search by name, address, or city.'}
             </p>
             <div className="flex flex-wrap justify-center gap-2">
               {SEEDED_CITIES.slice(0, 8).map((c) => (
@@ -99,7 +99,7 @@ const Search = () => {
             <MapPin className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
             <h2 className="text-xl font-semibold mb-2">No match for &ldquo;{q}&rdquo;</h2>
             <p className="text-muted-foreground mb-4">
-              It may not be in our graph yet — add it and be the first to share context.
+              This property isn't in our database. You can add it.
             </p>
             <Button variant="hero" asChild><a href="/contribute">Add this property</a></Button>
           </Card>
