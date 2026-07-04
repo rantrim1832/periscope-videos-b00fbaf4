@@ -6,7 +6,7 @@ import type { PropertyView, ReviewView, MediaItem, LifeStage, TimelineEvent, Fee
 import type { CategoryKey } from '@/domain/truthScore';
 import type { PropertyClass } from '@/domain/types';
 import { FIXTURE_PROPERTIES, findFixture, fixtureFeed } from './fixtures';
-import { getEnv } from '@/services/env';
+import { useCanonicalData } from '@/lib/demo';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface LocationCount {
@@ -259,7 +259,7 @@ let cached: PropertyDataProvider | null = null;
 
 export function getPropertyProvider(): PropertyDataProvider {
   if (cached) return cached;
-  cached = getEnv('VITE_USE_CANONICAL') === 'true'
+  cached = useCanonicalData()
     ? new CanonicalPropertyProvider()
     : new MockPropertyProvider();
   return cached;
