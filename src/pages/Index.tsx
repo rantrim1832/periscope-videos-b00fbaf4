@@ -230,61 +230,6 @@ const ColdStart = () => (
   </div>
 );
 
-// Cinematic Netflix-style hero: edge-to-edge imagery, layered gradients, integrated search.
-const CinematicHero = ({ item, q, setQ, runSearch }: { item: FeedItem; q: string; setQ: (v: string) => void; runSearch: (e: React.FormEvent) => void }) => (
-  <section className="relative w-full overflow-hidden bg-black text-white h-[72vh] min-h-[520px] max-h-[820px]">
-    {item.thumbnailUrl && (
-      <img
-        src={item.thumbnailUrl}
-        alt={item.title}
-        className="absolute inset-0 h-full w-full object-cover scale-105 animate-fade-in"
-      />
-    )}
-    <div className="absolute inset-0 bg-gradient-to-r from-black via-black/70 to-transparent" />
-    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
-    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,hsl(var(--primary)/0.28),transparent_60%)]" />
-
-    <div className="relative z-10 container h-full flex flex-col justify-end pb-10 md:pb-16">
-      <div className="max-w-2xl space-y-4 md:space-y-5 animate-fade-in-up">
-        <Badge className="bg-white/15 text-white border-white/25 backdrop-blur-md gap-1.5">
-          <Sparkles className="w-3 h-3" /> Featured property
-        </Badge>
-        <h1 className="text-4xl md:text-6xl lg:text-7xl font-black leading-[1.02] tracking-tight text-balance drop-shadow-[0_2px_20px_rgba(0,0,0,0.6)]">
-          See the property<br className="hidden md:block" /> before you sign the lease.
-        </h1>
-        <p className="text-white/85 text-base md:text-lg line-clamp-2 max-w-xl">{item.title}</p>
-        <p className="text-white/70 text-sm flex items-center gap-2">
-          <MapPin className="w-4 h-4 shrink-0" /> {item.propertyName} · {item.location}
-        </p>
-
-        <div className="flex flex-wrap gap-3 pt-2">
-          <Button size="lg" className="bg-white text-black hover:bg-white/90 font-semibold shadow-elevated" asChild>
-            <Link to={`/property/${item.propertyId}`}><Play className="w-5 h-5 fill-black" /> Watch tour</Link>
-          </Button>
-          <Button size="lg" variant="outline" className="bg-white/10 border-white/30 text-white hover:bg-white/20 hover:text-white backdrop-blur-md" asChild>
-            <Link to="/feed">Browse feed</Link>
-          </Button>
-        </div>
-
-        <form onSubmit={runSearch} className="pt-4 max-w-xl">
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/60 h-4 w-4" />
-            <Input
-              placeholder="Search any apartment, city, or address…"
-              className="pl-11 pr-24 h-12 bg-black/40 border-white/20 text-white placeholder:text-white/50 backdrop-blur-md focus-visible:ring-primary/50"
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-            />
-            <Button type="submit" size="sm" variant="hero" className="absolute right-1.5 top-1/2 -translate-y-1/2 h-9">
-              Search
-            </Button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </section>
-);
-
 // Instagram-style circular "story" avatars for cities.
 const StoriesRail = ({ localCity, onChange }: { localCity: LocalCity | null; onChange: (city: LocalCity) => void }) => {
   const [locating, setLocating] = useState(false);
