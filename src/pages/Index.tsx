@@ -71,14 +71,14 @@ const Index = () => {
 
           <main className="container pt-6 pb-10 space-y-12 md:space-y-16">
             {trending.length > 0 && <TrendingRail items={trending} />}
-            {localRow && <PosterRail title={`Near ${localCity?.label}`} subtitle="Official photos, tours, and verified resident posts near you." items={localRow.items} accent />}
+            {localRow && <PosterRail title={`Near ${localCity?.label}`} subtitle="Official photos, tours, and resident posts near you." items={localRow.items} accent />}
             {tourItems.length > 0 && <PosterRail title="Official tours and walkthroughs" subtitle="Verified property tours from official channels" items={tourItems} />}
             {mosaic.length >= 6 && <PhotoMosaic items={mosaic} />}
             {cityRows.slice(0, 3).map((row) => (
               <PosterRail key={row.city} title={`Popular in ${row.city}`} items={row.items} />
             ))}
             {photoItems.length > 0 && <PosterRail title="Verified property photography" subtitle="Official and sourced imagery" items={photoItems} />}
-            <PropertyRail title="Properties seeking resident input" properties={needTruth} />
+            <PropertyRail title="Properties without reviews" properties={needTruth} />
             <InfiniteFeed items={feed} />
           </main>
         </>
@@ -138,9 +138,9 @@ const PersonalizedTopBar = ({
   let icon = <Heart className="w-4 h-4" />;
   let eyebrow = 'For renters';
   let headline = locale
-    ? `What renters really think in ${locale}.`
-    : 'What renters really think — before you sign.';
-  let sub = 'Real tours, verified photos, and honest resident stories from large apartment buildings.';
+    ? `Apartment reviews in ${locale}.`
+    : 'Apartment reviews before you sign.';
+  let sub = 'Resident reviews, verified photos, and video tours for large apartment buildings.';
   let cta: { to: string; label: string; icon: React.ReactNode } = {
     to: '/contribute', label: 'Add a review', icon: <PenLine className="w-4 h-4" />,
   };
@@ -161,9 +161,9 @@ const PersonalizedTopBar = ({
     icon = <UserCheck className="w-4 h-4" />;
     eyebrow = firstName ? `Welcome back, ${firstName}` : 'Welcome back';
     headline = locale
-      ? `Fresh from renters near ${locale}.`
-      : 'Fresh from renters across the network.';
-    sub = 'Pick up where you left off, or add a note about a place you know.';
+      ? `Recent reviews near ${locale}.`
+      : 'Recent reviews across the network.';
+    sub = 'Continue reviewing or search a new property.';
     cta = { to: '/contribute', label: 'Add a review', icon: <PenLine className="w-4 h-4" /> };
   }
 
@@ -212,9 +212,9 @@ const POPULAR_CITIES = [
 
 const ColdStart = () => (
   <div className="text-center py-12 max-w-2xl mx-auto">
-    <h2 className="text-3xl font-bold mb-3">Help the next renter understand this place</h2>
+    <h2 className="text-3xl font-bold mb-3">No properties yet</h2>
     <p className="text-muted-foreground mb-8">
-      Look up a place you know, add a quick note or short video, and make the next renter&apos;s decision a little easier.
+      Search for a property or add one to get started.
     </p>
     <div className="flex flex-wrap justify-center gap-2 mb-8">
       {POPULAR_CITIES.map((c) => (
@@ -224,7 +224,7 @@ const ColdStart = () => (
       ))}
     </div>
     <div className="flex flex-col sm:flex-row gap-3 justify-center">
-      <Button variant="hero" size="lg" asChild><Link to="/contribute"><PenLine className="w-5 h-5 mr-2" /> Add a renter note</Link></Button>
+      <Button variant="hero" size="lg" asChild><Link to="/contribute"><PenLine className="w-5 h-5 mr-2" /> Add a property</Link></Button>
       <Button variant="outline" size="lg" asChild><Link to="/welcome">How it works</Link></Button>
     </div>
   </div>
@@ -476,8 +476,8 @@ const InfiniteFeed = ({ items }: { items: FeedItem[] }) => {
     <section>
       <div className="mb-4 flex items-end justify-between gap-4">
         <div>
-          <h2 className="text-xl md:text-2xl font-bold tracking-tight">Keep scrolling</h2>
-          <p className="text-xs md:text-sm text-muted-foreground mt-0.5">More properties from across the network</p>
+          <h2 className="text-xl md:text-2xl font-bold tracking-tight">More properties</h2>
+          <p className="text-xs md:text-sm text-muted-foreground mt-0.5">Additional listings across the network</p>
         </div>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-3">
@@ -499,7 +499,7 @@ const InfiniteFeed = ({ items }: { items: FeedItem[] }) => {
         {hasMore ? (
           <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-r-transparent" />
         ) : (
-          <p className="text-xs text-muted-foreground">You&apos;re all caught up.</p>
+          <p className="text-xs text-muted-foreground">End of results.</p>
         )}
       </div>
     </section>
