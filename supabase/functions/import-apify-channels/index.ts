@@ -141,21 +141,6 @@ function like(s: string) {
 }
 
 async function findProperty(supabase: ReturnType<typeof createClient>, candidate: Candidate): Promise<string | null> {
-  const sourceUrls = [
-    ...(candidate.sourceProfileUrl ? [candidate.sourceProfileUrl] : []),
-    ...candidate.channels.filter((ch) => ch.label === "source" || ch.label === "profile-source" || ch.kind === "website").map((ch) => ch.url),
-  ];
-  for (const url of sourceUrls) {
-    const stripped = url.replace(/[?#].*$/, "").replace(/\/$/, "");
-    const { data } = await supabase
-      .from("property_channel")
-      .select("canonical_property_id")
-      .ilike("url", `${stripped}%`)
-      .limit(1)
-      .maybeSingle();
-    if (data?.canonical_property_id) return data.canonical_property_id as string;
-  }
-
   if (candidate.address) {
     let query = supabase.from("canonical_property").select("id").ilike("address_line1", like(candidate.address)).limit(1);
     if (candidate.city) query = query.ilike("city", like(candidate.city));
@@ -169,6 +154,29 @@ async function findProperty(supabase: ReturnType<typeof createClient>, candidate
     if (candidate.state) query = query.ilike("state", like(candidate.state));
     const { data } = await query.maybeSingle();
     if (data?.id) return data.id as string;
+  }
+  const sourceUrls = [
+    ...(candidate.sourceProfileUrl ? [candidate.sourceProfileUrl] : []),
+    ...candidate.channels
+      .filter((ch) => ch.label === "source" || ch.label === "profile-source" || ch.label === "propertyWebsite" || ch.label === "website")
+      .map((ch) => ch.url),
+  ];
+  for (const url of sourceUrls) {
+    const stripped = url.replace(/[?#].*$/, "").replace(/\/$/, "");
+    let path = "";
+    try {
+      path = new URL(stripped).pathname.replace(/\/$/, "");
+    } catch {
+      path = "";
+    }
+    if (!path) continue;
+    const { data } = await supabase
+      .from("property_channel")
+      .select("canonical_property_id")
+      .ilike("url", `${stripped}%`)
+      .limit(1)
+      .maybeSingle();
+    if (data?.canonical_property_id) return data.canonical_property_id as string;
   }
   return null;
 }

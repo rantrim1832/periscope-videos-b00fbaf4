@@ -206,21 +206,6 @@ function like(s: string): string {
 }
 
 async function findProperty(client: SupabaseClient, c: Candidate): Promise<string | null> {
-  const sourceUrls = [
-    ...(c.sourceProfileUrl ? [c.sourceProfileUrl] : []),
-    ...c.channels.filter((ch) => ch.label === 'source' || ch.label === 'profile-source' || ch.kind === 'website').map((ch) => ch.url),
-  ];
-  for (const url of sourceUrls) {
-    const stripped = url.replace(/[?#].*$/, '').replace(/\/$/, '');
-    const { data } = await client
-      .from('property_channel')
-      .select('canonical_property_id')
-      .ilike('url', `${stripped}%`)
-      .limit(1)
-      .maybeSingle();
-    if (data?.canonical_property_id) return data.canonical_property_id as string;
-  }
-
   if (c.address) {
     let query = client.from('canonical_property').select('id').ilike('address_line1', like(c.address)).limit(1);
     if (c.city) query = query.ilike('city', like(c.city));
@@ -234,6 +219,24 @@ async function findProperty(client: SupabaseClient, c: Candidate): Promise<strin
     if (c.state) query = query.ilike('state', like(c.state));
     const { data } = await query.maybeSingle();
     if (data?.id) return data.id;
+  }
+  const sourceUrls = [
+    ...(c.sourceProfileUrl ? [c.sourceProfileUrl] : []),
+    ...c.channels
+      .filter((ch) => ch.label === 'source' || ch.label === 'profile-source' || ch.label === 'propertyWebsite' || ch.label === 'website')
+      .map((ch) => ch.url),
+  ];
+  for (const url of sourceUrls) {
+    const stripped = url.replace(/[?#].*$/, '').replace(/\/$/, '');
+    const path = (() => { try { return new URL(stripped).pathname.replace(/\/$/, ''); } catch { return ''; } })();
+    if (!path || path === '') continue;
+    const { data } = await client
+      .from('property_channel')
+      .select('canonical_property_id')
+      .ilike('url', `${stripped}%`)
+      .limit(1)
+      .maybeSingle();
+    if (data?.canonical_property_id) return data.canonical_property_id as string;
   }
   return null;
 }
