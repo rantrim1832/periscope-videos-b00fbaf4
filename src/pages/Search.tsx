@@ -33,6 +33,9 @@ const Search = () => {
     queryKey: ['search', q],
     queryFn: () => getPropertyProvider().search(q),
     enabled: q.trim().length > 0,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    placeholderData: (prev) => prev,
   });
 
   const submit = (e: React.FormEvent) => {
