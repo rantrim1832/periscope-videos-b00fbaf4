@@ -9,6 +9,7 @@ import { Search, Play, MapPin, PenLine, Building2, Sparkles } from "lucide-react
 import { Link, useNavigate } from "react-router-dom";
 import { getPropertyProvider } from "@/data/propertyProvider";
 import { FEED_CATEGORIES, type FeedItem, type PropertyView } from "@/domain/property";
+import { getStoredLocalCity, nearestSeededCity, SEEDED_CITIES, setStoredLocalCity, type LocalCity } from "@/lib/localDiscovery";
 
 // The homepage answers one question in <10s: "What's the most interesting thing
 // happening in apartment living right now?" Content-hook-first (TikTok + Zillow +
@@ -17,6 +18,7 @@ import { FEED_CATEGORIES, type FeedItem, type PropertyView } from "@/domain/prop
 const Index = () => {
   const navigate = useNavigate();
   const [q, setQ] = useState("");
+  const [localCity, setLocalCity] = useState<LocalCity | null>(() => getStoredLocalCity());
   const runSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (q.trim()) navigate(`/search?q=${encodeURIComponent(q.trim())}`);
@@ -31,6 +33,9 @@ const Index = () => {
     const cities = [...new Set(feed.map((i) => i.location).filter(Boolean))].slice(0, 10);
     return cities.map((city) => ({ city, items: feed.filter((i) => i.location === city).slice(0, 12) }));
   }, [feed]);
+  const localRow = localCity
+    ? cityRows.find((row) => row.city.toLowerCase().includes(localCity.city.toLowerCase()))
+    : null;
   const photoItems = feed.filter((i) => i.thumbnailUrl).slice(0, 18);
   const tourItems = feed.filter((i) => i.embedUrl || i.platform === 'matterport' || i.category === 'Luxury tours').slice(0, 18);
   const needTruth = properties.slice(0, 18);
@@ -62,7 +67,9 @@ const Index = () => {
         ) : (
           <>
             {hero && <HeroFeature item={hero} />}
-            <CityRail />
+            <LocalCityRail localCity={localCity} onChange={setLocalCity} />
+            {localRow && <ContentRail title={`Near ${localCity?.label}`} subtitle="Start with local official photos, tours, and social posts." items={localRow.items} />}
+            <CityRail onSelect={setLocalCity} />
             <ContentRail title="Official tours & walkthroughs" subtitle="Real property tours and sourced visual context" items={tourItems} />
             <ContentRail title="Photos that make pages feel real" subtitle="Seeded official/public imagery from property sources" items={photoItems} />
             {cityRows.slice(0, 4).map((row) => (
@@ -127,7 +134,46 @@ const HeroFeature = ({ item }: { item: FeedItem }) => (
   </section>
 );
 
-const CityRail = () => (
+const LocalCityRail = ({ localCity, onChange }: { localCity: LocalCity | null; onChange: (city: LocalCity) => void }) => {
+  const [locating, setLocating] = useState(false);
+  const useLocation = () => {
+    if (!navigator.geolocation) return;
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const city = nearestSeededCity(pos.coords.latitude, pos.coords.longitude);
+        setStoredLocalCity(city);
+        onChange(city);
+        setLocating(false);
+      },
+      () => setLocating(false),
+      { enableHighAccuracy: false, timeout: 8000 },
+    );
+  };
+
+  return (
+    <section className="rounded-2xl border bg-muted/30 p-4">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+        <div>
+          <h2 className="text-xl font-bold">{localCity ? `Your market: ${localCity.label}` : 'Make it local'}</h2>
+          <p className="text-sm text-muted-foreground">Pick a city or use location so Periscope starts with places near you.</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="hero" size="sm" onClick={useLocation} disabled={locating}>
+            <MapPin className="w-4 h-4 mr-2" /> {locating ? 'Finding...' : 'Use my location'}
+          </Button>
+          {SEEDED_CITIES.slice(0, 8).map((city) => (
+            <Button key={city.label} variant={localCity?.label === city.label ? 'default' : 'outline'} size="sm" onClick={() => { setStoredLocalCity(city); onChange(city); }}>
+              {city.label}
+            </Button>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+const CityRail = ({ onSelect }: { onSelect: (city: LocalCity) => void }) => (
   <section>
     <div className="flex items-center justify-between mb-3">
       <div>
@@ -138,7 +184,15 @@ const CityRail = () => (
     <div className="flex gap-3 overflow-x-auto pb-2">
       {POPULAR_CITIES.map((city) => (
         <Button key={city} variant="outline" className="h-20 min-w-36 flex-col gap-1" asChild>
-          <Link to={`/search?q=${encodeURIComponent(city)}`}><MapPin className="w-5 h-5" /> {city}</Link>
+          <Link
+            to={`/search?q=${encodeURIComponent(city)}`}
+            onClick={() => {
+              const found = SEEDED_CITIES.find((c) => c.label === city);
+              if (found) { setStoredLocalCity(found); onSelect(found); }
+            }}
+          >
+            <MapPin className="w-5 h-5" /> {city}
+          </Link>
         </Button>
       ))}
     </div>

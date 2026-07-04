@@ -10,6 +10,7 @@ import { getVideoProvider } from '@/services/providers/video';
 import { VideoPlayer } from '@/components/property/VideoPlayer';
 import { FEED_CATEGORIES, type FeedItem } from '@/domain/property';
 import { useToast } from '@/hooks/use-toast';
+import { getStoredLocalCity } from '@/lib/localDiscovery';
 
 const Feed = () => {
   const [category, setCategory] = useState<string>('All');
@@ -18,11 +19,14 @@ const Feed = () => {
     queryFn: () => getPropertyProvider().feed(),
   });
   const cities = [...new Set(items.map((i) => i.location).filter(Boolean))].slice(0, 12);
-  const [city, setCity] = useState<string>('All');
+  const stored = getStoredLocalCity();
+  const preferredLocation = stored ? `${stored.city}, ${stored.state}` : 'All';
+  const [city, setCity] = useState<string>(preferredLocation);
 
+  const effectiveCity = city === 'All' || cities.includes(city) ? city : 'All';
   const filtered = items.filter((i) =>
     (category === 'All' || i.category === category) &&
-    (city === 'All' || i.location === city),
+    (effectiveCity === 'All' || i.location === effectiveCity),
   );
 
   return (
@@ -40,7 +44,7 @@ const Feed = () => {
           </div>
           <div className="flex gap-2 overflow-x-auto">
             {['All', ...cities].map((c) => (
-              <Button key={c} size="sm" variant={city === c ? 'default' : 'outline'} className="whitespace-nowrap" onClick={() => setCity(c)}>
+              <Button key={c} size="sm" variant={effectiveCity === c ? 'default' : 'outline'} className="whitespace-nowrap" onClick={() => setCity(c)}>
                 {c === 'All' ? 'All cities' : c}
               </Button>
             ))}
