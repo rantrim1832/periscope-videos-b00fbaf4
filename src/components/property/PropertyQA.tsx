@@ -77,7 +77,7 @@ export const PropertyQA = ({ propertyId }: { propertyId: string }) => {
           </Card>
 
           {items.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No questions yet — be the first to ask.</p>
+            <p className="text-sm text-muted-foreground">No questions asked yet.</p>
           ) : (
             <div className="space-y-3">
               {items.map((q) => (

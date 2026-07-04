@@ -87,7 +87,7 @@ const ReportIssue = () => {
         <Card>
           <CardHeader>
             <CardTitle>What should be reviewed?</CardTitle>
-            <CardDescription>Reports go to an admin queue. We preserve resident truth while removing content that creates legal, privacy, or safety risk.</CardDescription>
+            <CardDescription>Reports go to an admin queue. We preserve resident reviews while removing content that creates legal, privacy, or safety risk.</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={submit} className="space-y-4">
@@ -132,7 +132,7 @@ const ReportIssue = () => {
           <CardContent className="p-5 flex items-start gap-3">
             <ShieldCheck className="w-5 h-5 text-primary mt-0.5" />
             <p className="text-sm text-muted-foreground">
-              Reports are not a tool for suppressing honest negative resident experiences. Property managers may respond and add context, but resident truth cannot be removed just because it is unfavorable.
+              Reports are not a tool for suppressing honest negative resident experiences. Property managers may respond and add context, but resident reviews cannot be removed just because it is unfavorable.
             </p>
           </CardContent>
         </Card>

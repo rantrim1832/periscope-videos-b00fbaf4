@@ -3,7 +3,7 @@ import { PropertyCard } from '@/components/PropertyCard';
 import { getPropertyProvider } from '@/data/propertyProvider';
 import type { PropertyView } from '@/domain/property';
 
-// Keeps the page connected (never a dead end) and reinforces perceived density.
+// Keeps navigation flowing and reinforces perceived density.
 export const NearbyProperties = ({ property }: { property: PropertyView }) => {
   const { data = [] } = useQuery({
     queryKey: ['nearby', property.id, property.state, property.city],

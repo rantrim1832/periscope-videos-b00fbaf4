@@ -76,7 +76,7 @@ export const ReviewsByLifeStage = ({ property, onContribute }: { property: Prope
           <p className="text-muted-foreground mb-4">
             No resident reviews yet. Lived here? Your experience could help someone make a more confident decision.
           </p>
-          <Button variant="hero" onClick={onContribute}>Be the first to review</Button>
+          <Button variant="hero" onClick={onContribute}>Add the first review</Button>
         </Card>
       ) : reviews.length === 0 ? (
         <p className="text-sm text-muted-foreground py-6">No reviews for this stage yet.</p>

@@ -31,7 +31,7 @@ export function deriveCategory(lifeStage: string | null, isPositive: boolean | n
   if (lifeStage === 'deposit') return 'Deposit disputes';
   if (lifeStage === 'maintenance') return 'Maintenance issues';
   if (isPositive) return 'Property tours';
-  if (hasEmbed) return 'Community verdicts';
+  if (hasEmbed) return 'Property comparison';
   return 'Resident warnings';
 }
 
@@ -430,7 +430,7 @@ export class CanonicalPropertyProvider implements PropertyDataProvider {
 
     // Launch fallback: until resident videos exist, make the entertainment feed
     // alive with official/public seeded visuals. These are clearly official
-    // source items, not resident truth and not Truth Score inputs.
+    // source items, not resident reviews and not Truth Score inputs.
     const { data: channels } = await this.db
       .from('property_channel')
       .select('id, kind, url, label, created_at, canonical_property:canonical_property_id(id, name, city, state)')
@@ -457,7 +457,7 @@ export class CanonicalPropertyProvider implements PropertyDataProvider {
       thumbnailUrl: c.kind === 'gallery' ? c.url : undefined,
       embedUrl: c.kind === 'matterport' ? c.url : undefined,
       platform: c.kind,
-      category: c.kind === 'gallery' || c.kind === 'matterport' ? 'Property tours' : 'Community verdicts',
+      category: c.kind === 'gallery' || c.kind === 'matterport' ? 'Property tours' : 'Property comparison',
       verified: false,
       propertyId: c.canonical_property?.id ?? '',
       propertyName: c.canonical_property?.name ?? 'Property',
