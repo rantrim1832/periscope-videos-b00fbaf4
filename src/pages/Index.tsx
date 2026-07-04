@@ -5,8 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, Play, MapPin, PenLine, Building2, Sparkles, Heart, Flame, ChevronRight } from "lucide-react";
+import { Search, Play, MapPin, PenLine, Building2, Heart, Flame, ChevronRight, Shield, Building, UserCheck } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useAdmin } from "@/hooks/useAdmin";
+import type { User as SupabaseUser } from "@supabase/supabase-js";
 import { getPropertyProvider } from "@/data/propertyProvider";
 import { type FeedItem, type PropertyView } from "@/domain/property";
 import { getStoredLocalCity, nearestSeededCity, SEEDED_CITIES, setStoredLocalCity, type LocalCity } from "@/lib/localDiscovery";
@@ -19,6 +22,8 @@ const Index = () => {
   const navigate = useNavigate();
   const [q, setQ] = useState("");
   const [localCity, setLocalCity] = useState<LocalCity | null>(() => getStoredLocalCity());
+  const { user, isManager } = useViewer();
+  const { isAdmin } = useAdmin();
   const runSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (q.trim()) navigate(`/search?q=${encodeURIComponent(q.trim())}`);
@@ -28,7 +33,6 @@ const Index = () => {
   const { data: properties = [], isLoading: propsLoading } = useQuery({ queryKey: ["home-props"], queryFn: () => getPropertyProvider().listSummaries() });
   const loading = feedLoading || propsLoading;
 
-  const hero = feed[0];
   const cityRows = useMemo(() => {
     const cities = [...new Set(feed.map((i) => i.location).filter(Boolean))].slice(0, 10);
     return cities.map((city) => ({ city, items: feed.filter((i) => i.location === city).slice(0, 12) }));
@@ -50,12 +54,19 @@ const Index = () => {
         <div className="flex justify-center py-40">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent" />
         </div>
-      ) : !hero && properties.length === 0 ? (
+      ) : feed.length === 0 && properties.length === 0 ? (
         <main className="container py-6"><ColdStart /></main>
       ) : (
         <>
-          {hero && <CinematicHero item={hero} q={q} setQ={setQ} runSearch={runSearch} />}
-
+          <PersonalizedTopBar
+            user={user}
+            isAdmin={isAdmin}
+            isManager={isManager}
+            localCity={localCity}
+            q={q}
+            setQ={setQ}
+            runSearch={runSearch}
+          />
           <StoriesRail localCity={localCity} onChange={setLocalCity} />
 
           <main className="container pt-6 pb-10 space-y-12 md:space-y-16">
@@ -85,6 +96,116 @@ const Index = () => {
   );
 };
 
+// Lightweight viewer detection: signed in? has any managed property?
+const useViewer = () => {
+  const [user, setUser] = useState<SupabaseUser | null>(null);
+  const [isManager, setIsManager] = useState(false);
+  useEffect(() => {
+    let active = true;
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!active) return;
+      setUser(user);
+      if (!user) return;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data } = await (supabase as any)
+        .from('property_manager').select('id').eq('user_id', user.id).limit(1).maybeSingle();
+      if (active) setIsManager(!!data);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
+      setUser(session?.user ?? null);
+    });
+    return () => { active = false; subscription.unsubscribe(); };
+  }, []);
+  return { user, isManager };
+};
+
+// Compact personalized top bar — replaces the oversized cinematic hero.
+// Greeting, primary CTA, and inline search adapt to the viewer's role.
+const PersonalizedTopBar = ({
+  user, isAdmin, isManager, localCity, q, setQ, runSearch,
+}: {
+  user: SupabaseUser | null;
+  isAdmin: boolean;
+  isManager: boolean;
+  localCity: LocalCity | null;
+  q: string;
+  setQ: (v: string) => void;
+  runSearch: (e: React.FormEvent) => void;
+}) => {
+  const firstName = (user?.user_metadata?.full_name || user?.email || '').toString().split(/[\s@]/)[0];
+  const locale = localCity?.city;
+
+  let icon = <Heart className="w-4 h-4" />;
+  let eyebrow = 'For renters';
+  let headline = locale
+    ? `What renters really think in ${locale}.`
+    : 'What renters really think — before you sign.';
+  let sub = 'Real tours, verified photos, and honest resident stories from large apartment buildings.';
+  let cta: { to: string; label: string; icon: React.ReactNode } = {
+    to: '/contribute', label: 'Share an experience', icon: <PenLine className="w-4 h-4" />,
+  };
+
+  if (isAdmin) {
+    icon = <Shield className="w-4 h-4" />;
+    eyebrow = 'Admin';
+    headline = firstName ? `Welcome back, ${firstName}.` : 'Welcome back.';
+    sub = 'Jump into moderation, claims, and property operations.';
+    cta = { to: '/admin/settings', label: 'Open admin', icon: <Shield className="w-4 h-4" /> };
+  } else if (isManager) {
+    icon = <Building className="w-4 h-4" />;
+    eyebrow = 'Property manager';
+    headline = firstName ? `Welcome back, ${firstName}.` : 'Manage your properties.';
+    sub = 'Respond to reviews, publish official content, and keep your listing accurate.';
+    cta = { to: '/manager/start', label: 'Manager tools', icon: <Building className="w-4 h-4" /> };
+  } else if (user) {
+    icon = <UserCheck className="w-4 h-4" />;
+    eyebrow = firstName ? `Welcome back, ${firstName}` : 'Welcome back';
+    headline = locale
+      ? `Fresh from renters near ${locale}.`
+      : 'Fresh from renters across the network.';
+    sub = 'Pick up where you left off, or add a note about a place you know.';
+    cta = { to: '/contribute', label: 'Share an experience', icon: <PenLine className="w-4 h-4" /> };
+  }
+
+  return (
+    <section className="border-b border-border/40 bg-gradient-to-b from-primary/[0.06] via-background to-background">
+      <div className="container py-5 md:py-7">
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 md:gap-6">
+          <div className="min-w-0">
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-primary/90 mb-2">
+              {icon} {eyebrow}
+            </span>
+            <h1 className="text-2xl md:text-3xl font-black tracking-tight text-balance leading-tight">
+              {headline}
+            </h1>
+            <p className="text-sm text-muted-foreground mt-1.5 max-w-xl">{sub}</p>
+          </div>
+          <div className="shrink-0">
+            <Button variant="hero" size="sm" asChild>
+              <Link to={cta.to}>{cta.icon} {cta.label}</Link>
+            </Button>
+          </div>
+        </div>
+
+        <form onSubmit={runSearch} className="mt-4 md:mt-5">
+          <div className="relative">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+            <Input
+              placeholder={locale ? `Search apartments in ${locale} or anywhere…` : 'Search any apartment, city, or address…'}
+              className="pl-10 pr-24 h-11"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+            />
+            <Button type="submit" size="sm" variant="hero" className="absolute right-1.5 top-1/2 -translate-y-1/2 h-8">
+              Search
+            </Button>
+          </div>
+        </form>
+      </div>
+    </section>
+  );
+};
+
 const POPULAR_CITIES = [
   'Phoenix', 'Dallas', 'Atlanta', 'Los Angeles', 'Austin', 'Chicago', 'Denver', 'Seattle', 'Miami', 'Charlotte',
 ];
@@ -107,61 +228,6 @@ const ColdStart = () => (
       <Button variant="outline" size="lg" asChild><Link to="/welcome">How it works</Link></Button>
     </div>
   </div>
-);
-
-// Cinematic Netflix-style hero: edge-to-edge imagery, layered gradients, integrated search.
-const CinematicHero = ({ item, q, setQ, runSearch }: { item: FeedItem; q: string; setQ: (v: string) => void; runSearch: (e: React.FormEvent) => void }) => (
-  <section className="relative w-full overflow-hidden bg-black text-white h-[72vh] min-h-[520px] max-h-[820px]">
-    {item.thumbnailUrl && (
-      <img
-        src={item.thumbnailUrl}
-        alt={item.title}
-        className="absolute inset-0 h-full w-full object-cover scale-105 animate-fade-in"
-      />
-    )}
-    <div className="absolute inset-0 bg-gradient-to-r from-black via-black/70 to-transparent" />
-    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
-    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,hsl(var(--primary)/0.28),transparent_60%)]" />
-
-    <div className="relative z-10 container h-full flex flex-col justify-end pb-10 md:pb-16">
-      <div className="max-w-2xl space-y-4 md:space-y-5 animate-fade-in-up">
-        <Badge className="bg-white/15 text-white border-white/25 backdrop-blur-md gap-1.5">
-          <Sparkles className="w-3 h-3" /> Featured property
-        </Badge>
-        <h1 className="text-4xl md:text-6xl lg:text-7xl font-black leading-[1.02] tracking-tight text-balance drop-shadow-[0_2px_20px_rgba(0,0,0,0.6)]">
-          See the property<br className="hidden md:block" /> before you sign the lease.
-        </h1>
-        <p className="text-white/85 text-base md:text-lg line-clamp-2 max-w-xl">{item.title}</p>
-        <p className="text-white/70 text-sm flex items-center gap-2">
-          <MapPin className="w-4 h-4 shrink-0" /> {item.propertyName} · {item.location}
-        </p>
-
-        <div className="flex flex-wrap gap-3 pt-2">
-          <Button size="lg" className="bg-white text-black hover:bg-white/90 font-semibold shadow-elevated" asChild>
-            <Link to={`/property/${item.propertyId}`}><Play className="w-5 h-5 fill-black" /> Watch tour</Link>
-          </Button>
-          <Button size="lg" variant="outline" className="bg-white/10 border-white/30 text-white hover:bg-white/20 hover:text-white backdrop-blur-md" asChild>
-            <Link to="/feed">Browse feed</Link>
-          </Button>
-        </div>
-
-        <form onSubmit={runSearch} className="pt-4 max-w-xl">
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/60 h-4 w-4" />
-            <Input
-              placeholder="Search any apartment, city, or address…"
-              className="pl-11 pr-24 h-12 bg-black/40 border-white/20 text-white placeholder:text-white/50 backdrop-blur-md focus-visible:ring-primary/50"
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-            />
-            <Button type="submit" size="sm" variant="hero" className="absolute right-1.5 top-1/2 -translate-y-1/2 h-9">
-              Search
-            </Button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </section>
 );
 
 // Instagram-style circular "story" avatars for cities.
