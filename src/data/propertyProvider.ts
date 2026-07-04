@@ -266,16 +266,19 @@ export class CanonicalPropertyProvider implements PropertyDataProvider {
   private async enrichSummaries(props: any[]): Promise<PropertyView[]> {
     const ids = props.map((p) => p.id);
     if (ids.length === 0) return [];
-    const channelRows: any[] = [];
-    for (let i = 0; i < ids.length; i += 40) {
-      const chunk = ids.slice(i, i + 40);
-      const { data } = await this.db
-        .from('property_channel')
-        .select('*')
-        .in('canonical_property_id', chunk)
-        .limit(1200);
-      channelRows.push(...(data ?? []));
-    }
+    // Parallelize channel fetches; sequential awaits were the main latency source.
+    const chunks: string[][] = [];
+    for (let i = 0; i < ids.length; i += 40) chunks.push(ids.slice(i, i + 40));
+    const chunkResults = await Promise.all(
+      chunks.map((chunk) =>
+        this.db
+          .from('property_channel')
+          .select('*')
+          .in('canonical_property_id', chunk)
+          .limit(1200),
+      ),
+    );
+    const channelRows: any[] = chunkResults.flatMap((r: any) => r.data ?? []);
     const byProperty = new Map<string, any[]>();
     for (const row of channelRows ?? []) {
       const list = byProperty.get(row.canonical_property_id) ?? [];
@@ -319,29 +322,34 @@ export class CanonicalPropertyProvider implements PropertyDataProvider {
     if (!q) return [];
     const term = `%${q}%`;
 
-    const channelCity = q.length >= 3
-      ? await this.db
-        .from('property_channel')
-        .select('canonical_property_id, kind, canonical_property!inner(city,status)')
-        .ilike('canonical_property.city', q)
-        .eq('canonical_property.status', 'active')
-        .limit(1000)
-      : { data: [] };
-    const channelCityIds = this.topIdsFromChannels(channelCity.data ?? [], 200);
-
-    const cityExact = q.length >= 3
-      ? await this.db
+    // Run the four independent lookups in parallel.
+    const [channelCity, cityExact, directRes, aliasRes] = await Promise.all([
+      q.length >= 3
+        ? this.db
+            .from('property_channel')
+            .select('canonical_property_id, kind, canonical_property!inner(city,status)')
+            .ilike('canonical_property.city', q)
+            .eq('canonical_property.status', 'active')
+            .limit(1000)
+        : Promise.resolve({ data: [] as any[] }),
+      q.length >= 3
+        ? this.db
+            .from('canonical_property').select('*')
+            .eq('status', 'active')
+            .ilike('city', q)
+            .limit(500)
+        : Promise.resolve({ data: [] as any[] }),
+      this.db
         .from('canonical_property').select('*')
         .eq('status', 'active')
-        .ilike('city', q)
-        .limit(1000)
-      : { data: [] };
-
-    const { data: direct } = await this.db
-      .from('canonical_property').select('*')
-      .eq('status', 'active')
-      .or(`name.ilike.${term},address_line1.ilike.${term},city.ilike.${term}`)
-      .limit(cityExact.data?.length ? 100 : 60);
+        .or(`name.ilike.${term},address_line1.ilike.${term},city.ilike.${term}`)
+        .limit(60),
+      this.db
+        .from('property_alias').select('canonical_property_id')
+        .ilike('alias_name', term).limit(20),
+    ]);
+    const channelCityIds = this.topIdsFromChannels(channelCity.data ?? [], 200);
+    const direct = directRes.data ?? [];
     let results: any[] = [];
     if (channelCityIds.length > 0) {
       const { data: channelProps } = await this.db
@@ -352,13 +360,10 @@ export class CanonicalPropertyProvider implements PropertyDataProvider {
       const byId = new Map((channelProps ?? []).map((p: any) => [p.id, p]));
       results.push(...channelCityIds.map((id) => byId.get(id)).filter(Boolean));
     }
-    results.push(...(cityExact.data ?? []), ...(direct ?? []));
+    results.push(...(cityExact.data ?? []), ...direct);
     const seen = new Set(results.map((r) => r.id));
 
-    const { data: aliasRows } = await this.db
-      .from('property_alias').select('canonical_property_id')
-      .ilike('alias_name', term).limit(20);
-    const aliasIds = [...new Set((aliasRows ?? []).map((a: any) => a.canonical_property_id))]
+    const aliasIds = [...new Set((aliasRes.data ?? []).map((a: any) => a.canonical_property_id))]
       .filter((id) => !seen.has(id));
     if (aliasIds.length > 0) {
       const { data: viaAlias } = await this.db
@@ -366,7 +371,9 @@ export class CanonicalPropertyProvider implements PropertyDataProvider {
       results.push(...(viaAlias ?? []).filter((p: any) => !seen.has(p.id)));
     }
     const deduped = [...new Map(results.map((p) => [p.id, p])).values()];
-    return this.sortContentFirst(await this.enrichSummaries(deduped)).slice(0, 36);
+    // Cap before enrichment: fewer property IDs → fewer channel fetches → faster.
+    const capped = deduped.slice(0, 36);
+    return this.sortContentFirst(await this.enrichSummaries(capped));
   }
 
   async listStates(): Promise<LocationCount[]> {
