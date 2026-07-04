@@ -40,13 +40,14 @@ const Contact = () => {
     }
     setSubmitting(true);
     const { data: auth } = await supabase.auth.getUser();
-    const { error } = await (supabase as any).from('contact_message').insert({
-      sender_user_id: auth.user?.id ?? null,
-      sender_email: form.email.trim() || auth.user?.email || null,
-      topic: form.topic,
-      subject: form.subject.trim(),
-      message: form.message.trim(),
-      source_url: window.location.href,
+    const { error } = await supabase.functions.invoke('submit-contact', {
+      body: {
+        sender_email: form.email.trim() || auth.user?.email || null,
+        topic: form.topic,
+        subject: form.subject.trim(),
+        message: form.message.trim(),
+        source_url: window.location.href,
+      },
     });
     setSubmitting(false);
     if (error) {

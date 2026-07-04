@@ -8,6 +8,12 @@ verify_jwt = false
 [functions.seed-review]
 verify_jwt = false
 
+[functions.submit-contact]
+verify_jwt = false
+
+[functions.submit-report]
+verify_jwt = false
+
 # All other functions require a valid JWT at the gateway AND enforce
 # admin/authenticated checks in-function (see _shared/auth.ts).
 [functions.moderate-content]

@@ -56,14 +56,15 @@ const ReportIssue = () => {
     }
     setSubmitting(true);
     const { data: auth } = await supabase.auth.getUser();
-    const { error } = await (supabase as any).from('safety_report').insert({
-      reporter_user_id: auth.user?.id ?? null,
-      reporter_email: form.email.trim() || auth.user?.email || null,
-      report_type: form.reportType,
-      target_type: form.targetType,
-      target_id: form.targetId.trim() || null,
-      target_url: form.targetUrl.trim() || window.location.href,
-      description: form.description.trim(),
+    const { error } = await supabase.functions.invoke('submit-report', {
+      body: {
+        reporter_email: form.email.trim() || auth.user?.email || null,
+        report_type: form.reportType,
+        target_type: form.targetType,
+        target_id: form.targetId.trim() || null,
+        target_url: form.targetUrl.trim() || window.location.href,
+        description: form.description.trim(),
+      },
     });
     setSubmitting(false);
     if (error) {
