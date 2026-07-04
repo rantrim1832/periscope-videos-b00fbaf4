@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Header } from '@/components/Header';
@@ -9,6 +9,7 @@ import { PropertyCard } from '@/components/PropertyCard';
 import { Search as SearchIcon, MapPin } from 'lucide-react';
 import { getPropertyProvider } from '@/data/propertyProvider';
 import type { PropertyView } from '@/domain/property';
+import { getStoredLocalCity, SEEDED_CITIES } from '@/lib/localDiscovery';
 
 const cardImage = (p: PropertyView) =>
   p.officialChannels?.find((c) => c.kind === 'gallery' && /\.(jpg|jpeg|png|webp)(\?|$)/i.test(c.url))?.url;
@@ -19,7 +20,14 @@ const visualCount = (p: PropertyView) =>
 const Search = () => {
   const [params, setParams] = useSearchParams();
   const q = params.get('q') ?? '';
-  const [input, setInput] = useState(q);
+  const stored = getStoredLocalCity();
+  // Prefill: URL query > stored local city > empty
+  const [input, setInput] = useState(q || (stored ? stored.label : ''));
+
+  useEffect(() => {
+    // Keep the input in sync when navigating between /search?q=… states.
+    if (q) setInput(q);
+  }, [q]);
 
   const { data: results = [], isLoading } = useQuery({
     queryKey: ['search', q],
@@ -60,7 +68,23 @@ const Search = () => {
               <SearchIcon className="w-6 h-6 text-primary" />
             </div>
             <h2 className="text-lg font-semibold mb-1">Find your next apartment</h2>
-            <p className="text-sm text-muted-foreground">Search any building in America to see its Truth Score, videos, and resident context.</p>
+            <p className="text-sm text-muted-foreground mb-6">
+              {stored
+                ? `We prefilled ${stored.label} — hit Search, or try a popular market below.`
+                : 'Search any building in America to see its Truth Score, videos, and resident context.'}
+            </p>
+            <div className="flex flex-wrap justify-center gap-2">
+              {SEEDED_CITIES.slice(0, 8).map((c) => (
+                <Button
+                  key={c.label}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => { setInput(c.label); setParams({ q: c.label }); }}
+                >
+                  {c.label}
+                </Button>
+              ))}
+            </div>
           </div>
         ) : isLoading ? (
           <div className="flex items-center gap-3 text-muted-foreground">
