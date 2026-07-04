@@ -255,10 +255,10 @@ const PostReview = () => {
                 <div className="bg-primary/10 border border-primary/20 rounded-lg p-4">
                   <h4 className="font-semibold text-foreground mb-2">Why verify?</h4>
                   <ul className="text-sm text-muted-foreground space-y-1">
-                    <li>✓ Your review will be marked as verified</li>
-                    <li>✓ Earn 50 bonus points toward rewards</li>
-                    <li>✓ Build trust with the community</li>
-                    <li>✓ Takes less than 1 minute</li>
+                    <li>• Review marked as verified</li>
+                    <li>• Earn 50 bonus points toward rewards</li>
+                    <li>• Verified reviews carry more weight</li>
+                    <li>• Takes less than 1 minute</li>
                   </ul>
                 </div>
 
