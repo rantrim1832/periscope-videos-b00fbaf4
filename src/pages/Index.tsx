@@ -128,7 +128,7 @@ const CinematicHero = ({ item, q, setQ, runSearch }: { item: FeedItem; q: string
           <Sparkles className="w-3 h-3" /> Featured property
         </Badge>
         <h1 className="text-4xl md:text-6xl lg:text-7xl font-black leading-[1.02] tracking-tight text-balance drop-shadow-[0_2px_20px_rgba(0,0,0,0.6)]">
-          See the place<br className="hidden md:block" /> before you sign the lease.
+          See the property<br className="hidden md:block" /> before you sign the lease.
         </h1>
         <p className="text-white/85 text-base md:text-lg line-clamp-2 max-w-xl">{item.title}</p>
         <p className="text-white/70 text-sm flex items-center gap-2">
@@ -319,7 +319,7 @@ const PhotoMosaic = ({ items }: { items: FeedItem[] }) => {
       <div className="mb-4 flex items-end justify-between gap-4">
         <div>
           <h2 className="text-xl md:text-2xl font-bold tracking-tight flex items-center gap-2">
-            <Heart className="w-5 h-5 text-primary" /> Explore
+            <Heart className="w-5 h-5 text-primary" /> Latest across the network
           </h2>
           <p className="text-xs md:text-sm text-muted-foreground mt-0.5">Recent photos, tours, and resident posts</p>
         </div>
