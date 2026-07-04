@@ -38,13 +38,16 @@ export function hasEnv(key: string): boolean {
 }
 
 export function getPublicSupabaseUrl(): string | undefined {
-  return getEnv('VITE_EXTERNAL_SUPABASE_URL') ?? getEnv('VITE_SUPABASE_URL') ?? EXTERNAL_SUPABASE_FALLBACK.url;
+  // Production must never fall through to Lovable Cloud-managed VITE_SUPABASE_*.
+  // Those values can be regenerated while Cloud is attached, so the browser
+  // client uses only the external aliases or the public external fallback.
+  return getEnv('VITE_EXTERNAL_SUPABASE_URL') ?? EXTERNAL_SUPABASE_FALLBACK.url;
 }
 
 export function getPublicSupabasePublishableKey(): string | undefined {
-  return getEnv('VITE_EXTERNAL_SUPABASE_PUBLISHABLE_KEY') ?? getEnv('VITE_SUPABASE_PUBLISHABLE_KEY') ?? EXTERNAL_SUPABASE_FALLBACK.publishableKey;
+  return getEnv('VITE_EXTERNAL_SUPABASE_PUBLISHABLE_KEY') ?? EXTERNAL_SUPABASE_FALLBACK.publishableKey;
 }
 
 export function getPublicSupabaseProjectId(): string | undefined {
-  return getEnv('VITE_EXTERNAL_SUPABASE_PROJECT_ID') ?? getEnv('VITE_SUPABASE_PROJECT_ID') ?? EXTERNAL_SUPABASE_FALLBACK.projectId;
+  return getEnv('VITE_EXTERNAL_SUPABASE_PROJECT_ID') ?? EXTERNAL_SUPABASE_FALLBACK.projectId;
 }
