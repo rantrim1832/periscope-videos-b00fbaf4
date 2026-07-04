@@ -22,7 +22,7 @@ const TOPICS = [
 ] as const;
 
 const Contact = () => {
-  useDocumentTitle('Contact Pariscope — support, claims, safety', 'Contact Pariscope for support, property claim help, privacy, copyright, or safety issues.');
+  useDocumentTitle('Contact Periscope — support, claims, safety', 'Contact Periscope for support, property claim help, privacy, copyright, or safety issues.');
   const { toast } = useToast();
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
@@ -62,7 +62,7 @@ const Contact = () => {
       <Header />
       <main className="container mx-auto px-4 py-10 max-w-4xl space-y-6">
         <div className="space-y-2">
-          <h1 className="text-4xl font-bold flex items-center gap-2"><LifeBuoy className="w-8 h-8 text-primary" /> Contact Pariscope</h1>
+          <h1 className="text-4xl font-bold flex items-center gap-2"><LifeBuoy className="w-8 h-8 text-primary" /> Contact Periscope</h1>
           <p className="text-muted-foreground">Support, property claim help, privacy, copyright, safety, and business inquiries.</p>
         </div>
 

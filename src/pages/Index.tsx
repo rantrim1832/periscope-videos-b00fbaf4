@@ -124,7 +124,7 @@ const ColdStart = () => (
   <div className="text-center py-12 max-w-2xl mx-auto">
     <h2 className="text-3xl font-bold mb-3">Be the first to expose or defend your building</h2>
     <p className="text-muted-foreground mb-8">
-      Pariscope is brand new in your area. Look up where you live, drop a 15-second video or a quick review,
+      Periscope is brand new in your area. Look up where you live, drop a 15-second video or a quick review,
       and start the truth for the next renter.
     </p>
     <div className="flex flex-wrap justify-center gap-2 mb-8">

@@ -193,6 +193,18 @@ export class CanonicalPropertyProvider implements PropertyDataProvider {
     };
   }
 
+  private channelPriority(kind: string, url = ''): number {
+    if (kind === 'gallery' && /\.(jpg|jpeg|png|webp)(\?|$)/i.test(url)) return 100;
+    if (kind === 'matterport') return 90;
+    if (kind === 'youtube') return 80;
+    if (kind === 'instagram' && /instagram\.com\/(p|reel|tv)\//i.test(url)) return 75;
+    if (kind === 'tiktok') return 70;
+    if (kind === 'instagram') return 50;
+    if (kind === 'facebook') return 40;
+    if (kind === 'website') return 20;
+    return 10;
+  }
+
   private visualScore(p: PropertyView): number {
     const channels = p.officialChannels ?? [];
     const weights: Record<string, number> = {
@@ -250,13 +262,19 @@ export class CanonicalPropertyProvider implements PropertyDataProvider {
         .limit(1200);
       channelRows.push(...(data ?? []));
     }
-    const byProperty = new Map<string, OfficialChannel[]>();
+    const byProperty = new Map<string, any[]>();
     for (const row of channelRows ?? []) {
       const list = byProperty.get(row.canonical_property_id) ?? [];
-      if (list.length < 12) list.push(this.mapChannel(row));
+      list.push(row);
       byProperty.set(row.canonical_property_id, list);
     }
-    return props.map((p) => this.mapSummary({ ...p, officialChannels: byProperty.get(p.id) ?? [] }));
+    return props.map((p) => {
+      const bestChannels = (byProperty.get(p.id) ?? [])
+        .sort((a, b) => this.channelPriority(b.kind, b.url) - this.channelPriority(a.kind, a.url))
+        .slice(0, 18)
+        .map((row) => this.mapChannel(row));
+      return this.mapSummary({ ...p, officialChannels: bestChannels });
+    });
   }
 
   async listSummaries(): Promise<PropertyView[]> {

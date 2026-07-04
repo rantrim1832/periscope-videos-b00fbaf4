@@ -65,7 +65,7 @@ export const ContributeFlow = ({ propertyId, propertyName }: { propertyId: strin
   };
 
   const share = async () => {
-    const text = `I just shared the truth about ${propertyName} on Pariscope`;
+    const text = `I just shared the truth about ${propertyName} on Periscope`;
     try {
       if (navigator.share) await navigator.share({ title: propertyName, text, url: `${window.location.origin}/property/${propertyId}` });
       else {

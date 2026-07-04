@@ -1,4 +1,4 @@
-// Domain types for the canonical Pariscope graph.
+// Domain types for the canonical Periscope graph.
 //
 // These are intentionally decoupled from the Supabase-generated
 // `integrations/supabase/types.ts`. The generated types should be

@@ -26,7 +26,7 @@ serve(async (req) => {
   const url = new URL(req.url);
   const propertyId = url.searchParams.get('propertyId') ?? url.searchParams.get('id');
 
-  let name = 'Pariscope';
+  let name = 'Periscope';
   let location = 'The trust layer for renting';
   let score: number | null = null;
   let categories: Record<string, { score: number | null }> = {};

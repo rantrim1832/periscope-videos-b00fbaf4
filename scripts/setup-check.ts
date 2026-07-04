@@ -22,7 +22,7 @@ const CHECKS: { key: string; fallback?: string; enables: string; required: boole
 
 const has = (k: string) => !!process.env[k] && process.env[k] !== '';
 
-console.log('\nPariscope — go-live readiness\n' + '='.repeat(40));
+console.log('\nPeriscope — go-live readiness\n' + '='.repeat(40));
 let missingRequired = 0;
 for (const c of CHECKS) {
   const ok = has(c.key) || (c.fallback ? has(c.fallback) : false);

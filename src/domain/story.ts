@@ -1,4 +1,4 @@
-// Collaborative storytelling engine — Pariscope is not a review site, it's a
+// Collaborative storytelling engine — Periscope is not a review site, it's a
 // collaborative story about a physical place. This models a property's "story
 // completeness" as content slots and generates audience-aware suggestions,
 // framed as "help complete this property's story" (not "leave a review").

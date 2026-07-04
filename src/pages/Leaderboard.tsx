@@ -27,7 +27,7 @@ async function getLeaders(): Promise<Row[]> {
 const MEDAL = ['🥇', '🥈', '🥉'];
 
 const Leaderboard = () => {
-  useDocumentTitle('Top contributors | Pariscope', 'The renters and creators contributing the most verified truth.');
+  useDocumentTitle('Top contributors | Periscope', 'The renters and creators contributing the most verified truth.');
   const { data: rows = [], isLoading } = useQuery({ queryKey: ['leaderboard'], queryFn: getLeaders });
 
   return (

@@ -56,7 +56,7 @@ export const Header = () => {
           </div>
           <div>
             <h1 className="font-bold text-lg leading-none bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              Pariscope
+              Periscope
             </h1>
             <p className="text-[10px] text-muted-foreground leading-none">Reviews</p>
           </div>

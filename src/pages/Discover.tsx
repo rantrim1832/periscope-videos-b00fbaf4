@@ -26,7 +26,7 @@ const visualCount = (p: PropertyView) =>
   p.officialChannels?.filter((c) => ['gallery', 'matterport', 'instagram', 'tiktok', 'youtube'].includes(c.kind)).length ?? 0;
 
 const Discover = () => {
-  useDocumentTitle('Discover the best & worst apartments | Pariscope', 'Ranked by trust-weighted resident experience — best and worst apartments by category and location.');
+  useDocumentTitle('Discover the best & worst apartments | Periscope', 'Ranked by trust-weighted resident experience — best and worst apartments by category and location.');
   const { toast } = useToast();
   const [metric, setMetric] = useState<Metric>('overall');
   const [order, setOrder] = useState<'best' | 'worst'>('best');
@@ -73,7 +73,7 @@ const Discover = () => {
             {state !== 'all' ? ` in ${state}` : ''}
           </h1>
           <Button variant="outline" size="sm" className="shrink-0" onClick={async () => {
-            const res = await shareContent({ title: 'Pariscope ranking', text: `${order === 'best' ? 'Best' : 'Worst'} for ${metricLabel}${state !== 'all' ? ` in ${state}` : ''} on Pariscope` });
+            const res = await shareContent({ title: 'Periscope ranking', text: `${order === 'best' ? 'Best' : 'Worst'} for ${metricLabel}${state !== 'all' ? ` in ${state}` : ''} on Periscope` });
             if (res === 'copied') toast({ title: 'Link copied' });
           }}><Share2 className="w-4 h-4 mr-2" /> Share</Button>
         </div>

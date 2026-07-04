@@ -1,6 +1,6 @@
 # Email operations
 
-Pariscope uses Resend for transactional/admin-triggered email.
+Periscope uses Resend for transactional/admin-triggered email.
 
 ## Required Supabase Edge Function secrets
 
@@ -29,7 +29,7 @@ Example payload:
 ```json
 {
   "to": "test@example.com",
-  "subject": "Pariscope email test",
+  "subject": "Periscope email test",
   "text": "This is a test from the external Supabase send-email function."
 }
 ```

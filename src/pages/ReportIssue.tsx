@@ -34,7 +34,7 @@ const TARGET_TYPES = [
 ] as const;
 
 const ReportIssue = () => {
-  useDocumentTitle('Report content — Pariscope safety', 'Report abuse, threats, doxxing, copyright, privacy, fake content, or incorrect property information.');
+  useDocumentTitle('Report content — Periscope safety', 'Report abuse, threats, doxxing, copyright, privacy, fake content, or incorrect property information.');
   const { toast } = useToast();
   const [params] = useSearchParams();
   const initialUrl = useMemo(() => params.get('url') ?? document.referrer ?? '', [params]);

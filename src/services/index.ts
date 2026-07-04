@@ -1,4 +1,4 @@
-// Pariscope service layer — the headless core shared by web, mobile, and
+// Periscope service layer — the headless core shared by web, mobile, and
 // ingestion. Interface-driven and mock-safe: every external dependency has a
 // provider abstraction that falls back to a working mock when no secret is set.
 

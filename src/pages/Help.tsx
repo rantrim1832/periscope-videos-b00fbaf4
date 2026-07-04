@@ -44,13 +44,13 @@ const FAQS = [
 ];
 
 const Help = () => {
-  useDocumentTitle("How Pariscope works — trust, scores & safety", "How the Truth Score, resident verification, and moderation work on Pariscope.");
+  useDocumentTitle("How Periscope works — trust, scores & safety", "How the Truth Score, resident verification, and moderation work on Periscope.");
   return (
     <div className="min-h-screen bg-background">
       <Header />
       <div className="container mx-auto px-4 py-10 max-w-4xl space-y-8">
         <div className="text-center space-y-3">
-          <h1 className="text-4xl font-bold">How Pariscope works</h1>
+          <h1 className="text-4xl font-bold">How Periscope works</h1>
           <p className="text-lg text-muted-foreground">Truth you can trust — and exactly how we keep it that way.</p>
         </div>
 

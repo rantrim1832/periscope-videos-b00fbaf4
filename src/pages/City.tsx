@@ -28,7 +28,7 @@ const City = () => {
   const cityName = decodeURIComponent(city);
   const stateName = decodeURIComponent(state);
   useDocumentTitle(
-    `Apartments in ${cityName}, ${stateName} — Reviews & Truth Scores | Pariscope`,
+    `Apartments in ${cityName}, ${stateName} — Reviews & Truth Scores | Periscope`,
     `Verified resident reviews, video proof, and Truth Scores for apartments in ${cityName}, ${stateName}.`,
   );
 
@@ -62,7 +62,7 @@ const City = () => {
           <div className="flex gap-2 shrink-0 mt-1">
             <WatchButton type="city" id={`${stateName}|${cityName}`} label={`${cityName}, ${stateName}`} size="sm" />
             <Button variant="outline" size="sm" onClick={async () => {
-              const res = await shareContent({ title: `Apartments in ${cityName}`, text: `Apartment truth for ${cityName}, ${stateName} on Pariscope` });
+              const res = await shareContent({ title: `Apartments in ${cityName}`, text: `Apartment truth for ${cityName}, ${stateName} on Periscope` });
               if (res === 'copied') toast({ title: 'Link copied' });
             }}><Share2 className="w-4 h-4 mr-2" /> Share</Button>
           </div>

@@ -25,7 +25,7 @@ const Notifications = () => {
   const share = async (message: string, propertyId: string | null, type: string) => {
     const origin = window.location.origin;
     const url = propertyId ? `${origin}/property/${propertyId}` : type === 'levelup' ? `${origin}/leaderboard` : origin;
-    const res = await shareContent({ title: 'Pariscope', text: message, url });
+    const res = await shareContent({ title: 'Periscope', text: message, url });
     if (res === 'copied') toast({ title: 'Copied — send it to a friend' });
   };
 

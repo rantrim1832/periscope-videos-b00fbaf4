@@ -29,7 +29,7 @@ export function setPropertyMeta(opts: {
   location: string;
   score: number | null;
 }) {
-  const title = `${opts.name} — Truth Score${opts.score != null ? ` ${opts.score}/100` : ''} | Pariscope`;
+  const title = `${opts.name} — Truth Score${opts.score != null ? ` ${opts.score}/100` : ''} | Periscope`;
   const description = `See verified resident reviews, video proof, and the Truth Score for ${opts.name}${opts.location ? `, ${opts.location}` : ''} before you sign.`;
   const image = ogImageUrl(opts.propertyId);
 
