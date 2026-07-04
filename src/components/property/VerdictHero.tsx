@@ -45,6 +45,8 @@ const StoryProgress = ({ property }: { property: PropertyView }) => {
 export const VerdictHero = ({ property, result, onWatch, onContribute }: Props) => {
   const location = [property.city, property.state].filter(Boolean).join(', ');
   const isEmpty = result.score == null;
+  const heroImage = property.officialChannels?.find((c) => c.kind === 'gallery' && /\.(jpg|jpeg|png|webp)(\?|$)/i.test(c.url))?.url;
+  const visualCount = property.officialChannels?.filter((c) => ['gallery', 'matterport', 'instagram', 'tiktok', 'youtube'].includes(c.kind)).length ?? 0;
 
   return (
     <section className="relative border-b border-border/40 bg-gradient-to-br from-primary/5 via-background to-secondary/5">
@@ -89,8 +91,24 @@ export const VerdictHero = ({ property, result, onWatch, onContribute }: Props) 
             </div>
           </div>
 
-          <div className="shrink-0 self-center">
-            {isEmpty ? <StoryProgress property={property} /> : <TruthScoreGauge result={result} />}
+          <div className="shrink-0 self-center w-full md:w-[22rem]">
+            {heroImage ? (
+              <div className="overflow-hidden rounded-2xl border bg-card shadow-lg">
+                <div className="relative aspect-[4/3] bg-muted">
+                  <img src={heroImage} alt={`${property.name} official preview`} className="h-full w-full object-cover" loading="eager" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                  <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between gap-2">
+                    <Badge className="bg-black/60 text-white border-white/20">Official · Public</Badge>
+                    {visualCount > 0 && <Badge variant="secondary">{visualCount} content</Badge>}
+                  </div>
+                </div>
+                <div className="p-4">
+                  {isEmpty ? <StoryProgress property={property} /> : <TruthScoreGauge result={result} />}
+                </div>
+              </div>
+            ) : (
+              isEmpty ? <StoryProgress property={property} /> : <TruthScoreGauge result={result} />
+            )}
           </div>
         </div>
       </div>
