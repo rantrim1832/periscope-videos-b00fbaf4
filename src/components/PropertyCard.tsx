@@ -2,6 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Bed, Bath, Star, Video } from "lucide-react";
 import { Link } from "react-router-dom";
+import { PropertyArtwork } from "./PropertyArtwork";
 
 interface PropertyCardProps {
   name: string;
@@ -16,6 +17,8 @@ interface PropertyCardProps {
   imageUrl?: string;
   verified?: boolean;
   to?: string;
+  units?: number | null;
+  propertyId?: string;
 }
 
 export const PropertyCard = ({
@@ -31,16 +34,28 @@ export const PropertyCard = ({
   imageUrl = "/placeholder.svg",
   verified = false,
   to,
+  units,
+  propertyId,
 }: PropertyCardProps) => {
+  const hasImage = !!imageUrl && imageUrl !== "/placeholder.svg";
   const card = (
     <Card className="group overflow-hidden cursor-pointer border-border/60 bg-card shadow-card hover:shadow-card-hover hover:-translate-y-0.5 hover:border-primary/40 transition-all duration-300">
       <div className="relative aspect-[4/3] overflow-hidden bg-muted">
-        <img
-          src={imageUrl}
-          alt={name}
-          loading="lazy"
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
-        />
+        {hasImage ? (
+          <img
+            src={imageUrl}
+            alt={name}
+            loading="lazy"
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+          />
+        ) : (
+          <PropertyArtwork
+            name={name}
+            seed={propertyId ?? `${name}-${city}-${state}`}
+            units={units}
+            className="w-full h-full transition-transform duration-500 group-hover:scale-[1.04]"
+          />
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
         {videoCount > 0 && (
           <div className="absolute top-2.5 right-2.5 flex gap-2">
