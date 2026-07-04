@@ -77,7 +77,7 @@ export const Header = () => {
   
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center justify-between gap-3">
+      <div className="container flex h-14 md:h-16 items-center justify-between gap-2 md:gap-3">
         <Link to="/" className="flex items-center gap-2.5 hover:opacity-90 transition-opacity shrink-0">
           <div className="bg-gradient-to-br from-primary to-secondary p-2 rounded-xl shadow-card">
             <Video className="h-4 w-4 text-primary-foreground" />
@@ -131,7 +131,7 @@ export const Header = () => {
               <Search className="h-5 w-5" />
             </Link>
           </Button>
-          <ThemeToggle />
+          <div className="hidden md:flex"><ThemeToggle /></div>
           {user ? (
             <>
               <Button variant="ghost" size="icon" asChild className="hidden sm:flex">
@@ -139,7 +139,7 @@ export const Header = () => {
                   <Bookmark className="h-5 w-5" />
                 </Link>
               </Button>
-              <Button variant="ghost" size="icon" asChild className="relative">
+              <Button variant="ghost" size="icon" asChild className="relative hidden sm:inline-flex">
                 <Link to="/notifications" aria-label="Notifications">
                   <Bell className="h-5 w-5" />
                   {unread > 0 && (
@@ -151,7 +151,7 @@ export const Header = () => {
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" aria-label="Account">
+                  <Button variant="ghost" size="icon" aria-label="Account" className="hidden sm:inline-flex">
                     <User className="h-5 w-5" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -172,13 +172,24 @@ export const Header = () => {
               </Button>
             </>
           ) : (
-            <Button variant="hero" size="sm" className="ml-1" asChild>
+            <Button variant="hero" size="sm" className="ml-1 hidden sm:inline-flex" asChild>
               <Link to="/auth">
                 <LogIn className="h-4 w-4" />
                 <span className="hidden sm:inline">Sign in</span>
               </Link>
             </Button>
           )}
+          {/* Mobile: single search icon + hamburger keeps the bar to two controls */}
+          <Button variant="ghost" size="icon" className="md:hidden relative" asChild>
+            <Link to={user ? '/notifications' : '/search'} aria-label={user ? 'Notifications' : 'Search'}>
+              {user ? <Bell className="h-5 w-5" /> : <Search className="h-5 w-5" />}
+              {user && unread > 0 && (
+                <span className="absolute top-1.5 right-1.5 min-w-[1.05rem] h-[1.05rem] px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-semibold flex items-center justify-center ring-2 ring-background">
+                  {unread > 9 ? '9+' : unread}
+                </span>
+              )}
+            </Link>
+          </Button>
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" className="lg:hidden">
@@ -190,8 +201,13 @@ export const Header = () => {
                 <SheetTitle className="text-left">Menu</SheetTitle>
               </SheetHeader>
               <div className="flex-1 overflow-y-auto p-5 space-y-6">
+                <div className="flex items-center justify-between -mt-2">
+                  <span className="text-xs text-muted-foreground">Theme</span>
+                  <ThemeToggle />
+                </div>
                 <MobileSection title="Explore">
                   <MobileLink to="/discover" onNav={() => setMobileMenuOpen(false)}>Discover</MobileLink>
+                  <MobileLink to="/search" onNav={() => setMobileMenuOpen(false)}>Search</MobileLink>
                   <MobileLink to="/browse" onNav={() => setMobileMenuOpen(false)}>Browse properties</MobileLink>
                   <MobileLink to="/shorts" onNav={() => setMobileMenuOpen(false)}>Shorts</MobileLink>
                   <MobileLink to="/feed" onNav={() => setMobileMenuOpen(false)}>Feed</MobileLink>
@@ -227,12 +243,18 @@ export const Header = () => {
                   </MobileSection>
                 )}
               </div>
-              {!user && (
+              {!user ? (
                 <div className="p-5 border-t">
                   <Button variant="hero" className="w-full" asChild>
                     <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>
                       <LogIn className="h-4 w-4" /> Sign in
                     </Link>
+                  </Button>
+                </div>
+              ) : (
+                <div className="p-5 border-t">
+                  <Button variant="outline" className="w-full" onClick={() => { setMobileMenuOpen(false); handleSignOut(); }}>
+                    <LogOut className="h-4 w-4" /> Sign out
                   </Button>
                 </div>
               )}
