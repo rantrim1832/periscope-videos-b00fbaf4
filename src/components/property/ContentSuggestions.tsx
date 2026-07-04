@@ -2,14 +2,12 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Sparkles, Video, Building2, Users } from 'lucide-react';
+import { Video, Building2, Users, Search } from 'lucide-react';
 import type { PropertyView } from '@/domain/property';
 import { suggestContent, type StoryAudience } from '@/domain/story';
 import { useIsManager } from '@/hooks/useIsManager';
 
-// Dynamic, missing-content-driven suggestions, framed as helping complete the
-// story. Audience-aware: managers see official-content prompts; residents see
-// lived-experience prompts; a creator tab offers investigation angles.
+// Missing-content prompts, grouped by audience: residents, management, creators.
 export const ContentSuggestions = ({ property }: { property: PropertyView }) => {
   const navigate = useNavigate();
   const isManager = useIsManager(property.id);
@@ -19,13 +17,13 @@ export const ContentSuggestions = ({ property }: { property: PropertyView }) => 
   const tabs: { key: StoryAudience; label: string; icon: typeof Video }[] = [
     { key: 'resident', label: 'Residents', icon: Users },
     { key: 'management', label: 'Management', icon: Building2 },
-    { key: 'creator', label: 'Creators', icon: Sparkles },
+    { key: 'creator', label: 'Creators', icon: Search },
   ];
 
   return (
     <section className="container mx-auto px-4 py-10">
-      <h2 className="text-2xl font-bold mb-1 flex items-center gap-2"><Sparkles className="w-6 h-6" /> Help complete this property's story</h2>
-      <p className="text-muted-foreground mb-4">Ideas for what this community's story is still missing.</p>
+      <h2 className="text-2xl font-bold mb-1">What's missing</h2>
+      <p className="text-muted-foreground mb-4">Content that hasn't been added yet.</p>
 
       <div className="flex gap-2 mb-4">
         {tabs.map((t) => {
