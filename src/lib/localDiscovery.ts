@@ -57,3 +57,32 @@ export function nearestSeededCity(lat: number, lng: number): LocalCity {
     .map((city) => ({ city, d: distanceKm(lat, lng, city.lat, city.lng) }))
     .sort((a, b) => a.d - b.d)[0].city;
 }
+
+// Parse the trailing state code from a "City, ST" location string.
+export function stateFromLocation(location?: string | null): string | null {
+  if (!location) return null;
+  const parts = location.split(',').map((s) => s.trim());
+  const last = parts[parts.length - 1];
+  return /^[A-Z]{2}$/.test(last) ? last : null;
+}
+
+export function getStoredLocalState(): string | null {
+  return getStoredLocalCity()?.state ?? null;
+}
+
+// Sort items so ones matching the local state come first, preserving relative
+// order otherwise. Used to keep the SoCal viewer from opening the page to Texas.
+export function sortByLocalState<T>(
+  items: T[],
+  getLocation: (item: T) => string | null | undefined,
+  localState: string | null,
+): T[] {
+  if (!localState) return items;
+  const local: T[] = [];
+  const rest: T[] = [];
+  for (const item of items) {
+    if (stateFromLocation(getLocation(item)) === localState) local.push(item);
+    else rest.push(item);
+  }
+  return [...local, ...rest];
+}
