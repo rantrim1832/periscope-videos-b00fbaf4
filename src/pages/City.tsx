@@ -120,7 +120,9 @@ const City = () => {
                       reviewCount={0}
                       videoCount={visualCount(p)}
                       imageUrl={cardImage(p)}
-                      to={`/property/${p.id}`}
+                      propertyId={p.id}
+                  units={p.unitsCount}
+                  to={`/property/${p.id}`}
                     />
                   ))}
                 </div>
@@ -149,7 +151,9 @@ const City = () => {
 const RankRow = ({ rows }: { rows: { p: { id: string; name: string; city: string | null; state: string | null }; r: ReturnType<typeof computeTruthScore> }[] }) => (
   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
     {rows.map(({ p, r }) => (
-      <Link key={p.id} to={`/property/${p.id}`}>
+      <Link key={p.id} propertyId={p.id}
+                  units={p.unitsCount}
+                  to={`/property/${p.id}`}>
         <Card className="hover:shadow-lg transition-all h-full">
           <CardContent className="p-4 flex items-center gap-3">
             <div className="w-14 h-14 rounded-full flex items-center justify-center text-lg font-bold shrink-0" style={{ border: `3px solid ${scoreColorVar(r.score)}`, color: scoreColorVar(r.score) }}>{r.score}</div>
