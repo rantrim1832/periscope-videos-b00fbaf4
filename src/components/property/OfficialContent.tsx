@@ -5,6 +5,8 @@ import { Globe, Instagram, Facebook, Youtube, Box, Images, ShieldCheck, Building
 import { Link } from 'react-router-dom';
 import type { PropertyView, OfficialChannel, ChannelKind } from '@/domain/property';
 import { useIsManager } from '@/hooks/useIsManager';
+import { useState } from 'react';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 
 const ICON: Record<ChannelKind, typeof Globe> = {
   website: Globe, instagram: Instagram, facebook: Facebook, tiktok: Youtube,
@@ -26,15 +28,20 @@ function isInstagramPost(url: string): boolean {
   return /instagram\.com\/(p|reel|tv)\//i.test(url);
 }
 
+function isApartmentsVideo(url: string): boolean {
+  return /vapi\.apartments\.com\/video\/play/i.test(url);
+}
+
 // Official content from the property's own channels. Labeled by trust:
 // "Official · Public" (embedded/linked from their public channels, pre-claim)
 // vs "Official · Verified" (post-claim, operator-managed). Never implies
 // endorsement until verified.
 export const OfficialContent = ({ property }: { property: PropertyView }) => {
+  const [selectedImage, setSelectedImage] = useState<OfficialChannel | null>(null);
   const channels = property.officialChannels ?? [];
   const verified = channels.some((c) => c.verified);
-  const gallery = channels.filter((c) => c.kind === 'gallery' && /\.(jpg|jpeg|png|webp)(\?|$)/i.test(c.url)).slice(0, 9);
-  const tours = channels.filter((c) => c.kind === 'matterport' || /matterport\.com|panoskin\.com/i.test(c.url)).slice(0, 4);
+  const gallery = channels.filter((c) => c.kind === 'gallery' && /\.(jpg|jpeg|png|webp)(\?|$)/i.test(c.url)).slice(0, 12);
+  const tours = channels.filter((c) => c.kind === 'matterport' || /matterport\.com|panoskin\.com/i.test(c.url) || isApartmentsVideo(c.url)).slice(0, 6);
   const youtube = channels.filter((c) => c.kind === 'youtube' && youtubeEmbed(c.url)).slice(0, 2);
   const instagramPosts = channels.filter((c) => c.kind === 'instagram' && isInstagramPost(c.url)).slice(0, 8);
   const profiles = channels.filter((c) =>
@@ -77,10 +84,10 @@ export const OfficialContent = ({ property }: { property: PropertyView }) => {
               {gallery.length > 0 && (
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {gallery.map((c) => (
-                    <a key={c.id} href={c.url} target="_blank" rel="noopener noreferrer nofollow" className="group relative overflow-hidden rounded-lg border bg-muted aspect-[4/3]">
+                    <button key={c.id} type="button" onClick={() => setSelectedImage(c)} className="group relative overflow-hidden rounded-lg border bg-muted aspect-[4/3] text-left">
                       <img src={c.url} alt={c.label ?? `${property.name} official photo`} className="w-full h-full object-cover transition-transform group-hover:scale-105" loading="lazy" />
-                      <span className="absolute left-2 top-2 rounded-full bg-black/60 px-2 py-0.5 text-xs text-white">Official photo</span>
-                    </a>
+                      <span className="absolute left-2 top-2 rounded-full bg-black/60 px-2 py-0.5 text-xs text-white">Official photo · tap to view</span>
+                    </button>
                   ))}
                 </div>
               )}
@@ -89,8 +96,8 @@ export const OfficialContent = ({ property }: { property: PropertyView }) => {
                 <div className="grid sm:grid-cols-2 gap-4">
                   {tours.map((c) => (
                     <Card key={c.id} className="overflow-hidden">
-                      <iframe title={c.label ?? 'Official tour'} src={c.url} className="w-full h-64 border-0" allowFullScreen loading="lazy" />
-                      <CardContent className="p-3"><p className="text-sm font-medium">Official 3D / virtual tour</p></CardContent>
+                      <iframe title={c.label ?? 'Official tour'} src={c.url} className="w-full h-64 border-0" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowFullScreen loading="lazy" />
+                      <CardContent className="p-3"><p className="text-sm font-medium">{isApartmentsVideo(c.url) ? 'Official video tour' : 'Official 3D / virtual tour'}</p></CardContent>
                     </Card>
                   ))}
                   {youtube.map((c) => (
@@ -152,6 +159,13 @@ export const OfficialContent = ({ property }: { property: PropertyView }) => {
           )}
         </div>
       )}
+      <Dialog open={!!selectedImage} onOpenChange={(open) => !open && setSelectedImage(null)}>
+        <DialogContent className="max-w-5xl p-2 bg-black border-0">
+          {selectedImage && (
+            <img src={selectedImage.url} alt={selectedImage.label ?? `${property.name} official photo`} className="max-h-[85vh] w-full object-contain rounded" />
+          )}
+        </DialogContent>
+      </Dialog>
     </section>
   );
 };

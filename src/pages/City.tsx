@@ -12,6 +12,14 @@ import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { shareContent } from '@/lib/share';
 import { useToast } from '@/hooks/use-toast';
 import { WatchButton } from '@/components/property/WatchButton';
+import { PropertyCard } from '@/components/PropertyCard';
+import type { PropertyView } from '@/domain/property';
+
+const cardImage = (p: PropertyView) =>
+  p.officialChannels?.find((c) => c.kind === 'gallery' && /\.(jpg|jpeg|png|webp)(\?|$)/i.test(c.url))?.url;
+
+const visualCount = (p: PropertyView) =>
+  p.officialChannels?.filter((c) => ['gallery', 'matterport', 'instagram', 'tiktok', 'youtube'].includes(c.kind)).length ?? 0;
 
 // City landing page — an indexable, shareable local hub tying together the
 // city's properties, best/worst Truth Scores, and local content.
@@ -85,7 +93,8 @@ const City = () => {
                     <Link key={f.id} to={`/property/${f.propertyId}`} className="shrink-0 w-40">
                       <Card className="overflow-hidden group hover:shadow-lg transition-all">
                         <div className="relative aspect-[9/16] bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
-                          <Play className="w-8 h-8 text-foreground/70" />
+                          {f.thumbnailUrl ? <img src={f.thumbnailUrl} alt={f.title} className="absolute inset-0 w-full h-full object-cover" loading="lazy" /> : <Play className="w-8 h-8 text-foreground/70" />}
+                          <div className="absolute inset-0 bg-black/20" />
                           {f.category && <Badge className="absolute top-2 left-2 bg-black/50 text-white border-0 text-[10px]">{f.category}</Badge>}
                         </div>
                         <CardContent className="p-2"><p className="text-xs font-medium line-clamp-2">{f.title}</p></CardContent>
@@ -101,14 +110,18 @@ const City = () => {
                 <h2 className="text-2xl font-bold mb-4">All communities</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {properties.map((p) => (
-                    <Link key={p.id} to={`/property/${p.id}`}>
-                      <Card className="hover:border-primary transition-colors h-full">
-                        <CardContent className="p-4">
-                          <p className="font-semibold truncate">{p.name}</p>
-                          <p className="text-sm text-muted-foreground truncate">{p.addressLine1}</p>
-                        </CardContent>
-                      </Card>
-                    </Link>
+                    <PropertyCard
+                      key={p.id}
+                      name={p.name}
+                      address={p.addressLine1 ?? ''}
+                      city={p.city ?? ''}
+                      state={p.state ?? ''}
+                      rating={0}
+                      reviewCount={0}
+                      videoCount={visualCount(p)}
+                      imageUrl={cardImage(p)}
+                      to={`/property/${p.id}`}
+                    />
                   ))}
                 </div>
               </section>

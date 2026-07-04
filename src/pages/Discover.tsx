@@ -12,10 +12,18 @@ import { shareContent } from '@/lib/share';
 import { useToast } from '@/hooks/use-toast';
 import { computeTruthScore, CATEGORY_LABELS, CATEGORY_ORDER, scoreColorVar, categoryPct, type CategoryKey } from '@/domain/truthScore';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { PropertyCard } from '@/components/PropertyCard';
+import type { PropertyView } from '@/domain/property';
 
 // Discovery (Mode 2): "show me the best/worst apartments." Curated rankings by
 // category + location — decision support that's inherently shareable and SEO-rich.
 type Metric = 'overall' | CategoryKey;
+
+const cardImage = (p: PropertyView) =>
+  p.officialChannels?.find((c) => c.kind === 'gallery' && /\.(jpg|jpeg|png|webp)(\?|$)/i.test(c.url))?.url;
+
+const visualCount = (p: PropertyView) =>
+  p.officialChannels?.filter((c) => ['gallery', 'matterport', 'instagram', 'tiktok', 'youtube'].includes(c.kind)).length ?? 0;
 
 const Discover = () => {
   useDocumentTitle('Discover the best & worst apartments | Pariscope', 'Ranked by trust-weighted resident experience — best and worst apartments by category and location.');
@@ -45,6 +53,14 @@ const Discover = () => {
   }, [properties, metric, order, state]);
 
   const metricLabel = metric === 'overall' ? 'Truth Score' : CATEGORY_LABELS[metric];
+  const contentRich = useMemo(() => {
+    return properties
+      .filter((p) => state === 'all' || p.state === state)
+      .map((p) => ({ p, count: visualCount(p) }))
+      .filter((x) => x.count > 0)
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 24);
+  }, [properties, state]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -85,10 +101,35 @@ const Discover = () => {
         </div>
 
         {ranked.length === 0 ? (
-          <Card className="p-10 text-center bg-muted/30 border-dashed">
-            <MapPin className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
-            <p className="text-muted-foreground">Not enough scored properties yet for this ranking.</p>
-          </Card>
+          contentRich.length > 0 ? (
+            <div className="space-y-4">
+              <div>
+                <h2 className="text-xl font-bold">Most complete official pages{state !== 'all' ? ` in ${state}` : ''}</h2>
+                <p className="text-sm text-muted-foreground">Truth Scores need resident signal. Until then, start with places that have official photos, tours, and social content.</p>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {contentRich.map(({ p, count }) => (
+                  <PropertyCard
+                    key={p.id}
+                    name={p.name}
+                    address={p.addressLine1 ?? ''}
+                    city={p.city ?? ''}
+                    state={p.state ?? ''}
+                    rating={0}
+                    reviewCount={0}
+                    videoCount={count}
+                    imageUrl={cardImage(p)}
+                    to={`/property/${p.id}`}
+                  />
+                ))}
+              </div>
+            </div>
+          ) : (
+            <Card className="p-10 text-center bg-muted/30 border-dashed">
+              <MapPin className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
+              <p className="text-muted-foreground">Not enough scored or seeded properties yet for this ranking.</p>
+            </Card>
+          )
         ) : (
           <div className="space-y-2">
             {ranked.map((row, i) => {

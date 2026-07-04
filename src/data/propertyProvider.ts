@@ -218,11 +218,16 @@ export class CanonicalPropertyProvider implements PropertyDataProvider {
   private async enrichSummaries(props: any[]): Promise<PropertyView[]> {
     const ids = props.map((p) => p.id);
     if (ids.length === 0) return [];
-    const { data: channelRows } = await this.db
-      .from('property_channel')
-      .select('*')
-      .in('canonical_property_id', ids)
-      .limit(Math.max(ids.length * 25, 250));
+    const channelRows: any[] = [];
+    for (let i = 0; i < ids.length; i += 40) {
+      const chunk = ids.slice(i, i + 40);
+      const { data } = await this.db
+        .from('property_channel')
+        .select('*')
+        .in('canonical_property_id', chunk)
+        .limit(1200);
+      channelRows.push(...(data ?? []));
+    }
     const byProperty = new Map<string, OfficialChannel[]>();
     for (const row of channelRows ?? []) {
       const list = byProperty.get(row.canonical_property_id) ?? [];

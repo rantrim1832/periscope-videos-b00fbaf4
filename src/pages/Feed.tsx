@@ -17,8 +17,13 @@ const Feed = () => {
     queryKey: ['feed'],
     queryFn: () => getPropertyProvider().feed(),
   });
+  const cities = [...new Set(items.map((i) => i.location).filter(Boolean))].slice(0, 12);
+  const [city, setCity] = useState<string>('All');
 
-  const filtered = category === 'All' ? items : items.filter((i) => i.category === category);
+  const filtered = items.filter((i) =>
+    (category === 'All' || i.category === category) &&
+    (city === 'All' || i.location === city),
+  );
 
   return (
     <div className="min-h-screen bg-background">
@@ -30,6 +35,13 @@ const Feed = () => {
             {FEED_CATEGORIES.map((c) => (
               <Button key={c} size="sm" variant={category === c ? 'default' : 'outline'} className="whitespace-nowrap" onClick={() => setCategory(c)}>
                 {c}
+              </Button>
+            ))}
+          </div>
+          <div className="flex gap-2 overflow-x-auto">
+            {['All', ...cities].map((c) => (
+              <Button key={c} size="sm" variant={city === c ? 'default' : 'outline'} className="whitespace-nowrap" onClick={() => setCity(c)}>
+                {c === 'All' ? 'All cities' : c}
               </Button>
             ))}
           </div>
@@ -97,7 +109,9 @@ const FeedCard = ({ item }: { item: FeedItem }) => {
                 <img src={item.thumbnailUrl} alt={item.title} className="absolute inset-0 w-full h-full object-cover opacity-80" loading="lazy" />
               )}
               <div className="absolute inset-0 bg-black/25" />
-              <div className="w-16 h-16 rounded-full bg-white/90 flex items-center justify-center"><Play className="w-7 h-7 text-black ml-1" /></div>
+              {!(item.thumbnailUrl && !item.embedUrl) && (
+                <div className="w-16 h-16 rounded-full bg-white/90 flex items-center justify-center z-10"><Play className="w-7 h-7 text-black ml-1" /></div>
+              )}
               <span className="text-white/80 text-sm z-10">{item.thumbnailUrl && !item.embedUrl ? 'Official photo' : 'Tap to play'}</span>
             </button>
           )}
