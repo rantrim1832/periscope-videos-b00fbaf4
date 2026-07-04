@@ -6,7 +6,7 @@ import { Play, ShieldCheck, Building2, MapPin } from 'lucide-react';
 import type { MediaItem, PropertyView } from '@/domain/property';
 import { EvidenceViewer } from './EvidenceViewer';
 
-// Two truths, always labeled, never merged: Resident Reality vs Official.
+// Two sources, always labeled: Resident vs Official.
 const MediaCard = ({ item, onPlay }: { item: MediaItem; onPlay: (m: MediaItem) => void }) => (
   <Card onClick={() => onPlay(item)} className="group overflow-hidden cursor-pointer hover:shadow-lg transition-all border-border/50">
     <div className="relative aspect-[9/16] bg-gradient-to-br from-primary/15 to-secondary/15 flex items-center justify-center">
@@ -37,10 +37,10 @@ export const EvidenceFeed = ({ property }: { property: PropertyView }) => {
   if (property.media.length === 0) {
     return (
       <section id="evidence" className="container mx-auto px-4 py-10">
-        <h2 className="text-2xl font-bold mb-2">The evidence</h2>
+        <h2 className="text-2xl font-bold mb-2">Videos</h2>
         <Card className="p-8 text-center bg-muted/30 border-dashed">
           <p className="text-muted-foreground">
-            No videos yet. A single clip is worth a thousand reviews — post the first one.
+            No videos submitted for this property.
           </p>
         </Card>
       </section>
@@ -49,18 +49,18 @@ export const EvidenceFeed = ({ property }: { property: PropertyView }) => {
 
   return (
     <section id="evidence" className="container mx-auto px-4 py-10">
-      <h2 className="text-2xl font-bold mb-1">The evidence</h2>
-      <p className="text-muted-foreground mb-6">What residents show vs. what the property shows.</p>
+      <h2 className="text-2xl font-bold mb-1">Videos</h2>
+      <p className="text-muted-foreground mb-6">Resident-submitted and official content.</p>
       <Tabs defaultValue="resident">
         <TabsList className="mb-6">
-          <TabsTrigger value="resident">Resident Reality ({resident.length})</TabsTrigger>
+          <TabsTrigger value="resident">Resident ({resident.length})</TabsTrigger>
           <TabsTrigger value="official">Official ({official.length})</TabsTrigger>
         </TabsList>
         <TabsContent value="resident">
-          <Grid items={resident} empty="No resident videos yet — be the first." onPlay={setActive} />
+          <Grid items={resident} empty="No resident videos submitted." onPlay={setActive} />
         </TabsContent>
         <TabsContent value="official">
-          <Grid items={official} empty="This property hasn't posted official content. Own it? Claim to respond." onPlay={setActive} />
+          <Grid items={official} empty="No official content. Claim this listing to add it." onPlay={setActive} />
         </TabsContent>
       </Tabs>
       <EvidenceViewer item={active} open={active != null} onOpenChange={(o) => !o && setActive(null)} />
