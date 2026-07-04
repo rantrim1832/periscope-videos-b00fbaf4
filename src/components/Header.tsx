@@ -224,7 +224,7 @@ export const Header = () => {
                     <MobileLink to="/notifications" onNav={() => setMobileMenuOpen(false)}>
                       Notifications{unread > 0 ? ` · ${unread}` : ''}
                     </MobileLink>
-                    <MobileLink to="/contribute" onNav={() => setMobileMenuOpen(false)}>Share an experience</MobileLink>
+                    <MobileLink to="/contribute" onNav={() => setMobileMenuOpen(false)}>Add a review</MobileLink>
                   </MobileSection>
                 )}
 

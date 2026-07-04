@@ -29,7 +29,7 @@ const City = () => {
   const stateName = decodeURIComponent(state);
   useDocumentTitle(
     `Apartments in ${cityName}, ${stateName} — Reviews & Truth Scores | Periscope`,
-    `Verified resident reviews, video proof, and Truth Scores for apartments in ${cityName}, ${stateName}.`,
+    `Resident reviews, videos, and Truth Scores for apartments in ${cityName}, ${stateName}.`,
   );
 
   const { toast } = useToast();
@@ -67,7 +67,7 @@ const City = () => {
             }}><Share2 className="w-4 h-4 mr-2" /> Share</Button>
           </div>
         </div>
-        <p className="text-muted-foreground mt-2 mb-8">{properties.length} communities · official sources, resident experiences, and visual context.</p>
+        <p className="text-muted-foreground mt-2 mb-8">{properties.length} properties</p>
 
         {isLoading ? (
           <p className="text-muted-foreground">Loading…</p>
@@ -81,13 +81,13 @@ const City = () => {
             )}
             {worst.length > 0 && (
               <section>
-                <h2 className="text-2xl font-bold mb-4 flex items-center gap-2"><TrendingDown className="w-6 h-6 text-destructive" /> Residents warn about</h2>
+                <h2 className="text-2xl font-bold mb-4 flex items-center gap-2"><TrendingDown className="w-6 h-6 text-destructive" /> Lowest rated</h2>
                 <RankRow rows={worst} />
               </section>
             )}
             {localFeed.length > 0 && (
               <section>
-                <h2 className="text-2xl font-bold mb-4">Local reality</h2>
+                <h2 className="text-2xl font-bold mb-4">Recent videos</h2>
                 <div className="flex gap-4 overflow-x-auto pb-2">
                   {localFeed.map((f) => (
                     <Link key={f.id} to={`/property/${f.propertyId}`} className="shrink-0 w-40">
@@ -107,7 +107,7 @@ const City = () => {
 
             {properties.length > 0 && (
               <section>
-                <h2 className="text-2xl font-bold mb-4">All communities</h2>
+                <h2 className="text-2xl font-bold mb-4">All properties</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {properties.map((p) => (
                     <PropertyCard
@@ -131,8 +131,8 @@ const City = () => {
 
             {properties.length === 0 && (
               <Card className="p-10 text-center bg-muted/30 border-dashed">
-                <p className="text-muted-foreground mb-4">No communities listed in {cityName} yet.</p>
-                <Button variant="hero" asChild><Link to="/contribute">Add the first one</Link></Button>
+                <p className="text-muted-foreground mb-4">No properties listed in {cityName}.</p>
+                <Button variant="hero" asChild><Link to="/contribute">Add a property</Link></Button>
               </Card>
             )}
           </div>
@@ -141,7 +141,7 @@ const City = () => {
 
       <div className="fixed bottom-4 inset-x-0 z-30 flex justify-center pointer-events-none">
         <Button variant="hero" className="pointer-events-auto shadow-lg" asChild>
-          <Link to="/contribute"><PenLine className="w-4 h-4 mr-2" /> Share an experience</Link>
+          <Link to="/contribute"><PenLine className="w-4 h-4 mr-2" /> Add a review</Link>
         </Button>
       </div>
     </div>

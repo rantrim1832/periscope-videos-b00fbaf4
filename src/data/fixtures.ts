@@ -51,7 +51,7 @@ const richMedia: MediaItem[] = [
   { id: 'm5', source: 'official', title: 'Renovated 2BR walkthrough', city: 'Los Angeles, CA', category: 'Property tours' },
   {
     id: 'm6', source: 'imported', title: 'Imported: resident apartment tour (YouTube)',
-    city: 'Los Angeles, CA', platform: 'youtube', category: 'Community verdicts',
+    city: 'Los Angeles, CA', platform: 'youtube', category: 'Property comparison',
     embedUrl: 'https://www.youtube.com/embed/aqz-KE-bpKQ',
   },
 ];

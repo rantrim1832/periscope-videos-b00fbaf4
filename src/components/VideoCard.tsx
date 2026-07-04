@@ -42,7 +42,7 @@ export const VideoCard = ({
         </div>
         {verified && (
           <div className="absolute top-2 left-2">
-            <Badge variant="success">✓ Verified</Badge>
+            <Badge variant="success">Verified</Badge>
           </div>
         )}
       </div>

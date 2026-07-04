@@ -5,7 +5,7 @@ import { Header } from '@/components/Header';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Sparkles, Users, ShieldCheck, Play } from 'lucide-react';
+import { Video, Users, ShieldCheck, Play } from 'lucide-react';
 import { getCreator, toggleFollow } from '@/services/creatorService';
 import { useToast } from '@/hooks/use-toast';
 
@@ -46,7 +46,7 @@ const Creator = () => {
           <p className="text-muted-foreground">Loading…</p>
         ) : !creator ? (
           <Card className="p-10 text-center bg-muted/30 border-dashed">
-            <Sparkles className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
+            <Video className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
             <h1 className="text-xl font-bold mb-2">Creator profiles</h1>
             <p className="text-muted-foreground">Creator &amp; investigator profiles appear here with live data. Explore the <Link to="/feed" className="underline">feed</Link>.</p>
           </Card>
@@ -59,7 +59,7 @@ const Creator = () => {
               <div className="flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
                   <h1 className="text-2xl font-bold">{creator.displayName ?? creator.pseudonym ?? 'Creator'}</h1>
-                  {creator.creatorType && <Badge variant="secondary" className="gap-1"><Sparkles className="w-3 h-3" /> {CREATOR_TYPE_LABEL[creator.creatorType] ?? 'Creator'}</Badge>}
+                  {creator.creatorType && <Badge variant="secondary" className="gap-1"><Video className="w-3 h-3" /> {CREATOR_TYPE_LABEL[creator.creatorType] ?? 'Creator'}</Badge>}
                   {creator.trustTier === 'verified_resident' && <Badge variant="success" className="gap-1"><ShieldCheck className="w-3 h-3" /> Verified</Badge>}
                 </div>
                 {creator.bio && <p className="text-muted-foreground mt-1">{creator.bio}</p>}

@@ -38,7 +38,7 @@ export function computeStory(property: PropertyView): StoryCompleteness {
     { key: 'neighborhood_guide', label: 'Neighborhood Guide', filledBy: 'creator', filled: importedMedia },
     { key: 'staff_intro', label: 'Staff Introduction', filledBy: 'management', filled: channels.some((c) => c.verified) },
     { key: 'maintenance_updates', label: 'Maintenance Updates', filledBy: 'management', filled: false },
-    { key: 'resident_truth', label: 'Resident Truth', filledBy: 'resident', filled: property.reviews.length > 0 },
+    { key: 'resident_truth', label: 'Resident reviews', filledBy: 'resident', filled: property.reviews.length > 0 },
   ];
 
   const filled = slots.filter((s) => s.filled).length;
@@ -75,7 +75,7 @@ const RESIDENT_SUGGESTIONS = [
 ];
 
 const CREATOR_SUGGESTIONS = [
-  'Apartment reality check', 'Community verdicts', 'Luxury versus reality',
+  'Apartment comparison', 'Resident interview', 'Luxury vs reality',
   'Deposit horror stories', 'Best apartments under $X', 'Hidden fees',
   'Management changes', 'Maintenance investigation', 'Neighborhood guide',
 ];

@@ -47,7 +47,7 @@ export const FEED_CATEGORIES = [
   'Property tours',
   'Investigations',
   'Renter tips',
-  'Community verdicts',
+  'Property comparison',
 ] as const;
 export type FeedCategory = (typeof FEED_CATEGORIES)[number];
 

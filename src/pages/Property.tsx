@@ -30,7 +30,7 @@ const Timeline = ({ events }: { events: TimelineEvent[] }) => {
   return (
     <section className="container mx-auto px-4 py-10">
       <h2 className="text-2xl font-bold mb-1 flex items-center gap-2"><History className="w-6 h-6" /> Property timeline</h2>
-      <p className="text-muted-foreground mb-6">What changed, and when — the story a snapshot can't tell.</p>
+      <p className="text-muted-foreground mb-6">Chronological changes for this property.</p>
       <div className="relative border-l-2 border-border/60 pl-6 space-y-6">
         {events.map((e) => (
           <div key={e.id} className="relative">
@@ -142,12 +142,11 @@ const Property = () => {
 
       <NearbyProperties property={property} />
 
-      {/* Keep going — never a dead end */}
       <section className="container mx-auto px-4 py-10">
         <Card className="bg-gradient-to-br from-primary/10 to-secondary/10 border-primary/20">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <GitCompareArrows className="w-5 h-5" /> Deciding between places?
+              <GitCompareArrows className="w-5 h-5" /> Compare properties
             </CardTitle>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-3">

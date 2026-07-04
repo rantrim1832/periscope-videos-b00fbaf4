@@ -89,7 +89,7 @@ const Feed = () => {
       ) : filtered.length === 0 ? (
         <div className="text-center py-20">
           <p className="text-muted-foreground mb-4">No {category === 'All' ? '' : `“${category}” `}content yet.</p>
-          <Button variant="hero" asChild><Link to="/contribute">Share an experience</Link></Button>
+          <Button variant="hero" asChild><Link to="/contribute">Add a review</Link></Button>
         </div>
       ) : (
         <div className="h-[calc(100dvh-8rem)] md:h-[calc(100dvh-9rem)] overflow-y-auto snap-y snap-mandatory">
@@ -166,7 +166,7 @@ const FeedCard = ({ item }: { item: FeedItem }) => {
           )}
           <div className="flex gap-2 pt-1">
             <Button size="sm" variant="secondary" onClick={share}><Share2 className="w-4 h-4 mr-1" /> Share</Button>
-            <Button size="sm" variant="hero" asChild><Link to={`/contribute/${item.propertyId}`}><PenLine className="w-4 h-4 mr-1" /> Share your experience</Link></Button>
+            <Button size="sm" variant="hero" asChild><Link to={`/contribute/${item.propertyId}`}><PenLine className="w-4 h-4 mr-1" /> Add a review</Link></Button>
           </div>
         </div>
       </div>

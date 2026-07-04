@@ -32,10 +32,7 @@ function isApartmentsVideo(url: string): boolean {
   return /vapi\.apartments\.com\/video\/play/i.test(url);
 }
 
-// Official content from the property's own channels. Labeled by trust:
-// "Official · Public" (embedded/linked from their public channels, pre-claim)
-// vs "Official · Verified" (post-claim, operator-managed). Never implies
-// endorsement until verified.
+// Official content from the property's own channels, labeled by verification tier.
 export const OfficialContent = ({ property }: { property: PropertyView }) => {
   const [selectedImage, setSelectedImage] = useState<OfficialChannel | null>(null);
   const channels = property.officialChannels ?? [];
@@ -69,13 +66,13 @@ export const OfficialContent = ({ property }: { property: PropertyView }) => {
         )}
       </div>
       <p className="text-muted-foreground mb-4">
-        Resident truth + official context = the complete picture. {verified ? 'Managed by the verified operator.' : 'From the property’s public channels (unverified).'}
+        {verified ? 'Managed by the verified operator.' : 'Sourced from the property’s public channels.'}
       </p>
 
       {channels.length === 0 ? (
         <Card className="p-6 bg-muted/30 border-dashed flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <p className="text-muted-foreground">No official content yet.</p>
-          <Button variant="outline" asChild><Link to={`/claim/${property.id}`}>Own this property? Claim it to add official content</Link></Button>
+          <p className="text-muted-foreground">No official content added.</p>
+          <Button variant="outline" asChild><Link to={`/claim/${property.id}`}>Claim this listing</Link></Button>
         </Card>
       ) : (
         <div className="space-y-4">
@@ -153,8 +150,8 @@ export const OfficialContent = ({ property }: { property: PropertyView }) => {
           </Card>
           {!verified && (
             <p className="text-xs text-muted-foreground">
-              Linked/embedded from public sources with attribution — we don’t re-host. Are you the operator?{' '}
-              <Link to={`/claim/${property.id}`} className="underline">Claim this property</Link> to verify and manage it.
+              Linked from public sources with attribution — not re-hosted. Property operator?{' '}
+              <Link to={`/claim/${property.id}`} className="underline">Claim this listing</Link> to manage it.
             </p>
           )}
         </div>

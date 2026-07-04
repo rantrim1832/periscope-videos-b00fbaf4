@@ -1,6 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Bed, Bath, Star, Video } from "lucide-react";
+import { MapPin, Bed, Bath, Star, Video, ShieldCheck } from "lucide-react";
 import { Link } from "react-router-dom";
 import { PropertyArtwork } from "./PropertyArtwork";
 
@@ -67,7 +67,7 @@ export const PropertyCard = ({
         )}
         {verified && (
           <div className="absolute top-2.5 left-2.5">
-            <Badge variant="success">✓ Verified</Badge>
+            <Badge variant="success" className="gap-1"><ShieldCheck className="w-3 h-3" /> Verified</Badge>
           </div>
         )}
       </div>
@@ -104,7 +104,7 @@ export const PropertyCard = ({
             </div>
           ) : (
             <div className="text-[11px] text-muted-foreground pt-2 line-clamp-1">
-              {videoCount > 0 ? 'Official sources · add resident input' : 'Be the first to share'}
+              {videoCount > 0 ? 'Official sources only' : 'No reviews yet'}
             </div>
           )}
         </div>

@@ -26,7 +26,7 @@ const visualCount = (p: PropertyView) =>
   p.officialChannels?.filter((c) => ['gallery', 'matterport', 'instagram', 'tiktok', 'youtube'].includes(c.kind)).length ?? 0;
 
 const Discover = () => {
-  useDocumentTitle('Discover the best & worst apartments | Periscope', 'Ranked by trust-weighted resident experience — best and worst apartments by category and location.');
+  useDocumentTitle('Discover the best & worst apartments | Periscope', 'Apartments ranked by review score, by category and location.');
   const { toast } = useToast();
   const [metric, setMetric] = useState<Metric>('overall');
   const [order, setOrder] = useState<'best' | 'worst'>('best');
@@ -77,7 +77,7 @@ const Discover = () => {
             if (res === 'copied') toast({ title: 'Link copied' });
           }}><Share2 className="w-4 h-4 mr-2" /> Share</Button>
         </div>
-        <p className="text-muted-foreground mb-6">Ranked by trust-weighted resident experience.</p>
+        <p className="text-muted-foreground mb-6">Ranked by verified review score.</p>
 
         <div className="flex flex-wrap gap-2 mb-6">
           <Select value={metric} onValueChange={(v) => setMetric(v as Metric)}>

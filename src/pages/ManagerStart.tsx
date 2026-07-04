@@ -36,7 +36,7 @@ const ManagerStart = () => {
             <Badge variant="secondary" className="w-fit">Property staff onboarding</Badge>
             <h1 className="text-4xl md:text-5xl font-bold leading-tight">Find your property page. Claim it. Make it look alive.</h1>
             <p className="text-lg text-muted-foreground">
-              Connect existing videos, social posts, tours, and official sources. Resident truth stays independent, but your official story should not be empty.
+              Connect existing videos, social posts, tours, and official sources. Resident reviews stays independent, but your official story should not be empty.
             </p>
             <form onSubmit={search} className="flex gap-3">
               <div className="relative flex-1">
@@ -56,7 +56,7 @@ const ManagerStart = () => {
             <CardContent className="space-y-4 text-sm">
               <div className="flex gap-3"><Video className="w-5 h-5 text-primary shrink-0" /><span>Connect Instagram, TikTok, YouTube, website, Matterport, and existing tour content.</span></div>
               <div className="flex gap-3"><Users className="w-5 h-5 text-primary shrink-0" /><span>Invite residents to post video reviews through a property-specific share link.</span></div>
-              <div className="flex gap-3"><ShieldCheck className="w-5 h-5 text-primary shrink-0" /><span>Respond and add context without controlling or suppressing resident truth.</span></div>
+              <div className="flex gap-3"><ShieldCheck className="w-5 h-5 text-primary shrink-0" /><span>Respond and add context without controlling or suppressing resident reviews.</span></div>
             </CardContent>
           </Card>
         </section>

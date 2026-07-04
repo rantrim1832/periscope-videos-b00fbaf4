@@ -17,9 +17,7 @@ interface Props {
   onContribute?: () => void;
 }
 
-// Story-first indicator shown when the Truth Score is confidence-gated (the
-// nationwide-launch default). A giant empty score gauge under-delivers; showing
-// how complete the property's story is — and inviting help — feels intentional.
+// Listing-completeness meter shown when Truth Score is confidence-gated.
 const StoryProgress = ({ property }: { property: PropertyView }) => {
   const story = computeStory(property);
   const size = 176, stroke = 12;
@@ -34,10 +32,10 @@ const StoryProgress = ({ property }: { property: PropertyView }) => {
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <span className="text-4xl font-bold text-primary tabular-nums">{story.pct}%</span>
-          <span className="text-[11px] text-muted-foreground tracking-wide">STORY COMPLETE</span>
+          <span className="text-[11px] text-muted-foreground tracking-wide">LISTING COMPLETE</span>
         </div>
       </div>
-      <p className="mt-3 text-sm font-medium text-center max-w-[16rem]">Gathering resident context — scores appear when there is enough signal</p>
+      <p className="mt-3 text-sm font-medium text-center max-w-[16rem]">Score appears once enough reviews are submitted.</p>
     </div>
   );
 };
@@ -72,18 +70,18 @@ export const VerdictHero = ({ property, result, onWatch, onContribute }: Props) 
 
             <p className="text-muted-foreground max-w-xl">
               {isEmpty
-                ? 'No resident experiences have been added yet. If you know this place, your context can help future renters.'
+                ? 'No reviews yet. If you\'ve lived here, add the first one.'
                 : `Based on ${result.verifiedResidentCount} verified residents, ${result.reviewCount} reviews, and ${result.videoCount} videos.`}
             </p>
 
             <div className="flex flex-wrap gap-3 pt-2">
               {!isEmpty && (
                 <Button variant="hero" size="lg" onClick={onWatch}>
-                  <Play className="w-5 h-5 mr-2" /> Watch the evidence
+                  <Play className="w-5 h-5 mr-2" /> Watch videos
                 </Button>
               )}
               <Button variant={isEmpty ? 'hero' : 'outline'} size="lg" onClick={onContribute}>
-                <PenLine className="w-5 h-5 mr-2" /> {isEmpty ? 'Share an experience' : 'Add your experience'}
+                <PenLine className="w-5 h-5 mr-2" /> Add a review
               </Button>
               <AddToCompareButton property={property} score={result.score} />
               <SaveButton property={property} />
