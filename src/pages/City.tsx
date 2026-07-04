@@ -29,7 +29,7 @@ const City = () => {
   const stateName = decodeURIComponent(state);
   useDocumentTitle(
     `Apartments in ${cityName}, ${stateName} — Reviews & Truth Scores | Periscope`,
-    `Verified resident reviews, video proof, and Truth Scores for apartments in ${cityName}, ${stateName}.`,
+    `Resident reviews, videos, and Truth Scores for apartments in ${cityName}, ${stateName}.`,
   );
 
   const { toast } = useToast();
