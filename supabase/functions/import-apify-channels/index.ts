@@ -146,8 +146,7 @@ async function findProperty(supabase: ReturnType<typeof createClient>, candidate
     const { data } = await supabase
       .from("property_channel")
       .select("canonical_property_id")
-      .eq("kind", "website")
-      .or(`url.eq.${url},url.ilike.${stripped}%`)
+      .ilike("url", `${stripped}%`)
       .limit(1)
       .maybeSingle();
     if (data?.canonical_property_id) return data.canonical_property_id as string;
