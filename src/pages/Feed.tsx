@@ -68,7 +68,7 @@ const Feed = () => {
           <div className="flex-1 flex gap-1.5 overflow-x-auto no-scrollbar text-xs text-muted-foreground items-center min-w-0">
             <span className="truncate">
               {category === 'All' ? 'All stories' : category}
-              {stateFilter !== 'All' ? ` · ${stateFilter}` : ''}
+              {effectiveState !== 'All' ? ` · ${effectiveState}` : ''}
               {effectiveCity !== 'All' ? ` · ${effectiveCity}` : ''}
             </span>
           </div>
@@ -94,7 +94,7 @@ const Feed = () => {
               <p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground mb-1.5">State</p>
               <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
                 {['All', ...statesList].map((s) => (
-                  <Button key={s} size="sm" variant={stateFilter === s ? 'default' : 'outline'} className="whitespace-nowrap h-8" onClick={() => { setStateFilter(s); setCity('All'); }}>
+                  <Button key={s} size="sm" variant={effectiveState === s ? 'default' : 'outline'} className="whitespace-nowrap h-8" onClick={() => { setStateFilter(s); setCity('All'); }}>
                     {s === 'All' ? 'All states' : s}
                   </Button>
                 ))}
