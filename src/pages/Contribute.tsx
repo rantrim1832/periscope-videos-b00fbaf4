@@ -20,7 +20,7 @@ const RENTER_TILES: PromptTile[] = [
     hint: 'A 60-second walkthrough is worth a thousand words. Show what daily life is really like.',
     icon: Sparkles,
     cover: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&auto=format&fit=crop',
-    to: '/browse',
+    to: '/contribute?topic=record-review',
     featured: true,
     badge: 'Start here',
   },
@@ -30,7 +30,7 @@ const RENTER_TILES: PromptTile[] = [
     hint: 'Hidden fees, renewal hikes, deposit charges — what future renters need to know.',
     icon: DollarSign,
     cover: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=800&auto=format&fit=crop',
-    to: '/browse',
+    to: '/contribute?topic=pricing',
   },
   {
     key: 'management',
@@ -38,7 +38,7 @@ const RENTER_TILES: PromptTile[] = [
     hint: 'Responsiveness, transparency, how issues actually got handled.',
     icon: MessageSquareWarning,
     cover: 'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=800&auto=format&fit=crop',
-    to: '/browse',
+    to: '/contribute?topic=management',
   },
   {
     key: 'maintenance',
@@ -46,7 +46,7 @@ const RENTER_TILES: PromptTile[] = [
     hint: 'What broke, how fast it was fixed, what still isn\'t.',
     icon: Wrench,
     cover: 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=800&auto=format&fit=crop',
-    to: '/browse',
+    to: '/contribute?topic=maintenance',
   },
   {
     key: 'property-issues',
@@ -54,7 +54,7 @@ const RENTER_TILES: PromptTile[] = [
     hint: 'Common areas, elevators, hallways, parking — the stuff photos hide.',
     icon: Home,
     cover: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&auto=format&fit=crop',
-    to: '/browse',
+    to: '/contribute?topic=property-condition',
   },
   {
     key: 'vibe',
@@ -62,7 +62,7 @@ const RENTER_TILES: PromptTile[] = [
     hint: 'Walk score, coffee, transit, noise, safety at night.',
     icon: Trees,
     cover: 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=800&auto=format&fit=crop',
-    to: '/browse',
+    to: '/contribute?topic=local-vibe',
   },
   {
     key: 'application',
@@ -70,7 +70,7 @@ const RENTER_TILES: PromptTile[] = [
     hint: 'Screening, fees, timelines, and what nearly went wrong.',
     icon: ClipboardCheck,
     cover: 'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=800&auto=format&fit=crop',
-    to: '/browse',
+    to: '/contribute?topic=application',
   },
   {
     key: 'tour',
@@ -78,7 +78,7 @@ const RENTER_TILES: PromptTile[] = [
     hint: 'Unit + amenities + halls, unfiltered — the honest version of the leasing video.',
     icon: Video,
     cover: 'https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=800&auto=format&fit=crop',
-    to: '/browse',
+    to: '/contribute?topic=full-tour',
   },
 ];
 
