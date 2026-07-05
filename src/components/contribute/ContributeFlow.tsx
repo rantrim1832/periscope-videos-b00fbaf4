@@ -22,6 +22,7 @@ import { LIFE_STAGE_LABELS, type LifeStage } from '@/domain/property';
 import { CATEGORY_LABELS } from '@/domain/truthScore';
 import { submitContribution, createContributionUpload } from '@/services/contributionService';
 import { getContributionTopic } from '@/domain/contributionTopics';
+import { CONTRIBUTION_TOPICS } from '@/domain/contributionTopics';
 
 const TYPES: { key: ContributionType; icon: typeof Video; title: string; desc: string }[] = [
   { key: 'video', icon: Video, title: 'Video', desc: 'Record or upload a video of the property.' },
@@ -197,6 +198,8 @@ export const ContributeFlow = ({ propertyId, propertyName, topic }: { propertyId
               </div>
             </div>
 
+            <TopicPicker draft={draft} set={set} />
+
             <div>
               <Label htmlFor="title">Title *</Label>
               <Input id="title" className="mt-1.5"
@@ -332,6 +335,104 @@ const Stepper = ({ step }: { step: number }) => (
     ))}
   </div>
 );
+
+// Renter-facing topic chips. Users pick one primary topic (drives title
+// placeholder + life stage) and any number of secondary tags — categories
+// cross-cut, so a "noise" video can also be tagged "neighbors" and "walls".
+const TopicPicker = ({
+  draft, set,
+}: {
+  draft: ContributionDraft;
+  set: (patch: Partial<ContributionDraft>) => void;
+}) => {
+  const renterTopics = useMemo(
+    () => Object.values(CONTRIBUTION_TOPICS).filter((t) => t.audience === 'resident'),
+    [],
+  );
+  const managerTopics = useMemo(
+    () => Object.values(CONTRIBUTION_TOPICS).filter((t) => t.audience === 'manager'),
+    [],
+  );
+  const selectedTags = new Set(draft.tags ?? []);
+
+  const pickTopic = (key: string) => {
+    const topic = CONTRIBUTION_TOPICS[key];
+    if (!topic) return;
+    const nextTags = Array.from(new Set([...(draft.tags ?? []), ...topic.tags]));
+    set({ topic: key, tags: nextTags, lifeStage: topic.lifeStage });
+  };
+  const toggleTag = (tag: string) => {
+    const next = new Set(draft.tags ?? []);
+    if (next.has(tag)) next.delete(tag); else next.add(tag);
+    set({ tags: Array.from(next) });
+  };
+
+  const allTags = Array.from(
+    new Set(Object.values(CONTRIBUTION_TOPICS).flatMap((t) => t.tags)),
+  ).sort();
+
+  return (
+    <div className="pt-2 border-t space-y-4">
+      <div>
+        <Label className="mb-2 block">What's this about?</Label>
+        <p className="text-xs text-muted-foreground mb-2">Pick the closest topic — it sets the vibe and tags.</p>
+        <div className="flex flex-wrap gap-1.5">
+          {renterTopics.map((t) => (
+            <Button
+              key={t.key}
+              type="button"
+              size="sm"
+              variant={draft.topic === t.key ? 'default' : 'outline'}
+              className="h-7 text-xs"
+              onClick={() => pickTopic(t.key)}
+            >
+              {t.label}
+            </Button>
+          ))}
+        </div>
+        <details className="mt-2">
+          <summary className="text-xs text-muted-foreground cursor-pointer">Manager / official topics</summary>
+          <div className="flex flex-wrap gap-1.5 mt-2">
+            {managerTopics.map((t) => (
+              <Button
+                key={t.key}
+                type="button"
+                size="sm"
+                variant={draft.topic === t.key ? 'default' : 'outline'}
+                className="h-7 text-xs"
+                onClick={() => pickTopic(t.key)}
+              >
+                {t.label}
+              </Button>
+            ))}
+          </div>
+        </details>
+      </div>
+
+      <div>
+        <Label className="mb-2 block">Add tags <span className="text-muted-foreground font-normal">(optional)</span></Label>
+        <p className="text-xs text-muted-foreground mb-2">Topics overlap — tag anything else this video touches on.</p>
+        <div className="flex flex-wrap gap-1.5">
+          {allTags.map((tag) => (
+            <button
+              key={tag}
+              type="button"
+              onClick={() => toggleTag(tag)}
+              className={`text-xs px-2 py-1 rounded-full border transition-colors ${
+                selectedTags.has(tag)
+                  ? 'bg-primary text-primary-foreground border-primary'
+                  : 'bg-background border-border hover:border-primary'
+              }`}
+            >
+              #{tag}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 
 const ResultScreen = ({ result, propertyId, onShare }: { result: SubmissionResult; propertyId: string; onShare: () => void }) => {
   const map = {
