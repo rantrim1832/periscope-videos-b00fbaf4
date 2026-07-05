@@ -3,32 +3,28 @@ import { Header } from "@/components/Header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MapPin, ChevronRight, Search, Building2, Sparkles } from "lucide-react";
+import { MapPin, ChevronRight, Search, Building2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getPropertyProvider, type LocationCount } from "@/data/propertyProvider";
 import { getStoredLocalState } from "@/lib/localDiscovery";
 
-// Distinct duotone gradient per state so cards don't look like a spreadsheet.
-// Deterministic hash keeps the same state on the same tile every visit.
-const STATE_GRADIENTS: [string, string][] = [
-  ['from-sky-500/80', 'to-indigo-600/80'],
-  ['from-amber-500/80', 'to-rose-600/80'],
-  ['from-emerald-500/80', 'to-teal-600/80'],
-  ['from-fuchsia-500/80', 'to-purple-700/80'],
-  ['from-orange-500/80', 'to-red-600/80'],
-  ['from-cyan-500/80', 'to-blue-700/80'],
-  ['from-lime-500/80', 'to-emerald-700/80'],
-  ['from-pink-500/80', 'to-fuchsia-700/80'],
-  ['from-yellow-500/80', 'to-orange-600/80'],
-  ['from-violet-500/80', 'to-indigo-700/80'],
-  ['from-teal-500/80', 'to-cyan-700/80'],
-  ['from-rose-500/80', 'to-pink-700/80'],
-];
-const gradientFor = (key: string) => {
-  let h = 0;
-  for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0;
-  return STATE_GRADIENTS[h % STATE_GRADIENTS.length];
+// Full state names for a professional directory feel — abbreviations look
+// like a spreadsheet dump.
+const STATE_NAMES: Record<string, string> = {
+  AL: 'Alabama', AK: 'Alaska', AZ: 'Arizona', AR: 'Arkansas', CA: 'California',
+  CO: 'Colorado', CT: 'Connecticut', DE: 'Delaware', DC: 'District of Columbia',
+  FL: 'Florida', GA: 'Georgia', HI: 'Hawaii', ID: 'Idaho', IL: 'Illinois',
+  IN: 'Indiana', IA: 'Iowa', KS: 'Kansas', KY: 'Kentucky', LA: 'Louisiana',
+  ME: 'Maine', MD: 'Maryland', MA: 'Massachusetts', MI: 'Michigan',
+  MN: 'Minnesota', MS: 'Mississippi', MO: 'Missouri', MT: 'Montana',
+  NE: 'Nebraska', NV: 'Nevada', NH: 'New Hampshire', NJ: 'New Jersey',
+  NM: 'New Mexico', NY: 'New York', NC: 'North Carolina', ND: 'North Dakota',
+  OH: 'Ohio', OK: 'Oklahoma', OR: 'Oregon', PA: 'Pennsylvania',
+  RI: 'Rhode Island', SC: 'South Carolina', SD: 'South Dakota', TN: 'Tennessee',
+  TX: 'Texas', UT: 'Utah', VT: 'Vermont', VA: 'Virginia', WA: 'Washington',
+  WV: 'West Virginia', WI: 'Wisconsin', WY: 'Wyoming',
 };
+const stateName = (code: string) => STATE_NAMES[code?.toUpperCase()] ?? code;
 
 const Browse = () => {
   const navigate = useNavigate();
@@ -114,46 +110,41 @@ const Browse = () => {
               {localState && localStateRow && !searchQuery && (
                 <button
                   onClick={() => handleStateClick(localState)}
-                  className="w-full text-left group relative overflow-hidden rounded-2xl border border-primary/30 shadow-elevated"
+                  className="w-full text-left group relative overflow-hidden rounded-xl border border-primary/30 bg-primary/5 hover:bg-primary/10 hover:border-primary/50 transition-colors"
                 >
-                  <div className={`absolute inset-0 bg-gradient-to-br ${gradientFor(localState).join(' ')}`} />
-                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.25),transparent_60%)]" />
-                  <div className="relative p-6 md:p-8 flex items-center justify-between gap-6 text-white">
+                  <div className="p-5 md:p-6 flex items-center justify-between gap-4">
                     <div className="min-w-0">
-                      <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider bg-white/20 backdrop-blur px-2 py-1 rounded-full mb-2">
-                        <Sparkles className="h-3 w-3" /> Your area
+                      <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-primary mb-2">
+                        <MapPin className="h-3 w-3" /> Your state
                       </span>
-                      <h2 className="text-3xl md:text-5xl font-black tracking-tight leading-none">{localStateRow.state}</h2>
-                      <p className="text-white/85 text-sm md:text-base mt-2">
-                        {localStateRow.count.toLocaleString()} propert{localStateRow.count === 1 ? 'y' : 'ies'} in your state
+                      <h2 className="text-2xl md:text-3xl font-bold tracking-tight leading-tight text-foreground">
+                        {stateName(localStateRow.state!)}
+                      </h2>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {localStateRow.count.toLocaleString()} propert{localStateRow.count === 1 ? 'y' : 'ies'}
                       </p>
                     </div>
-                    <ChevronRight className="h-8 w-8 shrink-0 opacity-80 group-hover:translate-x-1 transition-transform" />
+                    <ChevronRight className="h-5 w-5 shrink-0 text-primary group-hover:translate-x-0.5 transition-transform" />
                   </div>
                 </button>
               )}
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                 {orderedStates.map((s) => {
-                  const [g1, g2] = gradientFor(s.state!);
                   const isLocal = s.state === localState;
                   return (
                     <button
                       key={s.state}
                       onClick={() => handleStateClick(s.state!)}
-                      className="group relative overflow-hidden rounded-xl aspect-[4/3] shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all"
+                      className={`group text-left rounded-lg border bg-card hover:border-primary/50 hover:shadow-card transition-all p-4 ${isLocal ? 'border-primary/40' : 'border-border/60'}`}
                     >
-                      <div className={`absolute inset-0 bg-gradient-to-br ${g1} ${g2}`} />
-                      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.25),transparent_55%)]" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
-                      {isLocal && (
-                        <span className="absolute top-2 right-2 text-[10px] font-semibold uppercase tracking-wider bg-white/25 backdrop-blur text-white px-1.5 py-0.5 rounded">You</span>
-                      )}
-                      <div className="absolute inset-0 p-4 flex flex-col justify-between text-white">
-                        <MapPin className="h-4 w-4 opacity-80" />
-                        <div>
-                          <h3 className="text-2xl md:text-3xl font-black tracking-tight leading-none">{s.state}</h3>
-                          <p className="text-xs text-white/85 mt-1">{s.count.toLocaleString()} propert{s.count === 1 ? 'y' : 'ies'}</p>
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <h3 className="font-semibold text-base leading-tight truncate">{stateName(s.state!)}</h3>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {s.count.toLocaleString()} propert{s.count === 1 ? 'y' : 'ies'}
+                          </p>
                         </div>
+                        <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
                       </div>
                     </button>
                   );
