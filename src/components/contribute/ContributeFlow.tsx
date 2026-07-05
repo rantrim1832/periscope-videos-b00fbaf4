@@ -345,10 +345,6 @@ const TopicPicker = ({
   draft: ContributionDraft;
   set: (patch: Partial<ContributionDraft>) => void;
 }) => {
-  const renterTopics = useMemo(
-    () => Object.values(CONTRIBUTION_TOPICS).filter((t) => t.audience === 'resident'),
-    [],
-  );
   const managerTopics = useMemo(
     () => Object.values(CONTRIBUTION_TOPICS).filter((t) => t.audience === 'manager'),
     [],
