@@ -45,7 +45,7 @@ export const PromptTileRail = ({ eyebrow, title, subtitle, tiles, seeAllHref, se
           </Link>
         )}
       </div>
-      <div className="flex gap-3 md:gap-4 overflow-x-auto pb-3 no-scrollbar -mx-4 px-4">
+      <div className="grid grid-flow-col auto-cols-[minmax(9.5rem,42vw)] sm:auto-cols-[11rem] md:auto-cols-[13rem] gap-3 md:gap-4 overflow-x-auto pb-3 no-scrollbar -mx-4 px-4">
         {tiles.map((tile) => (
           <PromptTileCard key={tile.key} tile={tile} />
         ))}
@@ -60,7 +60,7 @@ const PromptTileCard = ({ tile }: { tile: PromptTile }) => {
     <Link
       to={tile.to}
       className={
-        'group relative shrink-0 w-44 md:w-56 aspect-[3/4] rounded-xl overflow-hidden bg-muted shadow-card hover:shadow-card-hover hover:-translate-y-1 transition-all duration-300 ' +
+        'group relative min-w-0 aspect-[4/5] overflow-hidden rounded-lg border border-border/70 bg-card shadow-card transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/60 hover:shadow-card-hover ' +
         (tile.featured ? 'ring-2 ring-primary ring-offset-2 ring-offset-background' : '')
       }
     >
@@ -68,28 +68,27 @@ const PromptTileCard = ({ tile }: { tile: PromptTile }) => {
         src={tile.cover}
         alt=""
         loading="lazy"
-        className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.08]"
+        className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
       />
-      {/* Brand wash: keeps type legible and unifies stock photography */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/70 via-primary/30 to-secondary/60 mix-blend-multiply" />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-t from-foreground/95 via-foreground/35 to-transparent" />
+      <div className="absolute inset-0 bg-primary/15 mix-blend-multiply" />
 
       {(tile.featured || tile.badge) && (
-        <span className="absolute top-2 left-2 inline-flex items-center gap-1 rounded-full bg-background/95 text-foreground text-[10px] font-semibold uppercase tracking-wider px-2 py-1 backdrop-blur">
+        <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-background/95 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-foreground backdrop-blur">
           {tile.badge ?? 'Recommended'}
         </span>
       )}
 
-      <div className="absolute top-2 right-2 flex h-9 w-9 items-center justify-center rounded-full bg-background/90 text-primary backdrop-blur">
+      <div className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-background/90 text-primary backdrop-blur">
         <Icon className="w-4 h-4" />
       </div>
 
-      <div className="absolute bottom-0 inset-x-0 p-3">
-        <p className="text-white font-semibold text-sm md:text-base leading-tight line-clamp-2">
+      <div className="absolute inset-x-0 bottom-0 p-3">
+        <p className="line-clamp-2 text-sm font-semibold leading-tight text-background md:text-base">
           {tile.title}
         </p>
         {tile.hint && (
-          <p className="text-white/80 text-[11px] md:text-xs mt-1 line-clamp-2">{tile.hint}</p>
+          <p className="mt-1 line-clamp-2 text-[11px] text-background/80 md:text-xs">{tile.hint}</p>
         )}
       </div>
     </Link>
