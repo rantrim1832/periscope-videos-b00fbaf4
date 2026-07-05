@@ -1,4 +1,4 @@
-import { useMemo, useState, type FormEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 import { useParams, Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Header } from '@/components/Header';
@@ -17,12 +17,20 @@ const RENTER_TILES: PromptTile[] = [
   {
     key: 'video-review',
     title: 'Record a video review of your apartment',
-    hint: 'A 60-second walkthrough is worth a thousand words. Show what daily life is really like.',
+    hint: 'Great or bad — a 60-second walkthrough is worth a thousand words.',
     icon: Sparkles,
     cover: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&auto=format&fit=crop',
     to: '/contribute?topic=record-review',
     featured: true,
     badge: 'Start here',
+  },
+  {
+    key: 'loved-it',
+    title: 'Share what you love about living here',
+    hint: 'What would make you re-sign? The team, the layout, the neighbors, the price.',
+    icon: Sparkles,
+    cover: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&auto=format&fit=crop',
+    to: '/contribute?topic=loved-it',
   },
   {
     key: 'pricing',
@@ -99,7 +107,8 @@ const Contribute = () => {
   });
   const onSearch = (e: FormEvent) => { e.preventDefault(); setQuery(input.trim()); };
 
-  const tiles = useMemo(() => RENTER_TILES.map((t) => ({ ...t, to: `${t.to}${topicQS ? '' : ''}` })), [topicQS]);
+  // Tiles hardcode their own `?topic=...` so we just pass them through as-is.
+  const tiles = RENTER_TILES;
 
   const { data: property, isLoading } = useQuery({
     queryKey: ['contribute-property', propertyId],
