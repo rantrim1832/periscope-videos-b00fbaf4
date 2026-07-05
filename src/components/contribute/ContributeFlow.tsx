@@ -132,9 +132,34 @@ export const ContributeFlow = ({ propertyId, propertyName, topic }: { propertyId
         <Card>
           <CardHeader>
             <CardTitle>Review {propertyName}</CardTitle>
-            <CardDescription>Include details that help renters evaluate this property.</CardDescription>
+            <CardDescription>Video carries the most weight — but a written review with ratings still helps every future renter.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
+            <div>
+              <Label className="mb-2 block">Format</Label>
+              <div className="flex flex-wrap gap-2">
+                {TYPES.map((t) => {
+                  const Icon = t.icon;
+                  const active = draft.type === t.key;
+                  return (
+                    <Button
+                      key={t.key}
+                      type="button"
+                      size="sm"
+                      variant={active ? 'default' : 'outline'}
+                      onClick={() => set({ type: t.key })}
+                    >
+                      <Icon className="w-4 h-4 mr-1.5" /> {t.title}
+                      {t.key === 'video' && !active && <span className="ml-1.5 text-[10px] uppercase tracking-wider opacity-70">Recommended</span>}
+                    </Button>
+                  );
+                })}
+              </div>
+              {draft.type === 'text' && (
+                <p className="text-xs text-muted-foreground mt-2">Written reviews are welcome — a short video makes yours ~4× more useful, if you can.</p>
+              )}
+            </div>
+
             <div>
               <Label className="mb-2 block">Which part of living there?</Label>
               <div className="flex flex-wrap gap-2">
