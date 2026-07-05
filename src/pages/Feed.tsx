@@ -282,10 +282,10 @@ const LocalVideoStart = ({ locationLabel, category }: { locationLabel: string; c
           </div>
           <div className="flex flex-col sm:flex-row gap-2.5 mt-6">
             <Button variant="hero" size="lg" asChild>
-              <Link to="/contribute"><Video className="w-4 h-4" /> Record a video review</Link>
+              <Link to="/contribute?topic=record-review"><Video className="w-4 h-4" /> Upload a video review</Link>
             </Button>
             <Button variant="outline" size="lg" asChild>
-              <Link to="/browse"><Search className="w-4 h-4" /> Find your property</Link>
+              <Link to="/browse"><Search className="w-4 h-4" /> Browse properties</Link>
             </Button>
           </div>
         </CardContent>
