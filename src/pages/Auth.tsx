@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Video } from 'lucide-react';
 import { Session, User } from '@supabase/supabase-js';
 
@@ -17,6 +17,8 @@ const Auth = () => {
   const [user, setUser] = useState<User | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const returnTo = searchParams.get('returnTo');
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -43,12 +45,13 @@ const Auth = () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data, error } = await (supabase as any)
           .from('resident_profile').select('intent').eq('id', user.id).maybeSingle();
-        navigate(!error && data && !data.intent ? '/welcome' : '/');
+        const dest = returnTo && returnTo.startsWith('/') ? returnTo : (!error && data && !data.intent ? '/welcome' : '/');
+        navigate(dest);
       } catch {
-        navigate('/');
+        navigate(returnTo && returnTo.startsWith('/') ? returnTo : '/');
       }
     })();
-  }, [user, navigate]);
+  }, [user, navigate, returnTo]);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,7 +59,9 @@ const Auth = () => {
 
     try {
       if (isSignUp) {
-        const redirectUrl = `${window.location.origin}/`;
+        const redirectUrl = returnTo && returnTo.startsWith('/')
+          ? `${window.location.origin}${returnTo}`
+          : `${window.location.origin}/`;
         const { error } = await supabase.auth.signUp({
           email,
           password,

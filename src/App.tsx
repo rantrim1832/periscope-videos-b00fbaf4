@@ -77,8 +77,8 @@ const App = () => (
                 <Route path="/browse" element={<Browse />} />
                 <Route path="/property/:id" element={<Property />} />
                 <Route path="/compare" element={<Compare />} />
-                <Route path="/contribute" element={<Contribute />} />
-                <Route path="/contribute/:propertyId" element={<Contribute />} />
+                <Route path="/contribute" element={<ProtectedRoute><Contribute /></ProtectedRoute>} />
+                <Route path="/contribute/:propertyId" element={<ProtectedRoute><Contribute /></ProtectedRoute>} />
                 <Route path="/search" element={<Search />} />
                 <Route path="/feed" element={<Feed />} />
                 <Route path="/discover" element={<Discover />} />
