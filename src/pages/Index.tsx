@@ -160,15 +160,6 @@ const Index = () => {
           <StoriesRail localCity={localCity} onChange={setLocalCity} />
 
           <main className="container pt-6 pb-10 space-y-12 md:space-y-16">
-            {trending.length > 0 && <TrendingRail items={trending} />}
-            {localRow && <PosterRail title={`Near ${localCity?.label}`} subtitle="Official photos, tours, and resident posts near you." items={localRow.items} accent />}
-            {tourItems.length > 0 && <PosterRail title="Official tours and walkthroughs" subtitle="Verified property tours from official channels" items={tourItems} />}
-            {mosaic.length >= 6 && <PhotoMosaic items={mosaic} />}
-            {cityRows.slice(0, 3).map((row) => (
-              <PosterRail key={row.city} title={`Popular in ${row.city}`} items={row.items} />
-            ))}
-            {photoItems.length > 0 && <PosterRail title="Verified property photography" subtitle="Official and sourced imagery" items={photoItems} />}
-            <PropertyRail title="Properties without reviews" properties={needTruth} />
             <PromptTileRail
               eyebrow="Post your own"
               title={localCity ? `What renters in ${localCity.city} are sharing` : 'What renters are sharing'}
@@ -183,6 +174,15 @@ const Index = () => {
               subtitle="Noise, pests, parking, pets, packages, laundry, deposits — the stuff tours skip."
               tiles={HOME_RENTER_MORE_TILES}
             />
+            {trending.length > 0 && <TrendingRail items={trending} />}
+            {localRow && <PosterRail title={`Near ${localCity?.label}`} subtitle="Official photos, tours, and resident posts near you." items={localRow.items} accent />}
+            {tourItems.length > 0 && <PosterRail title="Official tours and walkthroughs" subtitle="Verified property tours from official channels" items={tourItems} />}
+            {mosaic.length >= 6 && <PhotoMosaic items={mosaic} />}
+            {cityRows.slice(0, 3).map((row) => (
+              <PosterRail key={row.city} title={`Popular in ${row.city}`} items={row.items} />
+            ))}
+            {photoItems.length > 0 && <PosterRail title="Verified property photography" subtitle="Official and sourced imagery" items={photoItems} />}
+            <PropertyRail title="Properties without reviews" properties={needTruth} />
             <InfiniteFeed items={feed} />
           </main>
         </>
