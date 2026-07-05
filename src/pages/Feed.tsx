@@ -1,16 +1,148 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, ShieldCheck, Building2, Share2, PenLine, Play, SlidersHorizontal, X } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { MapPin, ShieldCheck, Building2, Share2, PenLine, Play, SlidersHorizontal, X, Sparkles, DollarSign, MessageSquareWarning, Wrench, Home, Trees, ClipboardCheck, Video, PlusCircle, Bell, Search } from 'lucide-react';
 import { getPropertyProvider } from '@/data/propertyProvider';
 import { getVideoProvider } from '@/services/providers/video';
 import { VideoPlayer } from '@/components/property/VideoPlayer';
 import { FEED_CATEGORIES, type FeedItem } from '@/domain/property';
 import { useToast } from '@/hooks/use-toast';
-import { getStoredLocalCity, sortByLocalState, stateFromLocation } from '@/lib/localDiscovery';
+import { getStoredLocalCity, stateFromLocation } from '@/lib/localDiscovery';
+import { PromptTileRail, type PromptTile } from '@/components/PromptTileRail';
+
+const RENTER_VIDEO_TILES: PromptTile[] = [
+  {
+    key: 'record-review',
+    title: 'Record a video review of your apartment',
+    hint: 'Show the building, the unit, and what daily life is actually like.',
+    icon: Sparkles,
+    cover: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&auto=format&fit=crop',
+    to: '/contribute',
+    featured: true,
+    badge: 'Start here',
+  },
+  {
+    key: 'pricing',
+    title: 'Share pricing issues',
+    hint: 'Rent increases, fees, deposits, utilities, and move-out charges.',
+    icon: DollarSign,
+    cover: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=800&auto=format&fit=crop',
+    to: '/contribute',
+  },
+  {
+    key: 'management',
+    title: 'Share management issues',
+    hint: 'Responsiveness, communication, leasing promises, and follow-through.',
+    icon: MessageSquareWarning,
+    cover: 'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=800&auto=format&fit=crop',
+    to: '/contribute',
+  },
+  {
+    key: 'maintenance',
+    title: 'Show maintenance issues',
+    hint: 'What broke, how long repairs took, and what still needs attention.',
+    icon: Wrench,
+    cover: 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=800&auto=format&fit=crop',
+    to: '/contribute',
+  },
+  {
+    key: 'property-condition',
+    title: 'Show property issues',
+    hint: 'Hallways, elevators, parking, common areas, noise, and cleanliness.',
+    icon: Home,
+    cover: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&auto=format&fit=crop',
+    to: '/contribute',
+  },
+  {
+    key: 'local-vibe',
+    title: 'Capture the local vibe',
+    hint: 'Transit, traffic, groceries, restaurants, safety, and weekend life.',
+    icon: Trees,
+    cover: 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=800&auto=format&fit=crop',
+    to: '/contribute',
+  },
+  {
+    key: 'application',
+    title: 'Share the application process',
+    hint: 'Screening, fees, approval timing, deposits, and lease surprises.',
+    icon: ClipboardCheck,
+    cover: 'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=800&auto=format&fit=crop',
+    to: '/contribute',
+  },
+  {
+    key: 'full-tour',
+    title: 'Record a full property tour',
+    hint: 'Unit, amenities, parking, hallways, entry, and street frontage.',
+    icon: Video,
+    cover: 'https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=800&auto=format&fit=crop',
+    to: '/contribute',
+  },
+];
+
+const MANAGER_VIDEO_TILES: PromptTile[] = [
+  {
+    key: 'leasing-tour',
+    title: 'Record the leasing tour',
+    hint: 'The strongest first video: walk renters through the property like a live tour.',
+    icon: Sparkles,
+    cover: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&auto=format&fit=crop',
+    to: '/manager',
+    featured: true,
+    badge: 'Recommended',
+  },
+  {
+    key: 'claim',
+    title: 'Claim or create your property',
+    hint: 'Find the building, verify your role, or create a new property page.',
+    icon: PlusCircle,
+    cover: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&auto=format&fit=crop',
+    to: '/manager',
+  },
+  {
+    key: 'interiors',
+    title: 'Upload interior videos',
+    hint: 'Show real units, finishes, storage, windows, light, and layout flow.',
+    icon: Home,
+    cover: 'https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=800&auto=format&fit=crop',
+    to: '/manager',
+  },
+  {
+    key: 'amenities',
+    title: 'Upload amenity videos',
+    hint: 'Gym, pool, lounge, coworking, rooftop, pet areas, and parking.',
+    icon: Video,
+    cover: 'https://images.unsplash.com/photo-1540541338287-41700207dee6?w=800&auto=format&fit=crop',
+    to: '/manager',
+  },
+  {
+    key: 'area',
+    title: 'Upload the area vibe',
+    hint: 'The block, transit, restaurants, coffee, parks, and daily convenience.',
+    icon: Trees,
+    cover: 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=800&auto=format&fit=crop',
+    to: '/manager',
+  },
+  {
+    key: 'resident-story',
+    title: 'Ask renters to share their story',
+    hint: 'Invite residents to post authentic video reviews for your building.',
+    icon: MessageSquareWarning,
+    cover: 'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=800&auto=format&fit=crop',
+    to: '/manager',
+  },
+  {
+    key: 'alerts',
+    title: 'Turn on review alerts',
+    hint: 'Get notified when a new apartment video review is posted.',
+    icon: Bell,
+    cover: 'https://images.unsplash.com/photo-1519452575417-564c1401ecc0?w=800&auto=format&fit=crop',
+    to: '/manager',
+  },
+];
 
 const Feed = () => {
   const { data: items = [], isLoading } = useQuery({
@@ -22,33 +154,29 @@ const Feed = () => {
   const preferredLocation = stored ? `${stored.city}, ${stored.state}` : 'All';
   const [category, setCategory] = useState<string>('All');
   const [city, setCity] = useState<string>(preferredLocation);
-  // State chip narrows the feed to the viewer's home state by default, so a
-  // Southern California renter doesn't get a wall of Texas content.
   const [stateFilter, setStateFilter] = useState<string>(localState ?? 'All');
   const [filtersOpen, setFiltersOpen] = useState(false);
 
-  const statesList = [...new Set(items.map((i) => stateFromLocation(i.location)).filter(Boolean))] as string[];
-  // If the viewer's home state has no content yet, don't strand them on an
-  // empty feed — quietly widen to all states so they see something to watch.
-  const effectiveState = stateFilter === 'All' || statesList.includes(stateFilter) ? stateFilter : 'All';
-  const citiesForState = [...new Set(
+  const statesList = useMemo(() => [...new Set(items.map((i) => stateFromLocation(i.location)).filter(Boolean))] as string[], [items]);
+  const citiesForState = useMemo(() => [...new Set(
     items
-      .filter((i) => effectiveState === 'All' || stateFromLocation(i.location) === effectiveState)
+      .filter((i) => stateFilter === 'All' || stateFromLocation(i.location) === stateFilter)
       .map((i) => i.location)
       .filter(Boolean),
-  )].slice(0, 24);
-  const effectiveCity = city === 'All' || citiesForState.includes(city) ? city : 'All';
+  )].slice(0, 24), [items, stateFilter]);
+  const cityOptions = city !== 'All' && !citiesForState.includes(city) ? [city, ...citiesForState] : citiesForState;
   const filteredRaw = items.filter((i) =>
     (category === 'All' || i.category === category) &&
-    (effectiveState === 'All' || stateFromLocation(i.location) === effectiveState) &&
-    (effectiveCity === 'All' || i.location === effectiveCity),
+    (stateFilter === 'All' || stateFromLocation(i.location) === stateFilter) &&
+    (city === 'All' || i.location === city),
   );
-  // When "All states" is picked but the viewer has a home state, still float
-  // local content to the top instead of shuffling in far-away metros first.
-  const filtered = effectiveState === 'All'
-    ? sortByLocalState(filteredRaw, (i) => i.location, localState)
-    : filteredRaw;
-  const activeCount = (category !== 'All' ? 1 : 0) + (effectiveCity !== 'All' ? 1 : 0) + (effectiveState !== 'All' && effectiveState !== (localState ?? 'All') ? 1 : 0);
+  const filtered = filteredRaw;
+  const activeCount = (category !== 'All' ? 1 : 0) + (city !== 'All' ? 1 : 0) + (stateFilter !== 'All' && stateFilter !== (localState ?? 'All') ? 1 : 0);
+  const resetToLocal = () => {
+    setCategory('All');
+    setStateFilter(localState ?? 'All');
+    setCity(stored ? preferredLocation : 'All');
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -68,12 +196,12 @@ const Feed = () => {
           <div className="flex-1 flex gap-1.5 overflow-x-auto no-scrollbar text-xs text-muted-foreground items-center min-w-0">
             <span className="truncate">
               {category === 'All' ? 'All stories' : category}
-              {effectiveState !== 'All' ? ` · ${effectiveState}` : ''}
-              {effectiveCity !== 'All' ? ` · ${effectiveCity}` : ''}
+              {stateFilter !== 'All' ? ` · ${stateFilter}` : ''}
+              {city !== 'All' ? ` · ${city}` : ''}
             </span>
           </div>
           {activeCount > 0 && (
-            <Button size="sm" variant="ghost" className="shrink-0 h-8 px-2" onClick={() => { setCategory('All'); setCity('All'); setStateFilter(localState ?? 'All'); }}>
+            <Button size="sm" variant="ghost" className="shrink-0 h-8 px-2" onClick={resetToLocal}>
               <X className="w-3.5 h-3.5" /> Clear
             </Button>
           )}
@@ -94,7 +222,7 @@ const Feed = () => {
               <p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground mb-1.5">State</p>
               <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
                 {['All', ...statesList].map((s) => (
-                  <Button key={s} size="sm" variant={effectiveState === s ? 'default' : 'outline'} className="whitespace-nowrap h-8" onClick={() => { setStateFilter(s); setCity('All'); }}>
+                  <Button key={s} size="sm" variant={stateFilter === s ? 'default' : 'outline'} className="whitespace-nowrap h-8" onClick={() => { setStateFilter(s); setCity('All'); }}>
                     {s === 'All' ? 'All states' : s}
                   </Button>
                 ))}
@@ -103,8 +231,8 @@ const Feed = () => {
             <div>
               <p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground mb-1.5">City</p>
               <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
-                {['All', ...citiesForState].map((c) => (
-                  <Button key={c} size="sm" variant={effectiveCity === c ? 'default' : 'outline'} className="whitespace-nowrap h-8" onClick={() => setCity(c)}>
+                {['All', ...cityOptions].map((c) => (
+                  <Button key={c} size="sm" variant={city === c ? 'default' : 'outline'} className="whitespace-nowrap h-8" onClick={() => setCity(c)}>
                     {c === 'All' ? 'All cities' : c}
                   </Button>
                 ))}
@@ -117,10 +245,10 @@ const Feed = () => {
       {isLoading ? (
         <p className="text-center text-muted-foreground py-20">Loading feed…</p>
       ) : filtered.length === 0 ? (
-        <div className="text-center py-20">
-          <p className="text-muted-foreground mb-4">No {category === 'All' ? '' : `“${category}” `}content yet.</p>
-          <Button variant="hero" asChild><Link to="/contribute">Add a review</Link></Button>
-        </div>
+        <LocalVideoStart
+          locationLabel={city !== 'All' ? city : stateFilter !== 'All' ? stateFilter : 'your area'}
+          category={category}
+        />
       ) : (
         <div className="h-[calc(100dvh-8rem)] md:h-[calc(100dvh-9rem)] overflow-y-auto snap-y snap-mandatory">
           {filtered.map((item) => <FeedCard key={item.id} item={item} />)}
@@ -129,6 +257,69 @@ const Feed = () => {
     </div>
   );
 };
+
+const LocalVideoStart = ({ locationLabel, category }: { locationLabel: string; category: string }) => (
+  <main className="container px-4 py-6 md:py-8 pb-24 space-y-8 md:space-y-10">
+    <section className="grid gap-4 md:grid-cols-[1.15fr_0.85fr] md:items-stretch">
+      <Card className="overflow-hidden border-primary/20 bg-gradient-to-br from-primary/[0.08] via-background to-secondary/[0.08]">
+        <CardContent className="p-5 md:p-7 flex flex-col justify-between min-h-[280px]">
+          <div>
+            <Badge variant="secondary" className="mb-3">{locationLabel}</Badge>
+            <h1 className="text-3xl md:text-5xl font-black leading-tight tracking-tight text-balance">
+              Bring Apartment Reviews to Life in {locationLabel}.
+            </h1>
+            <p className="text-muted-foreground mt-3 md:text-lg max-w-2xl">
+              Be the first to post the kind of apartment video renters actually want before they tour: pricing, maintenance, management, property condition, and neighborhood feel.
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-2.5 mt-6">
+            <Button variant="hero" size="lg" asChild>
+              <Link to="/contribute"><Video className="w-4 h-4" /> Record a video review</Link>
+            </Button>
+            <Button variant="outline" size="lg" asChild>
+              <Link to="/browse"><Search className="w-4 h-4" /> Find your property</Link>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="border-border/60">
+        <CardContent className="p-5 md:p-6 h-full flex flex-col justify-between gap-6">
+          <div>
+            <Badge variant="outline" className="mb-3">Property managers</Badge>
+            <h2 className="text-2xl font-bold leading-tight">Claim your property and record the leasing tour.</h2>
+            <p className="text-sm text-muted-foreground mt-2">
+              Add official videos, upload interiors and amenities, show the area, invite renters to share their story, and turn on alerts for new apartment video reviews.
+            </p>
+          </div>
+          <Button variant="secondary" className="w-full" asChild>
+            <Link to="/manager"><Building2 className="w-4 h-4" /> Claim or create property</Link>
+          </Button>
+        </CardContent>
+      </Card>
+    </section>
+
+    {category !== 'All' && (
+      <p className="text-sm text-muted-foreground">
+        Showing ideas for “{category}” because this location does not have that video category yet.
+      </p>
+    )}
+
+    <PromptTileRail
+      eyebrow="For renters"
+      title="Record the review you wish you had before signing"
+      subtitle="Pick one angle and keep it real — video helps the next renter understand the building fast."
+      tiles={RENTER_VIDEO_TILES}
+    />
+
+    <PromptTileRail
+      eyebrow="For apartment staff"
+      title="What to add after claiming your property"
+      subtitle="Start with the leasing tour, then add interiors, amenities, neighborhood clips, resident invitations, and alerts."
+      tiles={MANAGER_VIDEO_TILES}
+    />
+  </main>
+);
 
 const FeedCard = ({ item }: { item: FeedItem }) => {
   const { toast } = useToast();
