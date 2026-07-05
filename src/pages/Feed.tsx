@@ -18,12 +18,20 @@ const RENTER_VIDEO_TILES: PromptTile[] = [
   {
     key: 'record-review',
     title: 'Record a video review of your apartment',
-    hint: 'Show the building, the unit, and what daily life is actually like.',
+    hint: 'Great or bad — show the building, the unit, and what daily life is really like.',
     icon: Sparkles,
     cover: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&auto=format&fit=crop',
     to: '/contribute?topic=record-review',
     featured: true,
     badge: 'Start here',
+  },
+  {
+    key: 'loved-it',
+    title: 'Share what you love about living here',
+    hint: 'Rent, team, neighbors, layout — what would make you re-sign?',
+    icon: Sparkles,
+    cover: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&auto=format&fit=crop',
+    to: '/contribute?topic=loved-it',
   },
   {
     key: 'pricing',
