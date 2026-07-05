@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { RefreshCw, Plug, CheckCircle, XCircle, ExternalLink } from 'lucide-react';
+import { RefreshCw, Plug, CheckCircle, XCircle, ExternalLink, Bell, BellOff } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
 import { useIsManager } from '@/hooks/useIsManager';
 import { getPropertyProvider } from '@/data/propertyProvider';
 import {
@@ -15,6 +16,7 @@ import {
   type ConnectedSource, type SyncedContentItem,
 } from '@/services/sourceSyncService';
 import type { SourceKind } from '@/services/providers/socialSource';
+import { isWatching, toggleWatch } from '@/services/watchService';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -30,15 +32,36 @@ const ManageProperty = () => {
   const [kind, setKind] = useState<SourceKind>('instagram');
   const [handle, setHandle] = useState('');
   const [busy, setBusy] = useState(false);
+  const [alertsOn, setAlertsOn] = useState(false);
+  const [alertsBusy, setAlertsBusy] = useState(false);
 
   const { data: property } = useQuery({ queryKey: ['manage-prop', propertyId], queryFn: () => getPropertyProvider().getProperty(propertyId) });
 
   const refresh = useCallback(async () => {
     setSources(await listConnectedSources(propertyId));
     setQueue(await listQueue(propertyId, 'pending'));
+    setAlertsOn(await isWatching('property', propertyId));
   }, [propertyId]);
 
   useEffect(() => { if (isManager) refresh(); }, [isManager, refresh]);
+
+  const onToggleAlerts = async (next: boolean) => {
+    setAlertsBusy(true);
+    try {
+      await toggleWatch('property', propertyId, property?.name ?? 'Property', next);
+      setAlertsOn(next);
+      toast({
+        title: next ? 'Alerts on' : 'Alerts off',
+        description: next
+          ? "You'll be notified whenever a new resident review is posted."
+          : "You'll no longer be notified about new reviews on this property.",
+      });
+    } catch (e) {
+      toast({ title: 'Could not update alerts', description: (e as Error).message, variant: 'destructive' });
+    } finally {
+      setAlertsBusy(false);
+    }
+  };
 
   const onConnect = async () => {
     if (!handle.trim()) return;
@@ -82,6 +105,31 @@ const ManageProperty = () => {
           <h1 className="text-3xl font-bold">Manage official content</h1>
           <p className="text-muted-foreground">{property?.name} — connect your channels; approved content publishes as <Badge variant="success">Official · Verified</Badge>. Resident reviews remain independent.</p>
         </div>
+
+        {/* New-review alerts */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              {alertsOn ? <Bell className="w-5 h-5 text-primary" /> : <BellOff className="w-5 h-5 text-muted-foreground" />}
+              New review alerts
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex items-start justify-between gap-4">
+            <div className="text-sm text-muted-foreground max-w-lg">
+              Get notified the moment a resident posts a new video review or written review on this property.
+              Alerts show up in your <Link to="/notifications" className="text-primary hover:underline">Notifications</Link>.
+            </div>
+            <div className="flex items-center gap-3 shrink-0">
+              <Badge variant={alertsOn ? 'success' : 'outline'}>{alertsOn ? 'On' : 'Off'}</Badge>
+              <Switch
+                checked={alertsOn}
+                onCheckedChange={onToggleAlerts}
+                disabled={alertsBusy}
+                aria-label="Toggle new review alerts"
+              />
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Connect */}
         <Card>
