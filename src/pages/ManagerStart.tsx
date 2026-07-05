@@ -7,11 +7,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { getPropertyProvider } from '@/data/propertyProvider';
-import { Building2, Search, PlusCircle, Video, Users, ShieldCheck } from 'lucide-react';
+import { Building2, Search, PlusCircle, Video, Users, ShieldCheck, Bell } from 'lucide-react';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 const ManagerStart = () => {
-  useDocumentTitle('Manager start — claim or add your property', 'Find, claim, or add a property page and connect official videos/social content.');
+  useDocumentTitle('For property managers — claim your page and get discovered', 'Claim your property page, add official videos and content, and get alerts on new resident video reviews.');
   const navigate = useNavigate();
   const [input, setInput] = useState('');
   const [query, setQuery] = useState('');
@@ -33,10 +33,10 @@ const ManagerStart = () => {
       <main className="container mx-auto px-4 py-10 max-w-5xl space-y-8">
         <section className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr] items-center">
           <div className="space-y-4">
-            <Badge variant="secondary" className="w-fit">Property staff onboarding</Badge>
-            <h1 className="text-4xl md:text-5xl font-bold leading-tight">Find your property page. Claim it. Make it look alive.</h1>
+            <Badge variant="secondary" className="w-fit">For property managers</Badge>
+            <h1 className="text-4xl md:text-5xl font-bold leading-tight">Claim your page. Add your videos. Get alerted on every new review.</h1>
             <p className="text-lg text-muted-foreground">
-              Connect existing videos, social posts, tours, and official sources. Resident reviews stays independent, but your official story should not be empty.
+              Renters are watching apartment video reviews before they tour. Claim your building, add official videos and tours, and turn on alerts so you never miss a resident review.
             </p>
             <form onSubmit={search} className="flex gap-3">
               <div className="relative flex-1">
@@ -54,9 +54,10 @@ const ManagerStart = () => {
           <Card className="bg-gradient-to-br from-primary/10 to-secondary/10 border-primary/20">
             <CardHeader><CardTitle>What claiming unlocks</CardTitle></CardHeader>
             <CardContent className="space-y-4 text-sm">
-              <div className="flex gap-3"><Video className="w-5 h-5 text-primary shrink-0" /><span>Connect Instagram, TikTok, YouTube, website, Matterport, and existing tour content.</span></div>
+              <div className="flex gap-3"><Video className="w-5 h-5 text-primary shrink-0" /><span>Add your official videos, tours, Instagram, TikTok, YouTube, and Matterport to get discovered.</span></div>
+              <div className="flex gap-3"><Bell className="w-5 h-5 text-primary shrink-0" /><span>Get alerts the moment a new resident review is posted — respond quickly with context.</span></div>
               <div className="flex gap-3"><Users className="w-5 h-5 text-primary shrink-0" /><span>Invite residents to post video reviews through a property-specific share link.</span></div>
-              <div className="flex gap-3"><ShieldCheck className="w-5 h-5 text-primary shrink-0" /><span>Respond and add context without controlling or suppressing resident reviews.</span></div>
+              <div className="flex gap-3"><ShieldCheck className="w-5 h-5 text-primary shrink-0" /><span>Keep your page accurate — reviews stay independent, but your official story is yours.</span></div>
             </CardContent>
           </Card>
         </section>
