@@ -130,37 +130,63 @@ export const ContributeFlow = ({ propertyId, propertyName, topic }: { propertyId
 
       {step === 2 && (
         <Card>
-          <CardHeader>
-            <CardTitle>Review {propertyName}</CardTitle>
-            <CardDescription>Video carries the most weight — but a written review with ratings still helps every future renter.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-5">
-            <div>
-              <Label className="mb-2 block">Format</Label>
-              <div className="flex flex-wrap gap-2">
-                {TYPES.map((t) => {
-                  const Icon = t.icon;
-                  const active = draft.type === t.key;
-                  return (
-                    <Button
-                      key={t.key}
-                      type="button"
-                      size="sm"
-                      variant={active ? 'default' : 'outline'}
-                      onClick={() => set({ type: t.key })}
-                    >
-                      <Icon className="w-4 h-4 mr-1.5" /> {t.title}
-                      {t.key === 'video' && !active && <span className="ml-1.5 text-[10px] uppercase tracking-wider opacity-70">Recommended</span>}
-                    </Button>
-                  );
-                })}
+          <CardContent className="space-y-5 pt-6">
+            {/* HERO: the actual upload action comes first so the page reads as "upload your video". */}
+            {(draft.type === 'video' || draft.type === 'photo') && (
+              <div className="border-2 border-dashed border-primary/40 rounded-xl p-8 md:p-10 text-center bg-primary/[0.04]">
+                <div className="w-14 h-14 mx-auto rounded-full bg-primary/10 flex items-center justify-center mb-3">
+                  <Upload className="w-7 h-7 text-primary" />
+                </div>
+                <p className="text-base md:text-lg font-semibold">
+                  {draft.type === 'video' ? 'Upload your video' : 'Upload your photo'}
+                </p>
+                <p className="text-xs md:text-sm text-muted-foreground mt-1">
+                  Under 3 min works best. Processed securely — your address is never shown.
+                </p>
+                <Button variant="hero" size="lg" className="mt-4" onClick={async () => {
+                  const up = await createContributionUpload();
+                  set({ mediaAssetId: up.assetId });
+                  toast({ title: 'Upload ready', description: `Provider: ${up.provider}` });
+                }}>
+                  <Upload className="w-4 h-4" /> Choose file
+                </Button>
+                {draft.mediaAssetId && (
+                  <p className="text-xs text-success mt-3 font-medium">✓ Video attached</p>
+                )}
               </div>
-              {draft.type === 'text' && (
-                <p className="text-xs text-muted-foreground mt-2">Written reviews are welcome — a short video makes yours ~4× more useful, if you can.</p>
-              )}
+            )}
+
+            {draft.type === 'import' && (
+              <div className="rounded-xl border border-primary/40 bg-primary/[0.04] p-6 space-y-2">
+                <Label htmlFor="import-url" className="text-base font-semibold">Paste your public video link</Label>
+                <p className="text-xs text-muted-foreground -mt-1">YouTube, TikTok, or Instagram — we'll embed it with attribution.</p>
+                <Input
+                  id="import-url"
+                  className="mt-2 h-11"
+                  placeholder="https://www.tiktok.com/@you/video/…"
+                  value={draft.importUrl ?? ''}
+                  onChange={(e) => set({ importUrl: e.target.value })}
+                />
+                {draft.importUrl && (
+                  parseEmbed(draft.importUrl)
+                    ? <p className="text-xs text-success">{parseEmbed(draft.importUrl)!.platform} video detected.</p>
+                    : <p className="text-xs text-destructive">Unrecognized link. Supported: YouTube, TikTok, Instagram.</p>
+                )}
+              </div>
+            )}
+
+            {/* Format switcher — small, secondary, below the primary action */}
+            <div className="flex flex-wrap items-center gap-2 text-xs">
+              <span className="text-muted-foreground">Not filming?</span>
+              {TYPES.filter((t) => t.key !== draft.type).map((t) => (
+                <Button key={t.key} type="button" size="sm" variant="ghost" className="h-7 px-2 text-xs"
+                  onClick={() => set({ type: t.key })}>
+                  <t.icon className="w-3.5 h-3.5 mr-1" /> {t.key === 'text' ? 'Write it instead' : t.key === 'import' ? 'Import a link' : t.key === 'photo' ? 'Upload a photo' : 'Record video'}
+                </Button>
+              ))}
             </div>
 
-            <div>
+            <div className="pt-2 border-t">
               <Label className="mb-2 block">Which part of living there?</Label>
               <div className="flex flex-wrap gap-2">
                 {STAGES.map((s) => (
@@ -171,40 +197,6 @@ export const ContributeFlow = ({ propertyId, propertyName, topic }: { propertyId
               </div>
             </div>
 
-            {draft.type === 'import' && (
-              <div className="space-y-2">
-                <Label htmlFor="import-url">Link to your public video</Label>
-                <Input
-                  id="import-url"
-                  className="mt-1"
-                  placeholder="https://www.tiktok.com/@you/video/… or a YouTube/Instagram link"
-                  value={draft.importUrl ?? ''}
-                  onChange={(e) => set({ importUrl: e.target.value })}
-                />
-                {draft.importUrl && (
-                  parseEmbed(draft.importUrl)
-                    ? <p className="text-xs text-success">{parseEmbed(draft.importUrl)!.platform} video detected — will be embedded with attribution (not re-hosted).</p>
-                    : <p className="text-xs text-destructive">Unrecognized link. Supported: YouTube, TikTok, Instagram.</p>
-                )}
-              </div>
-            )}
-
-            {(draft.type === 'video' || draft.type === 'photo') && (
-              <div className="border-2 border-dashed border-border rounded-lg p-8 text-center bg-muted/20">
-                <Upload className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
-                <p className="text-sm font-medium">Upload your {draft.type}</p>
-                <p className="text-xs text-muted-foreground mt-1">Processed securely; your address is never shown.</p>
-                <Button variant="outline" size="sm" className="mt-3" onClick={async () => {
-                  const up = await createContributionUpload();
-                  set({ mediaAssetId: up.assetId });
-                  toast({ title: 'Upload ready', description: `Provider: ${up.provider}` });
-                }}>
-                  Choose file
-                </Button>
-                {draft.mediaAssetId && <p className="text-xs text-success mt-2">Media attached</p>}
-              </div>
-            )}
-
             <div>
               <Label htmlFor="title">Title *</Label>
               <Input id="title" className="mt-1.5"
@@ -213,8 +205,11 @@ export const ContributeFlow = ({ propertyId, propertyName, topic }: { propertyId
             </div>
 
             <div>
-              <Label htmlFor="body">Details</Label>
-              <Textarea id="body" className="mt-1.5 min-h-[100px]" placeholder="Describe conditions, management, charges, or other relevant details."
+              <Label htmlFor="body">{draft.type === 'text' ? 'Your review *' : 'Details (optional)'}</Label>
+              <Textarea id="body" className="mt-1.5 min-h-[100px]"
+                placeholder={draft.type === 'text'
+                  ? 'Share what living here was actually like — the good and the bad.'
+                  : 'Add anything the video doesn\'t already show.'}
                 value={draft.body} onChange={(e) => set({ body: e.target.value })} />
             </div>
 
