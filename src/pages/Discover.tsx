@@ -54,7 +54,7 @@ const Discover = () => {
     return rows.slice(0, 25);
   }, [properties, metric, order, state]);
 
-  const metricLabel = metric === 'overall' ? 'Truth Score' : CATEGORY_LABELS[metric];
+  const metricLabel = metric === 'overall' ? 'Overall rating' : CATEGORY_LABELS[metric];
   const contentRich = useMemo(() => {
     return properties
       .filter((p) => state === 'all' || p.state === state)
@@ -79,13 +79,13 @@ const Discover = () => {
             if (res === 'copied') toast({ title: 'Link copied' });
           }}><Share2 className="w-4 h-4 mr-2" /> Share</Button>
         </div>
-        <p className="text-muted-foreground mb-6">Ranked by verified review score.</p>
+        <p className="text-muted-foreground mb-6">Ranked by verified resident reviews.</p>
 
         <div className="flex flex-wrap gap-2 mb-6">
           <Select value={metric} onValueChange={(v) => setMetric(v as Metric)}>
             <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="overall">Overall Truth Score</SelectItem>
+              <SelectItem value="overall">Overall rating</SelectItem>
               {CATEGORY_ORDER.map((c) => <SelectItem key={c} value={c}>{CATEGORY_LABELS[c]}</SelectItem>)}
             </SelectContent>
           </Select>
@@ -131,7 +131,7 @@ const Discover = () => {
           ) : (
             <Card className="p-10 text-center bg-muted/30 border-dashed">
               <MapPin className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
-              <p className="text-muted-foreground">Not enough scored or seeded properties yet for this ranking.</p>
+              <p className="text-muted-foreground">Not enough reviews here yet to rank.</p>
             </Card>
           )
         ) : (
