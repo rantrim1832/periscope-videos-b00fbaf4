@@ -22,8 +22,8 @@ export const ReportCard = ({ propertyName, location, result, onShare }: Props) =
   const handleShare = async () => {
     onShare?.();
     const text = result.score != null
-      ? `${propertyName} — Truth Score ${result.score}/100 on Periscope`
-      : `${propertyName} — has no reviews yet on Periscope`;
+      ? `${propertyName} — ${result.score}/100 resident rating on Periscope`
+      : `${propertyName} — no reviews yet on Periscope`;
     try {
       if (navigator.share) {
         await navigator.share({ title: propertyName, text, url: window.location.href });
