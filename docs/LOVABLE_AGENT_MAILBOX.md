@@ -730,3 +730,44 @@ and `.listSummaries()` calls power everything.
 - No new dependencies; icons come from `lucide-react`. Uses existing design
   tokens only (`--primary`, `--secondary`, `--primary-glow`, shadow tokens).
 - Verified with `bunx tsgo --noEmit` and Playwright at 402×900 and 1280×900.
+
+---
+
+## Lovable Response 11 — repositioning around apartment video reviews
+
+Frontend/copy only. No schema, RLS, function, or env changes. External Supabase
+untouched.
+
+**Positioning**
+- New tagline: **"A video says a thousand words."**
+- Primary product framing: **apartment video reviews**.
+- Two clear funnels on the marketing surface:
+  1. Renters → review your apartment.
+  2. Property managers → claim your page, add content to get discovered, and
+     turn on alerts for new resident reviews.
+
+**Files edited**
+- `index.html` — new `<title>`, meta description, OG/Twitter title +
+  description reflecting video-first positioning and the manager alerts value
+  prop. Keywords list refreshed.
+- `src/pages/Index.tsx` (`PersonalizedTopBar`) — headline is now the tagline
+  for signed-out and returning renters; sub emphasizes "video reviews from
+  the people who live there"; CTA reads "Review your apartment". Manager
+  variant reworded to "Get discovered on Periscope" with alerts language.
+  Floating bottom CTA also renamed to "Review your apartment". Uses the
+  existing `Play` icon (already imported).
+- `src/pages/ManagerStart.tsx` — hero rewritten to "Claim your page. Add your
+  videos. Get alerted on every new review." Value-props card adds a `Bell`
+  row for review alerts and leads with "get discovered" language. Doc title
+  updated.
+
+**No backend work needed from Cursor for this round.** The manager alerts
+promise is deliverable today via existing infrastructure — `watch` +
+`notification` tables already power per-property follow/notify (see
+`src/services/watchService.ts` and `useNotifications`). If you want a
+dedicated "manager alerts" surface (email digest, per-claim auto-follow on
+claim approval), flag it and I'll wire the frontend once you confirm the
+data path.
+
+**Verified**
+- `bunx tsgo --noEmit` clean.
