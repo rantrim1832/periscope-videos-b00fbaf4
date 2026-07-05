@@ -21,7 +21,7 @@ const RENTER_VIDEO_TILES: PromptTile[] = [
     hint: 'Show the building, the unit, and what daily life is actually like.',
     icon: Sparkles,
     cover: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&auto=format&fit=crop',
-    to: '/contribute',
+    to: '/contribute?topic=record-review',
     featured: true,
     badge: 'Start here',
   },
@@ -31,7 +31,7 @@ const RENTER_VIDEO_TILES: PromptTile[] = [
     hint: 'Rent increases, fees, deposits, utilities, and move-out charges.',
     icon: DollarSign,
     cover: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=800&auto=format&fit=crop',
-    to: '/contribute',
+    to: '/contribute?topic=pricing',
   },
   {
     key: 'management',
@@ -39,7 +39,7 @@ const RENTER_VIDEO_TILES: PromptTile[] = [
     hint: 'Responsiveness, communication, leasing promises, and follow-through.',
     icon: MessageSquareWarning,
     cover: 'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=800&auto=format&fit=crop',
-    to: '/contribute',
+    to: '/contribute?topic=management',
   },
   {
     key: 'maintenance',
@@ -47,7 +47,7 @@ const RENTER_VIDEO_TILES: PromptTile[] = [
     hint: 'What broke, how long repairs took, and what still needs attention.',
     icon: Wrench,
     cover: 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=800&auto=format&fit=crop',
-    to: '/contribute',
+    to: '/contribute?topic=maintenance',
   },
   {
     key: 'property-condition',
@@ -55,7 +55,7 @@ const RENTER_VIDEO_TILES: PromptTile[] = [
     hint: 'Hallways, elevators, parking, common areas, noise, and cleanliness.',
     icon: Home,
     cover: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&auto=format&fit=crop',
-    to: '/contribute',
+    to: '/contribute?topic=property-condition',
   },
   {
     key: 'local-vibe',
@@ -63,7 +63,7 @@ const RENTER_VIDEO_TILES: PromptTile[] = [
     hint: 'Transit, traffic, groceries, restaurants, safety, and weekend life.',
     icon: Trees,
     cover: 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=800&auto=format&fit=crop',
-    to: '/contribute',
+    to: '/contribute?topic=local-vibe',
   },
   {
     key: 'application',
@@ -71,7 +71,7 @@ const RENTER_VIDEO_TILES: PromptTile[] = [
     hint: 'Screening, fees, approval timing, deposits, and lease surprises.',
     icon: ClipboardCheck,
     cover: 'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=800&auto=format&fit=crop',
-    to: '/contribute',
+    to: '/contribute?topic=application',
   },
   {
     key: 'full-tour',
@@ -79,7 +79,7 @@ const RENTER_VIDEO_TILES: PromptTile[] = [
     hint: 'Unit, amenities, parking, hallways, entry, and street frontage.',
     icon: Video,
     cover: 'https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=800&auto=format&fit=crop',
-    to: '/contribute',
+    to: '/contribute?topic=full-tour',
   },
 ];
 
@@ -90,7 +90,7 @@ const MANAGER_VIDEO_TILES: PromptTile[] = [
     hint: 'The strongest first video: walk renters through the property like a live tour.',
     icon: Sparkles,
     cover: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&auto=format&fit=crop',
-    to: '/manager',
+    to: '/manager?topic=leasing-tour',
     featured: true,
     badge: 'Recommended',
   },
@@ -108,7 +108,7 @@ const MANAGER_VIDEO_TILES: PromptTile[] = [
     hint: 'Show real units, finishes, storage, windows, light, and layout flow.',
     icon: Home,
     cover: 'https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=800&auto=format&fit=crop',
-    to: '/manager',
+    to: '/manager?topic=interiors',
   },
   {
     key: 'amenities',
@@ -116,7 +116,7 @@ const MANAGER_VIDEO_TILES: PromptTile[] = [
     hint: 'Gym, pool, lounge, coworking, rooftop, pet areas, and parking.',
     icon: Video,
     cover: 'https://images.unsplash.com/photo-1540541338287-41700207dee6?w=800&auto=format&fit=crop',
-    to: '/manager',
+    to: '/manager?topic=amenities',
   },
   {
     key: 'area',
@@ -124,7 +124,7 @@ const MANAGER_VIDEO_TILES: PromptTile[] = [
     hint: 'The block, transit, restaurants, coffee, parks, and daily convenience.',
     icon: Trees,
     cover: 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=800&auto=format&fit=crop',
-    to: '/manager',
+    to: '/manager?topic=area',
   },
   {
     key: 'resident-story',

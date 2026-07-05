@@ -21,6 +21,7 @@ import {
 import { LIFE_STAGE_LABELS, type LifeStage } from '@/domain/property';
 import { CATEGORY_LABELS } from '@/domain/truthScore';
 import { submitContribution, createContributionUpload } from '@/services/contributionService';
+import { getContributionTopic } from '@/domain/contributionTopics';
 
 const TYPES: { key: ContributionType; icon: typeof Video; title: string; desc: string }[] = [
   { key: 'video', icon: Video, title: 'Video', desc: 'Record or upload a video of the property.' },
@@ -31,11 +32,23 @@ const TYPES: { key: ContributionType; icon: typeof Video; title: string; desc: s
 
 const STAGES: LifeStage[] = ['moveIn', 'living', 'maintenance', 'moveOut', 'deposit'];
 
-export const ContributeFlow = ({ propertyId, propertyName }: { propertyId: string; propertyName: string }) => {
+export const ContributeFlow = ({ propertyId, propertyName, topic }: { propertyId: string; propertyName: string; topic?: string | null }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [step, setStep] = useState(1);
-  const [draft, setDraft] = useState<ContributionDraft>(() => emptyDraft(propertyId, propertyName));
+  const activeTopic = getContributionTopic(topic);
+  const [step, setStep] = useState(activeTopic ? 2 : 1);
+  const [draft, setDraft] = useState<ContributionDraft>(() => {
+    const base = emptyDraft(propertyId, propertyName);
+    if (!activeTopic) return base;
+    return {
+      ...base,
+      type: 'video',
+      lifeStage: activeTopic.lifeStage,
+      topic: activeTopic.key,
+      tags: activeTopic.tags,
+      title: '',
+    };
+  });
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<SubmissionResult | null>(null);
   const [hasSession, setHasSession] = useState<boolean | null>(null);
@@ -80,6 +93,14 @@ export const ContributeFlow = ({ propertyId, propertyName }: { propertyId: strin
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <Stepper step={step} />
+
+      {activeTopic && (
+        <div className="flex items-center flex-wrap gap-2 text-sm">
+          <Badge variant="secondary" className="uppercase tracking-wide text-[10px]">Topic</Badge>
+          <span className="font-semibold">{activeTopic.label}</span>
+          <span className="text-muted-foreground">— {activeTopic.hint}</span>
+        </div>
+      )}
 
       {step === 1 && (
         <Card>
@@ -161,7 +182,8 @@ export const ContributeFlow = ({ propertyId, propertyName }: { propertyId: strin
 
             <div>
               <Label htmlFor="title">Title *</Label>
-              <Input id="title" className="mt-1.5" placeholder="e.g. Charged most of my deposit for nothing"
+              <Input id="title" className="mt-1.5"
+                placeholder={activeTopic?.titlePlaceholder ?? 'e.g. Charged most of my deposit for nothing'}
                 value={draft.title} onChange={(e) => set({ title: e.target.value })} />
             </div>
 
