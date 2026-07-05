@@ -99,7 +99,8 @@ const Contribute = () => {
   });
   const onSearch = (e: FormEvent) => { e.preventDefault(); setQuery(input.trim()); };
 
-  const tiles = useMemo(() => RENTER_TILES.map((t) => ({ ...t, to: `${t.to}${topicQS ? '' : ''}` })), [topicQS]);
+  // Tiles hardcode their own `?topic=...` so we just pass them through as-is.
+  const tiles = RENTER_TILES;
 
   const { data: property, isLoading } = useQuery({
     queryKey: ['contribute-property', propertyId],
