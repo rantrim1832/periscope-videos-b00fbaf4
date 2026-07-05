@@ -28,24 +28,27 @@ const Feed = () => {
   const [filtersOpen, setFiltersOpen] = useState(false);
 
   const statesList = [...new Set(items.map((i) => stateFromLocation(i.location)).filter(Boolean))] as string[];
+  // If the viewer's home state has no content yet, don't strand them on an
+  // empty feed — quietly widen to all states so they see something to watch.
+  const effectiveState = stateFilter === 'All' || statesList.includes(stateFilter) ? stateFilter : 'All';
   const citiesForState = [...new Set(
     items
-      .filter((i) => stateFilter === 'All' || stateFromLocation(i.location) === stateFilter)
+      .filter((i) => effectiveState === 'All' || stateFromLocation(i.location) === effectiveState)
       .map((i) => i.location)
       .filter(Boolean),
   )].slice(0, 24);
   const effectiveCity = city === 'All' || citiesForState.includes(city) ? city : 'All';
   const filteredRaw = items.filter((i) =>
     (category === 'All' || i.category === category) &&
-    (stateFilter === 'All' || stateFromLocation(i.location) === stateFilter) &&
+    (effectiveState === 'All' || stateFromLocation(i.location) === effectiveState) &&
     (effectiveCity === 'All' || i.location === effectiveCity),
   );
   // When "All states" is picked but the viewer has a home state, still float
   // local content to the top instead of shuffling in far-away metros first.
-  const filtered = stateFilter === 'All'
+  const filtered = effectiveState === 'All'
     ? sortByLocalState(filteredRaw, (i) => i.location, localState)
     : filteredRaw;
-  const activeCount = (category !== 'All' ? 1 : 0) + (effectiveCity !== 'All' ? 1 : 0) + (stateFilter !== (localState ?? 'All') ? 1 : 0);
+  const activeCount = (category !== 'All' ? 1 : 0) + (effectiveCity !== 'All' ? 1 : 0) + (effectiveState !== 'All' && effectiveState !== (localState ?? 'All') ? 1 : 0);
 
   return (
     <div className="min-h-screen bg-background">
@@ -65,7 +68,7 @@ const Feed = () => {
           <div className="flex-1 flex gap-1.5 overflow-x-auto no-scrollbar text-xs text-muted-foreground items-center min-w-0">
             <span className="truncate">
               {category === 'All' ? 'All stories' : category}
-              {stateFilter !== 'All' ? ` · ${stateFilter}` : ''}
+              {effectiveState !== 'All' ? ` · ${effectiveState}` : ''}
               {effectiveCity !== 'All' ? ` · ${effectiveCity}` : ''}
             </span>
           </div>
@@ -91,7 +94,7 @@ const Feed = () => {
               <p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground mb-1.5">State</p>
               <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
                 {['All', ...statesList].map((s) => (
-                  <Button key={s} size="sm" variant={stateFilter === s ? 'default' : 'outline'} className="whitespace-nowrap h-8" onClick={() => { setStateFilter(s); setCity('All'); }}>
+                  <Button key={s} size="sm" variant={effectiveState === s ? 'default' : 'outline'} className="whitespace-nowrap h-8" onClick={() => { setStateFilter(s); setCity('All'); }}>
                     {s === 'All' ? 'All states' : s}
                   </Button>
                 ))}
