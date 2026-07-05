@@ -20,7 +20,7 @@ const MANAGER_TILES: PromptTile[] = [
     hint: 'The single highest-converting video you can post. Walk a renter through as if they just arrived.',
     icon: Sparkles,
     cover: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&auto=format&fit=crop',
-    to: '/manager',
+    to: '/manager?topic=leasing-tour',
     featured: true,
     badge: 'Start here',
   },
@@ -30,7 +30,7 @@ const MANAGER_TILES: PromptTile[] = [
     hint: 'Show a real unit — kitchen, bath, closets, light.',
     icon: Home,
     cover: 'https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=800&auto=format&fit=crop',
-    to: '/manager',
+    to: '/manager?topic=interiors',
   },
   {
     key: 'amenities',
@@ -38,7 +38,7 @@ const MANAGER_TILES: PromptTile[] = [
     hint: 'Pool, gym, lounge, rooftop, coworking, pet spa.',
     icon: Video,
     cover: 'https://images.unsplash.com/photo-1540541338287-41700207dee6?w=800&auto=format&fit=crop',
-    to: '/manager',
+    to: '/manager?topic=amenities',
   },
   {
     key: 'vibe',
@@ -46,7 +46,7 @@ const MANAGER_TILES: PromptTile[] = [
     hint: 'Coffee, transit, parks, nightlife — the 5-minute radius.',
     icon: Trees,
     cover: 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=800&auto=format&fit=crop',
-    to: '/manager',
+    to: '/manager?topic=area',
   },
   {
     key: 'invite',
