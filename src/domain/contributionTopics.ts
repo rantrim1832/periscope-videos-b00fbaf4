@@ -19,26 +19,26 @@ export const CONTRIBUTION_TOPICS: Record<string, ContributionTopic> = {
   'record-review': {
     key: 'record-review', label: 'Video review', audience: 'resident',
     tags: ['review', 'video-tour'], lifeStage: 'living',
-    titlePlaceholder: 'e.g. Honest take after 8 months living here',
-    hint: 'A 60-second walkthrough is worth a thousand words.',
+    titlePlaceholder: 'e.g. Honest take after 8 months — the good and the bad',
+    hint: 'Great experience or bad — a 60-second walkthrough is worth a thousand words.',
   },
   'pricing': {
     key: 'pricing', label: 'Pricing surprise', audience: 'resident',
     tags: ['pricing', 'fees'], lifeStage: 'moveIn',
-    titlePlaceholder: 'e.g. Renewal jumped $400 with no warning',
-    hint: 'Rent hikes, fees, deposits, utilities, move-out charges.',
+    titlePlaceholder: 'e.g. What renewal, fees and deposits actually cost me',
+    hint: 'Rent, fees, deposits, utilities, move-out charges — surprises or fair play.',
   },
   'management': {
     key: 'management', label: 'Management issue', audience: 'resident',
     tags: ['management', 'communication'], lifeStage: 'living',
-    titlePlaceholder: 'e.g. Leasing office never returns calls',
-    hint: 'Responsiveness, communication, promises kept or broken.',
+    titlePlaceholder: 'e.g. How the office actually handled my requests',
+    hint: 'Responsiveness, communication, promises kept or broken — either way.',
   },
   'maintenance': {
     key: 'maintenance', label: 'Maintenance issue', audience: 'resident',
     tags: ['maintenance', 'repairs'], lifeStage: 'maintenance',
-    titlePlaceholder: 'e.g. HVAC broken for 3 weeks in July',
-    hint: 'What broke, how long repairs took, what still needs attention.',
+    titlePlaceholder: 'e.g. How maintenance handled my last request',
+    hint: 'Repair speed and quality — praise the fast ones, flag the slow ones.',
   },
   'property-condition': {
     key: 'property-condition', label: 'Property condition', audience: 'resident',
@@ -55,8 +55,14 @@ export const CONTRIBUTION_TOPICS: Record<string, ContributionTopic> = {
   'application': {
     key: 'application', label: 'Application process', audience: 'resident',
     tags: ['application', 'leasing'], lifeStage: 'moveIn',
-    titlePlaceholder: 'e.g. Approval took 2 weeks and 4 fees',
-    hint: 'Screening, fees, approval timing, lease surprises.',
+    titlePlaceholder: 'e.g. What screening, fees and approval actually looked like',
+    hint: 'Screening, fees, approval timing, lease terms — smooth or painful.',
+  },
+  'loved-it': {
+    key: 'loved-it', label: 'What you loved', audience: 'resident',
+    tags: ['positive', 'recommend'], lifeStage: 'living',
+    titlePlaceholder: 'e.g. Why I re-signed my lease here',
+    hint: 'The unit, the team, the neighbors — what makes this place worth it.',
   },
   'full-tour': {
     key: 'full-tour', label: 'Full property tour', audience: 'resident',
