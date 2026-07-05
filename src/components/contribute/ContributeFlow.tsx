@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import {
   Video, Camera, FileText, Link2, ShieldCheck, Upload, Loader2, Share2,
-  PartyPopper, Clock, XCircle,
+  PartyPopper, Clock, XCircle, Check,
 } from 'lucide-react';
 import { parseEmbed } from '@/services/providers/embed';
 import { supabase } from '@/integrations/supabase/client';
@@ -345,21 +345,39 @@ const TopicPicker = ({
   draft: ContributionDraft;
   set: (patch: Partial<ContributionDraft>) => void;
 }) => {
-  const renterTopics = useMemo(
-    () => Object.values(CONTRIBUTION_TOPICS).filter((t) => t.audience === 'resident'),
-    [],
-  );
   const managerTopics = useMemo(
     () => Object.values(CONTRIBUTION_TOPICS).filter((t) => t.audience === 'manager'),
     [],
   );
   const selectedTags = new Set(draft.tags ?? []);
+  const [pickerOpen, setPickerOpen] = useState(!draft.topic);
+  const [showAllTags, setShowAllTags] = useState(false);
+  const activeTopic = draft.topic ? CONTRIBUTION_TOPICS[draft.topic] : undefined;
+  const topicGroups = useMemo(() => ([
+    {
+      label: 'Start here',
+      keys: ['record-review', 'loved-it', 'full-tour', 'unit-tour', 'day-in-life'],
+    },
+    {
+      label: 'Building reality',
+      keys: ['management', 'maintenance', 'property-condition', 'amenities-real', 'noise', 'safety', 'pests'],
+    },
+    {
+      label: 'Daily life',
+      keys: ['parking', 'pets', 'packages', 'laundry', 'hvac', 'wifi-signal', 'commute', 'wfh-setup', 'families-schools', 'accessibility', 'local-vibe', 'staff-shoutout'],
+    },
+    {
+      label: 'Money & moving',
+      keys: ['pricing', 'application', 'move-in-day', 'move-out', 'deposit-return', 'renewal-negotiation', 'red-flags'],
+    },
+  ]), []);
 
   const pickTopic = (key: string) => {
     const topic = CONTRIBUTION_TOPICS[key];
     if (!topic) return;
     const nextTags = Array.from(new Set([...(draft.tags ?? []), ...topic.tags]));
     set({ topic: key, tags: nextTags, lifeStage: topic.lifeStage });
+    setPickerOpen(false);
   };
   const toggleTag = (tag: string) => {
     const next = new Set(draft.tags ?? []);
@@ -371,8 +389,6 @@ const TopicPicker = ({
     new Set(Object.values(CONTRIBUTION_TOPICS).flatMap((t) => t.tags)),
   ).sort();
 
-  const [showAllTags, setShowAllTags] = useState(false);
-  const activeTopic = draft.topic ? CONTRIBUTION_TOPICS[draft.topic] : undefined;
   // Suggested tags = tags from the picked topic + a small curated set of common
   // cross-cutting tags, so users aren't drowning in an alphabetical dump.
   const suggestedTags = useMemo(() => {
@@ -386,57 +402,80 @@ const TopicPicker = ({
   const visibleTags = showAllTags ? allTags : suggestedTags;
 
   return (
-    <div className="pt-4 border-t space-y-5">
-      <div>
-        <div className="flex items-baseline justify-between mb-2">
-          <Label className="text-sm font-semibold">What's this about?</Label>
-          {activeTopic && (
-            <span className="text-xs text-muted-foreground">Selected: <span className="text-foreground font-medium">{activeTopic.label}</span></span>
-          )}
+    <div className="pt-4 border-t space-y-4">
+      <div className="rounded-xl border bg-muted/30 p-3 md:p-4 space-y-3">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <Label className="text-sm font-semibold">What's this about?</Label>
+            <p className="mt-1 text-sm font-semibold leading-tight text-foreground">
+              {activeTopic?.label ?? 'Choose a review topic'}
+            </p>
+            {activeTopic && <p className="mt-1 text-xs text-muted-foreground line-clamp-2">{activeTopic.hint}</p>}
+          </div>
+          <Button type="button" size="sm" variant="outline" className="shrink-0" onClick={() => setPickerOpen((open) => !open)}>
+            {pickerOpen ? 'Done' : 'Change'}
+          </Button>
         </div>
-        <div className="flex flex-wrap gap-1.5">
-          {renterTopics.map((t) => {
-            const active = draft.topic === t.key;
-            return (
-              <button
-                key={t.key}
-                type="button"
-                onClick={() => pickTopic(t.key)}
-                className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
-                  active
-                    ? 'bg-primary text-primary-foreground border-primary'
-                    : 'bg-background border-border hover:border-primary hover:text-primary'
-                }`}
-              >
-                {t.label}
-              </button>
-            );
-          })}
-        </div>
-        <details className="mt-3 group">
-          <summary className="text-xs text-muted-foreground cursor-pointer hover:text-foreground select-none">
-            Manager / official topics
-          </summary>
-          <div className="flex flex-wrap gap-1.5 mt-2">
-            {managerTopics.map((t) => {
-              const active = draft.topic === t.key;
+
+        {pickerOpen && (
+          <div className="space-y-3">
+            {topicGroups.map((group) => {
+              const topics = group.keys.map((key) => CONTRIBUTION_TOPICS[key]).filter(Boolean);
               return (
-                <button
-                  key={t.key}
-                  type="button"
-                  onClick={() => pickTopic(t.key)}
-                  className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
-                    active
-                      ? 'bg-primary text-primary-foreground border-primary'
-                      : 'bg-background border-border hover:border-primary hover:text-primary'
-                  }`}
-                >
-                  {t.label}
-                </button>
+                <div key={group.label}>
+                  <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{group.label}</p>
+                  <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar -mx-1 px-1">
+                    {topics.map((t) => {
+                      const active = draft.topic === t.key;
+                      return (
+                        <button
+                          key={t.key}
+                          type="button"
+                          onClick={() => pickTopic(t.key)}
+                          className={`min-h-[44px] shrink-0 rounded-lg border px-3 py-2 text-left text-xs font-semibold transition-colors ${
+                            active
+                              ? 'border-primary bg-primary text-primary-foreground shadow-sm'
+                              : 'border-border bg-background text-foreground hover:border-primary hover:text-primary'
+                          }`}
+                        >
+                          <span className="flex items-center gap-1.5 whitespace-nowrap">
+                            {active && <Check className="h-3.5 w-3.5" />}
+                            {t.label}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               );
             })}
+
+            <details className="group rounded-lg border border-dashed bg-background/70 p-3">
+              <summary className="cursor-pointer select-none text-xs font-medium text-muted-foreground hover:text-foreground">
+                Manager / official topics
+              </summary>
+              <div className="mt-2 flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+                {managerTopics.map((t) => {
+                  const active = draft.topic === t.key;
+                  return (
+                    <button
+                      key={t.key}
+                      type="button"
+                      onClick={() => pickTopic(t.key)}
+                      className={`min-h-[40px] shrink-0 rounded-lg border px-3 py-2 text-left text-xs font-semibold transition-colors ${
+                        active
+                          ? 'border-primary bg-primary text-primary-foreground'
+                          : 'border-border bg-background hover:border-primary hover:text-primary'
+                      }`}
+                    >
+                      {t.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </details>
           </div>
-        </details>
+        )}
       </div>
 
       <div>
@@ -448,7 +487,7 @@ const TopicPicker = ({
             <span className="text-xs text-muted-foreground">{selectedTags.size} selected</span>
           )}
         </div>
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar -mx-1 px-1">
           {visibleTags.map((tag) => {
             const active = selectedTags.has(tag);
             return (
@@ -456,7 +495,7 @@ const TopicPicker = ({
                 key={tag}
                 type="button"
                 onClick={() => toggleTag(tag)}
-                className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                className={`shrink-0 text-xs px-2.5 py-1 rounded-full border transition-colors ${
                   active
                     ? 'bg-primary/10 text-primary border-primary'
                     : 'bg-background border-border text-muted-foreground hover:border-primary hover:text-foreground'
@@ -470,7 +509,7 @@ const TopicPicker = ({
             <button
               type="button"
               onClick={() => setShowAllTags(true)}
-              className="text-xs px-2.5 py-1 rounded-full border border-dashed text-muted-foreground hover:text-foreground hover:border-primary"
+              className="shrink-0 text-xs px-2.5 py-1 rounded-full border border-dashed text-muted-foreground hover:text-foreground hover:border-primary"
             >
               + {allTags.length - visibleTags.length} more
             </button>
