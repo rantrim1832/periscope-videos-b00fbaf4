@@ -371,62 +371,110 @@ const TopicPicker = ({
     new Set(Object.values(CONTRIBUTION_TOPICS).flatMap((t) => t.tags)),
   ).sort();
 
+  const [showAllTags, setShowAllTags] = useState(false);
+  const activeTopic = draft.topic ? CONTRIBUTION_TOPICS[draft.topic] : undefined;
+  // Suggested tags = tags from the picked topic + a small curated set of common
+  // cross-cutting tags, so users aren't drowning in an alphabetical dump.
+  const suggestedTags = useMemo(() => {
+    const base = new Set<string>(activeTopic?.tags ?? []);
+    ['noise', 'parking', 'maintenance', 'management', 'safety', 'pets', 'deposit', 'amenities']
+      .forEach((t) => base.add(t));
+    (draft.tags ?? []).forEach((t) => base.add(t));
+    return Array.from(base).sort();
+  }, [activeTopic, draft.tags]);
+
+  const visibleTags = showAllTags ? allTags : suggestedTags;
+
   return (
-    <div className="pt-2 border-t space-y-4">
+    <div className="pt-4 border-t space-y-5">
       <div>
-        <Label className="mb-2 block">What's this about?</Label>
-        <p className="text-xs text-muted-foreground mb-2">Pick the closest topic — it sets the vibe and tags.</p>
-        <div className="flex flex-wrap gap-1.5">
-          {renterTopics.map((t) => (
-            <Button
-              key={t.key}
-              type="button"
-              size="sm"
-              variant={draft.topic === t.key ? 'default' : 'outline'}
-              className="h-7 text-xs"
-              onClick={() => pickTopic(t.key)}
-            >
-              {t.label}
-            </Button>
-          ))}
+        <div className="flex items-baseline justify-between mb-2">
+          <Label className="text-sm font-semibold">What's this about?</Label>
+          {activeTopic && (
+            <span className="text-xs text-muted-foreground">Selected: <span className="text-foreground font-medium">{activeTopic.label}</span></span>
+          )}
         </div>
-        <details className="mt-2">
-          <summary className="text-xs text-muted-foreground cursor-pointer">Manager / official topics</summary>
-          <div className="flex flex-wrap gap-1.5 mt-2">
-            {managerTopics.map((t) => (
-              <Button
+        <div className="flex flex-wrap gap-1.5">
+          {renterTopics.map((t) => {
+            const active = draft.topic === t.key;
+            return (
+              <button
                 key={t.key}
                 type="button"
-                size="sm"
-                variant={draft.topic === t.key ? 'default' : 'outline'}
-                className="h-7 text-xs"
                 onClick={() => pickTopic(t.key)}
+                className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
+                  active
+                    ? 'bg-primary text-primary-foreground border-primary'
+                    : 'bg-background border-border hover:border-primary hover:text-primary'
+                }`}
               >
                 {t.label}
-              </Button>
-            ))}
+              </button>
+            );
+          })}
+        </div>
+        <details className="mt-3 group">
+          <summary className="text-xs text-muted-foreground cursor-pointer hover:text-foreground select-none">
+            Manager / official topics
+          </summary>
+          <div className="flex flex-wrap gap-1.5 mt-2">
+            {managerTopics.map((t) => {
+              const active = draft.topic === t.key;
+              return (
+                <button
+                  key={t.key}
+                  type="button"
+                  onClick={() => pickTopic(t.key)}
+                  className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
+                    active
+                      ? 'bg-primary text-primary-foreground border-primary'
+                      : 'bg-background border-border hover:border-primary hover:text-primary'
+                  }`}
+                >
+                  {t.label}
+                </button>
+              );
+            })}
           </div>
         </details>
       </div>
 
       <div>
-        <Label className="mb-2 block">Add tags <span className="text-muted-foreground font-normal">(optional)</span></Label>
-        <p className="text-xs text-muted-foreground mb-2">Topics overlap — tag anything else this video touches on.</p>
+        <div className="flex items-baseline justify-between mb-2">
+          <Label className="text-sm font-semibold">
+            Tags <span className="text-muted-foreground font-normal">(optional)</span>
+          </Label>
+          {selectedTags.size > 0 && (
+            <span className="text-xs text-muted-foreground">{selectedTags.size} selected</span>
+          )}
+        </div>
         <div className="flex flex-wrap gap-1.5">
-          {allTags.map((tag) => (
+          {visibleTags.map((tag) => {
+            const active = selectedTags.has(tag);
+            return (
+              <button
+                key={tag}
+                type="button"
+                onClick={() => toggleTag(tag)}
+                className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                  active
+                    ? 'bg-primary/10 text-primary border-primary'
+                    : 'bg-background border-border text-muted-foreground hover:border-primary hover:text-foreground'
+                }`}
+              >
+                #{tag}
+              </button>
+            );
+          })}
+          {!showAllTags && allTags.length > visibleTags.length && (
             <button
-              key={tag}
               type="button"
-              onClick={() => toggleTag(tag)}
-              className={`text-xs px-2 py-1 rounded-full border transition-colors ${
-                selectedTags.has(tag)
-                  ? 'bg-primary text-primary-foreground border-primary'
-                  : 'bg-background border-border hover:border-primary'
-              }`}
+              onClick={() => setShowAllTags(true)}
+              className="text-xs px-2.5 py-1 rounded-full border border-dashed text-muted-foreground hover:text-foreground hover:border-primary"
             >
-              #{tag}
+              + {allTags.length - visibleTags.length} more
             </button>
-          ))}
+          )}
         </div>
       </div>
     </div>
