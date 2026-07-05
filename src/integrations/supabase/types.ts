@@ -144,10 +144,12 @@ export type Database = {
           baths: number | null
           beds: number | null
           city: string
+          contact_name: string | null
           county: string | null
           county_fips: string | null
           created_at: string
           created_by_user_id: string | null
+          email: string | null
           features: Json | null
           history: Json | null
           hoa_fee: number | null
@@ -161,7 +163,9 @@ export type Database = {
           lot_size: number | null
           management_company: string | null
           name: string
+          notes: string | null
           owner: Json | null
+          phone: string | null
           property_taxes: Json | null
           property_type: string | null
           rent: number | null
@@ -176,7 +180,9 @@ export type Database = {
           units_count: number | null
           updated_at: string
           verification_required: boolean | null
+          website: string | null
           year_built: number | null
+          zip: string | null
           zip_code: string | null
           zoning: string | null
         }
@@ -189,10 +195,12 @@ export type Database = {
           baths?: number | null
           beds?: number | null
           city: string
+          contact_name?: string | null
           county?: string | null
           county_fips?: string | null
           created_at?: string
           created_by_user_id?: string | null
+          email?: string | null
           features?: Json | null
           history?: Json | null
           hoa_fee?: number | null
@@ -206,7 +214,9 @@ export type Database = {
           lot_size?: number | null
           management_company?: string | null
           name: string
+          notes?: string | null
           owner?: Json | null
+          phone?: string | null
           property_taxes?: Json | null
           property_type?: string | null
           rent?: number | null
@@ -221,7 +231,9 @@ export type Database = {
           units_count?: number | null
           updated_at?: string
           verification_required?: boolean | null
+          website?: string | null
           year_built?: number | null
+          zip?: string | null
           zip_code?: string | null
           zoning?: string | null
         }
@@ -234,10 +246,12 @@ export type Database = {
           baths?: number | null
           beds?: number | null
           city?: string
+          contact_name?: string | null
           county?: string | null
           county_fips?: string | null
           created_at?: string
           created_by_user_id?: string | null
+          email?: string | null
           features?: Json | null
           history?: Json | null
           hoa_fee?: number | null
@@ -251,7 +265,9 @@ export type Database = {
           lot_size?: number | null
           management_company?: string | null
           name?: string
+          notes?: string | null
           owner?: Json | null
+          phone?: string | null
           property_taxes?: Json | null
           property_type?: string | null
           rent?: number | null
@@ -266,7 +282,9 @@ export type Database = {
           units_count?: number | null
           updated_at?: string
           verification_required?: boolean | null
+          website?: string | null
           year_built?: number | null
+          zip?: string | null
           zip_code?: string | null
           zoning?: string | null
         }
