@@ -9,6 +9,77 @@ import { Badge } from '@/components/ui/badge';
 import { getPropertyProvider } from '@/data/propertyProvider';
 import { Building2, Search, PlusCircle, Video, Users, ShieldCheck, Bell } from 'lucide-react';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { PromptTileRail, type PromptTile } from '@/components/PromptTileRail';
+import { Sparkles, Home, Trees, MessageSquare, ClipboardCheck } from 'lucide-react';
+
+const MANAGER_TILES: PromptTile[] = [
+  {
+    key: 'leasing-tour',
+    title: 'Record your leasing tour',
+    hint: 'The single highest-converting video you can post. Walk a renter through as if they just arrived.',
+    icon: Sparkles,
+    cover: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&auto=format&fit=crop',
+    to: '/manager',
+    featured: true,
+    badge: 'Start here',
+  },
+  {
+    key: 'interior',
+    title: 'Interior walkthroughs',
+    hint: 'Show a real unit — kitchen, bath, closets, light.',
+    icon: Home,
+    cover: 'https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=800&auto=format&fit=crop',
+    to: '/manager',
+  },
+  {
+    key: 'amenities',
+    title: 'Show off your amenities',
+    hint: 'Pool, gym, lounge, rooftop, coworking, pet spa.',
+    icon: Video,
+    cover: 'https://images.unsplash.com/photo-1540541338287-41700207dee6?w=800&auto=format&fit=crop',
+    to: '/manager',
+  },
+  {
+    key: 'vibe',
+    title: 'Capture the neighborhood vibe',
+    hint: 'Coffee, transit, parks, nightlife — the 5-minute radius.',
+    icon: Trees,
+    cover: 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=800&auto=format&fit=crop',
+    to: '/manager',
+  },
+  {
+    key: 'invite',
+    title: 'Invite residents to share their story',
+    hint: 'A property-specific link that makes leaving a review painless.',
+    icon: MessageSquare,
+    cover: 'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=800&auto=format&fit=crop',
+    to: '/manager',
+  },
+  {
+    key: 'claim',
+    title: 'Claim your property',
+    hint: 'Verify ownership so you can publish official content.',
+    icon: ShieldCheck,
+    cover: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&auto=format&fit=crop',
+    to: '/manager',
+  },
+  {
+    key: 'create',
+    title: 'Create a new property page',
+    hint: 'Not listed yet? Add your building in under a minute.',
+    icon: PlusCircle,
+    cover: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&auto=format&fit=crop',
+    to: '/contribute',
+  },
+  {
+    key: 'alerts',
+    title: 'Turn on new-review alerts',
+    hint: 'Get notified the moment a resident posts about your building.',
+    icon: Bell,
+    cover: 'https://images.unsplash.com/photo-1519452575417-564c1401ecc0?w=800&auto=format&fit=crop',
+    to: '/manager',
+  },
+];
 
 const ManagerStart = () => {
   useDocumentTitle('For property managers — claim your page and get discovered', 'Claim your property page, add official videos and content, and get alerts on new resident video reviews.');
@@ -41,12 +112,12 @@ const ManagerStart = () => {
             <form onSubmit={search} className="flex gap-3">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5" />
-                <Input className="pl-10 h-12" value={input} onChange={(e) => setInput(e.target.value)} placeholder="Search property name, address, or city" />
+                <Input className="pl-10 h-12" value={input} onChange={(e) => setInput(e.target.value)} placeholder="Type your property name to claim or create it" />
               </div>
-              <Button type="submit" variant="hero" size="lg">Find</Button>
+              <Button type="submit" variant="hero" size="lg">Claim or create</Button>
             </form>
             <div className="flex flex-wrap gap-3">
-              <Button variant="outline" asChild><Link to="/contribute"><PlusCircle className="w-4 h-4 mr-2" /> Add missing property</Link></Button>
+              <Button variant="outline" asChild><Link to="/contribute"><PlusCircle className="w-4 h-4 mr-2" /> Add a brand-new property</Link></Button>
               <Button variant="ghost" asChild><Link to="/feed">Explore first</Link></Button>
             </div>
           </div>
@@ -61,6 +132,13 @@ const ManagerStart = () => {
             </CardContent>
           </Card>
         </section>
+
+        <PromptTileRail
+          eyebrow="Get discovered"
+          title="What to post on your property page"
+          subtitle="Renters watch before they tour. Start with the leasing tour, then layer in the rest."
+          tiles={MANAGER_TILES}
+        />
 
         {query && (
           <section className="space-y-4">
