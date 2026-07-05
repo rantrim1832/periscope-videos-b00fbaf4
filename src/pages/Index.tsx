@@ -174,7 +174,7 @@ const PersonalizedTopBar = ({
     eyebrow = 'Property manager';
     headline = firstName ? `Welcome back, ${firstName}.` : 'Get discovered on Periscope.';
     sub = 'Update your page, add official videos and content, and get alerts the moment a new review is posted.';
-    cta = { to: '/manager/start', label: 'Manager tools', icon: <Building className="w-4 h-4" /> };
+    cta = { to: '/manager', label: 'Manager tools', icon: <Building className="w-4 h-4" /> };
   } else if (user) {
     icon = <UserCheck className="w-4 h-4" />;
     eyebrow = firstName ? `Welcome back, ${firstName}` : 'Welcome back';
