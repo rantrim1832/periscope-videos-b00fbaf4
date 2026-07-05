@@ -179,9 +179,14 @@ const ManagerStart = () => {
                       </div>
                       <div className="flex gap-2">
                         <Button variant="outline" onClick={() => navigate(`/property/${property.id}`)}>View</Button>
-                        <Button variant="hero" onClick={() => navigate(activeTopic ? `/contribute/${property.id}${topicQS}` : `/claim/${property.id}`)}>
-                          {activeTopic ? 'Upload' : 'Claim'}
-                        </Button>
+                        {activeTopic ? (
+                          <>
+                            <Button variant="outline" onClick={() => navigate(`/claim/${property.id}`)}>Claim first</Button>
+                            <Button variant="hero" onClick={() => navigate(`/manage/${property.id}`)}>Upload official</Button>
+                          </>
+                        ) : (
+                          <Button variant="hero" onClick={() => navigate(`/claim/${property.id}`)}>Claim</Button>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
