@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { useParams, Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Header } from '@/components/Header';
@@ -9,10 +9,31 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Search, Video, DollarSign, Wrench, Trees, MessageSquareWarning, ClipboardCheck, Home, Sparkles, Upload, FileText, Check } from 'lucide-react';
 import { getPropertyProvider } from '@/data/propertyProvider';
+import { supabase } from '@/integrations/supabase/client';
 import { ContributeFlow } from '@/components/contribute/ContributeFlow';
 import { PromptTileRail, type PromptTile } from '@/components/PromptTileRail';
 import { getContributionTopic } from '@/domain/contributionTopics';
 import { CreatePropertyDialog } from '@/components/CreatePropertyDialog';
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+type LiteHit = { id: string; name: string; addressLine1: string | null; city: string | null; state: string | null };
+
+// Lightweight, snappy search for the contribute picker: single ilike query,
+// no channel enrichment, tiny row cap. Fires on debounce as the user types.
+async function fastSearch(q: string): Promise<LiteHit[]> {
+  const term = `%${q}%`;
+  const { data } = await (supabase as any)
+    .from('canonical_property')
+    .select('id, name, address_line1, city, state')
+    .eq('status', 'active')
+    .or(`name.ilike.${term},address_line1.ilike.${term},city.ilike.${term}`)
+    .limit(8);
+  return (data ?? []).map((r: any) => ({
+    id: r.id, name: r.name ?? 'Unnamed property',
+    addressLine1: r.address_line1 ?? null, city: r.city ?? null, state: r.state ?? null,
+  }));
+}
 
 const RENTER_TILES: PromptTile[] = [
   {
@@ -101,10 +122,16 @@ const Contribute = () => {
 
   const [input, setInput] = useState('');
   const [query, setQuery] = useState('');
+  // Debounce typing so we don't fire a query per keystroke.
+  useEffect(() => {
+    const h = setTimeout(() => setQuery(input.trim()), 250);
+    return () => clearTimeout(h);
+  }, [input]);
   const { data: results = [], isLoading: searching } = useQuery({
-    queryKey: ['contribute-property-search', query],
-    queryFn: () => getPropertyProvider().search(query),
-    enabled: query.trim().length > 0,
+    queryKey: ['contribute-property-search-lite', query],
+    queryFn: () => fastSearch(query),
+    enabled: query.length >= 2,
+    staleTime: 60_000,
   });
   const onSearch = (e: FormEvent) => { e.preventDefault(); setQuery(input.trim()); };
 
