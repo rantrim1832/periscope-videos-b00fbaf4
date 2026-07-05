@@ -22,6 +22,7 @@ import { LIFE_STAGE_LABELS, type LifeStage } from '@/domain/property';
 import { CATEGORY_LABELS } from '@/domain/truthScore';
 import { submitContribution, createContributionUpload } from '@/services/contributionService';
 import { getContributionTopic } from '@/domain/contributionTopics';
+import { CONTRIBUTION_TOPICS } from '@/domain/contributionTopics';
 
 const TYPES: { key: ContributionType; icon: typeof Video; title: string; desc: string }[] = [
   { key: 'video', icon: Video, title: 'Video', desc: 'Record or upload a video of the property.' },
@@ -196,6 +197,8 @@ export const ContributeFlow = ({ propertyId, propertyName, topic }: { propertyId
                 ))}
               </div>
             </div>
+
+            <TopicPicker draft={draft} set={set} />
 
             <div>
               <Label htmlFor="title">Title *</Label>
