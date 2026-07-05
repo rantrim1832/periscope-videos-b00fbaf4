@@ -107,7 +107,7 @@ const Index = () => {
         style={{ bottom: 'max(1rem, env(safe-area-inset-bottom))' }}
       >
         <Button variant="hero" className="pointer-events-auto shadow-elevated" asChild>
-          <Link to="/contribute"><PenLine className="w-4 h-4" /> Add a review</Link>
+          <Link to="/contribute"><PenLine className="w-4 h-4" /> Review your apartment</Link>
         </Button>
       </div>
     </div>
@@ -153,14 +153,14 @@ const PersonalizedTopBar = ({
   const firstName = (user?.user_metadata?.full_name || user?.email || '').toString().split(/[\s@]/)[0];
   const locale = localCity?.city;
 
-  let icon = <Heart className="w-4 h-4" />;
-  let eyebrow = 'For renters';
+  let icon = <Play className="w-4 h-4" />;
+  let eyebrow = 'Apartment video reviews';
   let headline = locale
-    ? `Apartment reviews in ${locale}.`
-    : 'Apartment reviews before you sign.';
-  let sub = 'Resident reviews, verified photos, and video tours for large apartment buildings.';
+    ? `A video says a thousand words — see apartments in ${locale}.`
+    : 'A video says a thousand words.';
+  let sub = 'Watch real video reviews of large apartment buildings from the people who live there. Then review your own.';
   let cta: { to: string; label: string; icon: React.ReactNode } = {
-    to: '/contribute', label: 'Add a review', icon: <PenLine className="w-4 h-4" />,
+    to: '/contribute', label: 'Review your apartment', icon: <PenLine className="w-4 h-4" />,
   };
 
   if (isAdmin) {
@@ -172,17 +172,17 @@ const PersonalizedTopBar = ({
   } else if (isManager) {
     icon = <Building className="w-4 h-4" />;
     eyebrow = 'Property manager';
-    headline = firstName ? `Welcome back, ${firstName}.` : 'Manage your properties.';
-    sub = 'Respond to reviews, publish official content, and keep your listing accurate.';
+    headline = firstName ? `Welcome back, ${firstName}.` : 'Get discovered on Periscope.';
+    sub = 'Update your page, add official videos and content, and get alerts the moment a new review is posted.';
     cta = { to: '/manager/start', label: 'Manager tools', icon: <Building className="w-4 h-4" /> };
   } else if (user) {
     icon = <UserCheck className="w-4 h-4" />;
     eyebrow = firstName ? `Welcome back, ${firstName}` : 'Welcome back';
     headline = locale
-      ? `Recent reviews near ${locale}.`
-      : 'Recent reviews across the network.';
-    sub = 'Continue reviewing or search a new property.';
-    cta = { to: '/contribute', label: 'Add a review', icon: <PenLine className="w-4 h-4" /> };
+      ? `New video reviews near ${locale}.`
+      : 'New video reviews across the network.';
+    sub = 'Keep watching, or review the apartment you live in.';
+    cta = { to: '/contribute', label: 'Review your apartment', icon: <PenLine className="w-4 h-4" /> };
   }
 
   return (
