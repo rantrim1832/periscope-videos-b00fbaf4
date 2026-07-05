@@ -12,6 +12,7 @@ import { getPropertyProvider } from '@/data/propertyProvider';
 import { ContributeFlow } from '@/components/contribute/ContributeFlow';
 import { PromptTileRail, type PromptTile } from '@/components/PromptTileRail';
 import { getContributionTopic } from '@/domain/contributionTopics';
+import { CreatePropertyDialog } from '@/components/CreatePropertyDialog';
 
 const RENTER_TILES: PromptTile[] = [
   {
@@ -146,9 +147,22 @@ const Contribute = () => {
                   {searching ? (
                     <p className="text-sm text-muted-foreground">Searching…</p>
                   ) : results.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">
-                      No match. <Link to="/browse" className="underline">Browse all properties</Link> or <Link to="/manager" className="underline">add this property</Link>.
-                    </p>
+                    <div className="text-sm text-muted-foreground space-y-3">
+                      <p>
+                        No match. <Link to="/browse" className="underline">Browse all properties</Link> — or add it below so you can leave a review.
+                      </p>
+                      <CreatePropertyDialog
+                        onPropertyCreated={(id) => navigate(`/contribute/${id}${topicQS}`)}
+                        trigger={
+                          <Button type="button" variant="hero" size="sm">
+                            Add this property
+                          </Button>
+                        }
+                      />
+                      <p className="text-xs">
+                        You're adding this as a renter — no claim required. Managers can claim it later.
+                      </p>
+                    </div>
                   ) : (
                     results.slice(0, 6).map((p) => (
                       <button key={p.id} onClick={() => navigate(`/contribute/${p.id}${topicQS}`)}
