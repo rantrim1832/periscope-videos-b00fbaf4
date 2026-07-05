@@ -156,8 +156,8 @@ const PersonalizedTopBar = ({
   let icon = <Play className="w-4 h-4" />;
   let eyebrow = 'Apartment reviews';
   let headline = locale
-    ? `Where apartment reviews come to life in ${locale}.`
-    : 'Where apartment reviews come to life.';
+    ? `Where Apartment Reviews Come to Life in ${locale}.`
+    : 'Where Apartment Reviews Come to Life.';
   let sub = 'Read honest resident reviews and watch video tours of large apartment buildings. Then review your own.';
   let cta: { to: string; label: string; icon: React.ReactNode } = {
     to: '/contribute', label: 'Review your apartment', icon: <PenLine className="w-4 h-4" />,
