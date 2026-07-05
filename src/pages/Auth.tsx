@@ -9,7 +9,9 @@ import { Video } from 'lucide-react';
 import { Session, User } from '@supabase/supabase-js';
 
 const Auth = () => {
-  const [isSignUp, setIsSignUp] = useState(false);
+  const [searchParams] = useSearchParams();
+  const returnTo = searchParams.get('returnTo');
+  const [isSignUp, setIsSignUp] = useState(!!returnTo);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -17,8 +19,6 @@ const Auth = () => {
   const [user, setUser] = useState<User | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const returnTo = searchParams.get('returnTo');
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
