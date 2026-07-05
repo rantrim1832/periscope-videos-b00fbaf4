@@ -1,5 +1,5 @@
 import { FormEvent, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,7 @@ import { Building2, Search, PlusCircle, Video, Users, ShieldCheck, Bell } from '
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { PromptTileRail, type PromptTile } from '@/components/PromptTileRail';
 import { Sparkles, Home, Trees, MessageSquare, ClipboardCheck } from 'lucide-react';
+import { getContributionTopic } from '@/domain/contributionTopics';
 
 const MANAGER_TILES: PromptTile[] = [
   {
@@ -84,6 +85,10 @@ const MANAGER_TILES: PromptTile[] = [
 const ManagerStart = () => {
   useDocumentTitle('For property managers — claim your page and get discovered', 'Claim your property page, add official videos and content, and get alerts on new resident video reviews.');
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const topicKey = searchParams.get('topic');
+  const activeTopic = getContributionTopic(topicKey);
+  const topicQS = topicKey ? `?topic=${encodeURIComponent(topicKey)}` : '';
   const [input, setInput] = useState('');
   const [query, setQuery] = useState('');
 
@@ -102,6 +107,17 @@ const ManagerStart = () => {
     <div className="min-h-screen bg-background">
       <Header />
       <main className="container mx-auto px-4 py-10 max-w-5xl space-y-8">
+        {activeTopic && (
+          <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 flex items-start gap-3">
+            <Video className="w-5 h-5 text-primary mt-0.5 shrink-0" />
+            <div className="text-sm">
+              <p className="font-semibold">Uploading: {activeTopic.label}</p>
+              <p className="text-muted-foreground">
+                Find your building below — the upload page will open pre-tagged for “{activeTopic.label}”. If your property isn't listed, create it first.
+              </p>
+            </div>
+          </div>
+        )}
         <section className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr] items-center">
           <div className="space-y-4">
             <Badge variant="secondary" className="w-fit">For property managers</Badge>
@@ -163,7 +179,9 @@ const ManagerStart = () => {
                       </div>
                       <div className="flex gap-2">
                         <Button variant="outline" onClick={() => navigate(`/property/${property.id}`)}>View</Button>
-                        <Button variant="hero" onClick={() => navigate(`/claim/${property.id}`)}>Claim</Button>
+                        <Button variant="hero" onClick={() => navigate(activeTopic ? `/contribute/${property.id}${topicQS}` : `/claim/${property.id}`)}>
+                          {activeTopic ? 'Upload' : 'Claim'}
+                        </Button>
                       </div>
                     </CardContent>
                   </Card>
