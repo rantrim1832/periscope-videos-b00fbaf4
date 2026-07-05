@@ -19,6 +19,8 @@ export interface ContributionDraft {
   anonymous: boolean;
   mediaAssetId?: string;
   importUrl?: string;      // public social URL to embed (YouTube/TikTok/Instagram)
+  topic?: string;          // which prompt tile the contributor started from
+  tags?: string[];         // free-form category tags derived from topic
 }
 
 export type SubmissionStatus = 'published' | 'pending' | 'rejected';
