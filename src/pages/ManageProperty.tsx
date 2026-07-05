@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Header } from '@/components/Header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -24,12 +24,16 @@ const KINDS: SourceKind[] = ['instagram', 'facebook', 'tiktok', 'youtube', 'webs
 
 const ManageProperty = () => {
   const { propertyId = '' } = useParams();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
   const isManager = useIsManager(propertyId);
   const [sources, setSources] = useState<ConnectedSource[]>([]);
   const [queue, setQueue] = useState<SyncedContentItem[]>([]);
-  const [kind, setKind] = useState<SourceKind>('instagram');
+  const [kind, setKind] = useState<SourceKind>(() => {
+    const q = searchParams.get('kind') as SourceKind | null;
+    return q && KINDS.includes(q) ? q : 'instagram';
+  });
   const [handle, setHandle] = useState('');
   const [busy, setBusy] = useState(false);
   const [alertsOn, setAlertsOn] = useState(false);
@@ -44,6 +48,12 @@ const ManageProperty = () => {
   }, [propertyId]);
 
   useEffect(() => { if (isManager) refresh(); }, [isManager, refresh]);
+
+  // If deep-linked with ?kind=... preselect that source kind and focus the connect card.
+  useEffect(() => {
+    const q = searchParams.get('kind') as SourceKind | null;
+    if (q && KINDS.includes(q)) setKind(q);
+  }, [searchParams]);
 
   const onToggleAlerts = async (next: boolean) => {
     setAlertsBusy(true);
