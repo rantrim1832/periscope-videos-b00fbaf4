@@ -15,12 +15,20 @@ interface CreatePropertyDialogProps {
 export const CreatePropertyDialog = ({ onPropertyCreated, trigger }: CreatePropertyDialogProps) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showMore, setShowMore] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     address: "",
     city: "",
     state: "",
-    rent: ""
+    zip: "",
+    rent: "",
+    website: "",
+    phone: "",
+    email: "",
+    contact_name: "",
+    management_company: "",
+    notes: "",
   });
   const { toast } = useToast();
 
@@ -62,7 +70,14 @@ export const CreatePropertyDialog = ({ onPropertyCreated, trigger }: CreatePrope
           address: formData.address,
           city: formData.city,
           state: formData.state,
+          zip: formData.zip || null,
           rent: formData.rent ? parseFloat(formData.rent) : null,
+          website: formData.website || null,
+          phone: formData.phone || null,
+          email: formData.email || null,
+          contact_name: formData.contact_name || null,
+          management_company: formData.management_company || null,
+          notes: formData.notes || null,
           created_by_user_id: user.id,
           status: 'pending',
           verification_required: true,
@@ -79,7 +94,11 @@ export const CreatePropertyDialog = ({ onPropertyCreated, trigger }: CreatePrope
       });
 
       setOpen(false);
-      setFormData({ name: "", address: "", city: "", state: "", rent: "" });
+      setFormData({
+        name: "", address: "", city: "", state: "", zip: "", rent: "",
+        website: "", phone: "", email: "", contact_name: "", management_company: "", notes: "",
+      });
+      setShowMore(false);
       
       if (onPropertyCreated && property) {
         onPropertyCreated(property.id);
@@ -107,11 +126,11 @@ export const CreatePropertyDialog = ({ onPropertyCreated, trigger }: CreatePrope
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[560px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create New Property</DialogTitle>
           <DialogDescription>
-            Add a new property to the database. ID verification is required to publish.
+            Add a new property. Extra contact details help us notify the leasing team when their account is created.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -158,16 +177,67 @@ export const CreatePropertyDialog = ({ onPropertyCreated, trigger }: CreatePrope
               />
             </div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="rent">Monthly Rent (Optional)</Label>
-            <Input
-              id="rent"
-              type="number"
-              placeholder="1500"
-              value={formData.rent}
-              onChange={(e) => setFormData({ ...formData, rent: e.target.value })}
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="zip">ZIP (Optional)</Label>
+              <Input id="zip" placeholder="10001" value={formData.zip}
+                onChange={(e) => setFormData({ ...formData, zip: e.target.value })} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="rent">Monthly Rent (Optional)</Label>
+              <Input id="rent" type="number" placeholder="1500" value={formData.rent}
+                onChange={(e) => setFormData({ ...formData, rent: e.target.value })} />
+            </div>
           </div>
+
+          <div className="pt-2">
+            <Button type="button" variant="ghost" size="sm" onClick={() => setShowMore((v) => !v)}>
+              {showMore ? "Hide" : "Add"} contact & management details (optional)
+            </Button>
+          </div>
+
+          {showMore && (
+            <div className="space-y-4 rounded-lg border p-4 bg-muted/30">
+              <p className="text-xs text-muted-foreground">
+                Optional — but if you add these, we'll reach out to the leasing team when their manager account is created for this property.
+              </p>
+              <div className="space-y-2">
+                <Label htmlFor="website">Property Website</Label>
+                <Input id="website" type="url" placeholder="https://example.com" value={formData.website}
+                  onChange={(e) => setFormData({ ...formData, website: e.target.value })} />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Leasing Phone</Label>
+                  <Input id="phone" type="tel" placeholder="(555) 555-5555" value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Leasing Email</Label>
+                  <Input id="email" type="email" placeholder="leasing@example.com" value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="contact_name">Contact Name</Label>
+                  <Input id="contact_name" placeholder="Jane Doe" value={formData.contact_name}
+                    onChange={(e) => setFormData({ ...formData, contact_name: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="management_company">Management Company</Label>
+                  <Input id="management_company" placeholder="Acme Residential" value={formData.management_company}
+                    onChange={(e) => setFormData({ ...formData, management_company: e.target.value })} />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="notes">Notes</Label>
+                <Input id="notes" placeholder="Anything else useful (unit count, year built, etc.)" value={formData.notes}
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })} />
+              </div>
+            </div>
+          )}
+
           <div className="flex justify-end gap-3">
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Cancel
