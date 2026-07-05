@@ -72,9 +72,7 @@ const Search = () => {
             </div>
             <h2 className="text-lg font-semibold mb-1">Search for a property</h2>
             <p className="text-sm text-muted-foreground mb-6">
-              {stored
-                ? `We prefilled ${stored.label} — hit Search, or try a popular market below.`
-                : 'Search by name, address, or city.'}
+              Search by property name, address, or city.
             </p>
             <div className="flex flex-wrap justify-center gap-2">
               {SEEDED_CITIES.slice(0, 8).map((c) => (

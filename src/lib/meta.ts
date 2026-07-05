@@ -29,8 +29,8 @@ export function setPropertyMeta(opts: {
   location: string;
   score: number | null;
 }) {
-  const title = `${opts.name} — Truth Score${opts.score != null ? ` ${opts.score}/100` : ''} | Periscope`;
-  const description = `Resident reviews, videos, and Truth Score for ${opts.name}${opts.location ? `, ${opts.location}` : ''}.`;
+  const title = `${opts.name}${opts.score != null ? ` — ${opts.score}/100 rating` : ''} | Periscope`;
+  const description = `Resident reviews, ratings, and video tours for ${opts.name}${opts.location ? `, ${opts.location}` : ''}.`;
   const image = ogImageUrl(opts.propertyId);
 
   document.title = title;

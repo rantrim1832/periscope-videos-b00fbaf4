@@ -154,11 +154,11 @@ const PersonalizedTopBar = ({
   const locale = localCity?.city;
 
   let icon = <Play className="w-4 h-4" />;
-  let eyebrow = 'Apartment video reviews';
+  let eyebrow = 'Apartment reviews';
   let headline = locale
-    ? `A video says a thousand words — see apartments in ${locale}.`
-    : 'A video says a thousand words.';
-  let sub = 'Watch real video reviews of large apartment buildings from the people who live there. Then review your own.';
+    ? `Where apartment reviews come to life in ${locale}.`
+    : 'Where apartment reviews come to life.';
+  let sub = 'Read honest resident reviews and watch video tours of large apartment buildings. Then review your own.';
   let cta: { to: string; label: string; icon: React.ReactNode } = {
     to: '/contribute', label: 'Review your apartment', icon: <PenLine className="w-4 h-4" />,
   };
@@ -179,8 +179,8 @@ const PersonalizedTopBar = ({
     icon = <UserCheck className="w-4 h-4" />;
     eyebrow = firstName ? `Welcome back, ${firstName}` : 'Welcome back';
     headline = locale
-      ? `New video reviews near ${locale}.`
-      : 'New video reviews across the network.';
+      ? `New reviews near ${locale}.`
+      : 'New apartment reviews across the network.';
     sub = 'Keep watching, or review the apartment you live in.';
     cta = { to: '/contribute', label: 'Review your apartment', icon: <PenLine className="w-4 h-4" /> };
   }

@@ -215,7 +215,7 @@ export const ContributeFlow = ({ propertyId, propertyName }: { propertyId: strin
               className={`w-full text-left rounded-lg border p-4 ${draft.trustTier === 'unverified' ? 'border-primary bg-primary/5' : 'border-border'}`}
             >
               <p className="font-semibold">Post now, unverified</p>
-              <p className="text-xs text-muted-foreground">Counts less toward the Truth Score, clearly labeled.</p>
+              <p className="text-xs text-muted-foreground">Counts less toward the rating, and clearly labeled.</p>
             </button>
             <button
               onClick={() => set({ trustTier: 'likely_resident', verificationMethod: 'lease' })}
