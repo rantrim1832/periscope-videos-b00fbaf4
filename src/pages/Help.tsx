@@ -7,12 +7,12 @@ import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 const SECTIONS = [
   {
-    icon: Gauge, title: "How the Truth Score works",
-    body: "The Truth Score (0–100) is a trust-weighted, recency-decayed synthesis of resident ratings across 11 categories. Verified residents count far more than anonymous ones, recent experiences outweigh old ones, and we never show a precise score until there's enough signal — you'll see \u201cNot enough data yet\u201d instead of a fake number.",
+    icon: Gauge, title: "How the overall rating works",
+    body: "The overall rating (0–100) is a trust-weighted, recency-decayed synthesis of resident ratings across 11 categories. Verified residents count far more than anonymous ones, recent experiences outweigh old ones, and we don't show a rating until there's enough signal — you'll see \u201cNot enough reviews yet\u201d instead of a fake number.",
   },
   {
-    icon: Activity, title: "Truth Score vs. Trajectory",
-    body: "The Truth Score is reputation (what residents think). The Trajectory (Health Index) is direction — is it getting better or worse? A place can have a decent score but a declining trajectory after a management change. We show both.",
+    icon: Activity, title: "Rating vs. trajectory",
+    body: "The rating is reputation (what residents think). The trajectory is direction — is the building getting better or worse? A place can have a decent rating but a declining trajectory after a management change. We show both.",
   },
   {
     icon: Landmark, title: "Deposit & maintenance intelligence",
@@ -39,12 +39,12 @@ const SECTIONS = [
 const FAQS = [
   { q: "Do I need to show my face in a video?", a: "No. Post anonymously — film the apartment, not yourself. Verification is about residency, not identity." },
   { q: "Can a landlord remove a negative review?", a: "No. Managers can respond and add context, but the platform never lets them delete or hide honest resident reviews." },
-  { q: "Why is a score missing on some properties?", a: "We only show a Truth Score once there's enough verified signal. Until then you'll see the property's story completeness and an option to add the first review." },
+  { q: "Why is a rating missing on some properties?", a: "We only show a rating once there's enough verified resident input. Until then you'll see the property's page completeness and an option to add the first review." },
   { q: "Is this free for renters?", a: "Yes. Renters never pay to view property context or resident experiences. We monetize property-manager tools and aggregated, non-tenant-screening insights." },
 ];
 
 const Help = () => {
-  useDocumentTitle("How Periscope works — trust, scores & safety", "How the Truth Score, resident verification, and moderation work on Periscope.");
+  useDocumentTitle("How Periscope works — ratings, verification & safety", "How ratings, resident verification, and moderation work on Periscope.");
   return (
     <div className="min-h-screen bg-background">
       <Header />
