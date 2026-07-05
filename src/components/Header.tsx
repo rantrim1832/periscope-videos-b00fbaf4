@@ -86,7 +86,7 @@ export const Header = () => {
             <span className="block font-bold text-base bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
               Periscope
             </span>
-            <span className="block text-[10px] text-muted-foreground mt-0.5 tracking-wide uppercase">Reviews</span>
+            <span className="block text-[10px] text-muted-foreground mt-0.5 tracking-wide uppercase">Apartment Reviews</span>
           </div>
         </Link>
 
