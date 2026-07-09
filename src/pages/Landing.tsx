@@ -336,29 +336,33 @@ function MarqueeRail({
   items,
   direction,
   duration,
+  hideHeader,
 }: {
   title: string;
   hint: string;
   items: Teaser[];
   direction: 'left' | 'right';
   duration: string;
+  hideHeader?: boolean;
 }) {
   // Duplicate the list so the marquee loop is seamless.
   const loop = [...items, ...items];
   return (
     <div>
-      <div className="container flex items-baseline justify-between gap-4 mb-3">
-        <div>
-          <h3 className="text-lg md:text-xl font-bold tracking-tight">{title}</h3>
-          <p className="text-xs text-muted-foreground">{hint}</p>
+      {!hideHeader && (
+        <div className="container flex items-baseline justify-between gap-4 mb-3">
+          <div>
+            <h3 className="text-lg md:text-xl font-bold tracking-tight">{title}</h3>
+            <p className="text-xs text-muted-foreground">{hint}</p>
+          </div>
+          <Link
+            to={AUTH_RENTER}
+            className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline whitespace-nowrap"
+          >
+            <Lock className="h-3 w-3" /> Unlock all
+          </Link>
         </div>
-        <Link
-          to={AUTH_RENTER}
-          className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline whitespace-nowrap"
-        >
-          <Lock className="h-3 w-3" /> Unlock all
-        </Link>
-      </div>
+      )}
 
       <div
         className="marquee-pause relative overflow-hidden"
