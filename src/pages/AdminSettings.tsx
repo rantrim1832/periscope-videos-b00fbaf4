@@ -91,6 +91,12 @@ const AdminSettings = () => {
                     Property Scraper
                   </Link>
                 </Button>
+                <Button asChild className="w-full justify-start text-sm md:text-base" variant="outline">
+                  <Link to="/admin/curated">
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    Curated video library
+                  </Link>
+                </Button>
               </CardContent>
             </Card>
           )}
