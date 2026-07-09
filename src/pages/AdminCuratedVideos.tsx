@@ -112,7 +112,7 @@ const AdminCuratedVideos = () => {
     setEditingId('new');
     setDraft({
       slug: '', label: '', hint: '', feed_category: 'Renter tips',
-      suggested_queries: [], sort_order: (categories.at(-1)?.sort_order ?? 0) + 10, is_active: true,
+      suggested_queries: [], sort_order: (categories[categories.length - 1]?.sort_order ?? 0) + 10, is_active: true,
     });
   };
 
