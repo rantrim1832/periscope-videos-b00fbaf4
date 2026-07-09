@@ -17,6 +17,8 @@ interface ImportBody {
   category: string;        // slug, e.g. "maintenance"
   maxResults?: number;     // 1–50
   videoDuration?: 'any' | 'short' | 'medium' | 'long';
+  mode?: 'insert' | 'preview';
+  videoIds?: string[];     // when present, only insert these specific IDs (must already be found by prior preview)
 }
 
 Deno.serve(async (req) => {
@@ -57,6 +59,8 @@ Deno.serve(async (req) => {
     const category = (body.category ?? '').trim();
     const maxResults = Math.min(Math.max(body.maxResults ?? 25, 1), 50);
     const videoDuration = body.videoDuration ?? 'any';
+    const mode = body.mode ?? 'insert';
+    const selectedIds = Array.isArray(body.videoIds) ? new Set(body.videoIds) : null;
     if (!query || !category) return json({ error: 'query and category are required' }, 400);
 
     // 1) Search for video IDs.
@@ -80,7 +84,7 @@ Deno.serve(async (req) => {
     const ids: string[] = (searchJson.items ?? [])
       .map((it: any) => it?.id?.videoId)
       .filter(Boolean);
-    if (ids.length === 0) return json({ imported: 0, skipped: 0, results: [] });
+    if (ids.length === 0) return json({ imported: 0, skipped: 0, totalFound: 0, candidates: [] });
 
     // 2) Skip anything already stored (by yt:<id> tag).
     const ytTags = ids.map((id) => `yt:${id}`);
@@ -96,12 +100,15 @@ Deno.serve(async (req) => {
     }
     const freshIds = ids.filter((id) => !existingIds.has(id));
 
-    // 3) Fetch full snippet data for the fresh IDs.
+    // 3) Fetch full snippet data for ALL ids (needed for preview thumbnails, and
+    //    for selective insert). If inserting, we still only insert fresh ones.
+    const idsToDetail = mode === 'preview' ? ids : freshIds;
     const rows: any[] = [];
-    if (freshIds.length > 0) {
+    const candidates: any[] = [];
+    if (idsToDetail.length > 0) {
       const detailsUrl = new URL(`${YT_API}/videos`);
       detailsUrl.searchParams.set('part', 'snippet');
-      detailsUrl.searchParams.set('id', freshIds.join(','));
+      detailsUrl.searchParams.set('id', idsToDetail.join(','));
       detailsUrl.searchParams.set('key', ytKey);
       const detailsRes = await fetch(detailsUrl);
       if (!detailsRes.ok) {
@@ -115,6 +122,19 @@ Deno.serve(async (req) => {
         const title = String(snip.title ?? '').slice(0, 300);
         const channel = String(snip.channelTitle ?? '').slice(0, 120);
         const description = String(snip.description ?? '').slice(0, 400);
+        const already = existingIds.has(vid);
+        candidates.push({
+          videoId: vid,
+          title: title || 'Untitled',
+          channel,
+          description,
+          thumbnail: `https://img.youtube.com/vi/${vid}/mqdefault.jpg`,
+          watchUrl: `https://www.youtube.com/watch?v=${vid}`,
+          alreadyImported: already,
+        });
+        if (mode === 'preview') continue;
+        if (already) continue;
+        if (selectedIds && !selectedIds.has(vid)) continue;
         rows.push({
           title: title || 'Untitled',
           embed_url: `https://www.youtube.com/embed/${vid}`,
@@ -133,6 +153,15 @@ Deno.serve(async (req) => {
       }
     }
 
+    if (mode === 'preview') {
+      return json({
+        mode: 'preview',
+        totalFound: ids.length,
+        alreadyImported: ids.length - freshIds.length,
+        candidates,
+      });
+    }
+
     let inserted = 0;
     if (rows.length > 0) {
       const { error: insErr, count } = await admin
@@ -144,7 +173,7 @@ Deno.serve(async (req) => {
 
     return json({
       imported: inserted,
-      skipped: ids.length - freshIds.length,
+      skipped: ids.length - inserted,
       totalFound: ids.length,
     });
   } catch (e) {
