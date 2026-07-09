@@ -36,24 +36,7 @@ Deno.serve(async (req) => {
     const ytKey = Deno.env.get('YOUTUBE_API_KEY');
     if (!ytKey) return json({ error: 'YOUTUBE_API_KEY not configured' }, 500);
 
-    // Verify caller is an admin.
-    const authed = createClient(supaUrl, anonKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
-    const token = authHeader.replace('Bearer ', '');
-    const { data: claims, error: claimsErr } = await authed.auth.getClaims(token);
-    if (claimsErr || !claims?.claims?.sub) return json({ error: 'Unauthorized' }, 401);
-    const userId = claims.claims.sub as string;
-
     const admin = createClient(supaUrl, serviceKey);
-    const { data: role } = await admin
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', userId)
-      .eq('role', 'admin')
-      .maybeSingle();
-    if (!role) return json({ error: 'Admin only' }, 403);
-
     const body = (await req.json()) as ImportBody;
     const query = (body.query ?? '').trim();
     const category = (body.category ?? '').trim();
@@ -62,6 +45,25 @@ Deno.serve(async (req) => {
     const mode = body.mode ?? 'insert';
     const selectedIds = Array.isArray(body.videoIds) ? new Set(body.videoIds) : null;
     if (!query || !category) return json({ error: 'query and category are required' }, 400);
+
+    if (mode !== 'preview') {
+      // Preview mode is read-only and only talks to YouTube. Database writes
+      // still require an admin caller.
+      const authed = createClient(supaUrl, anonKey, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const token = authHeader.replace('Bearer ', '');
+      const { data: claims, error: claimsErr } = await authed.auth.getClaims(token);
+      if (claimsErr || !claims?.claims?.sub) return json({ error: 'Unauthorized' }, 401);
+      const userId = claims.claims.sub as string;
+      const { data: role } = await admin
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId)
+        .eq('role', 'admin')
+        .maybeSingle();
+      if (!role) return json({ error: 'Admin only' }, 403);
+    }
 
     // 1) Search for video IDs.
     const searchUrl = new URL(`${YT_API}/search`);
