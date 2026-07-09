@@ -93,7 +93,6 @@ const Browse = () => {
     const rest = filteredStates.filter((s) => s.state !== localState);
     return [...local, ...rest];
   }, [filteredStates, localState]);
-  const localStateRow = states.find((s) => s.state === localState);
 
   return (
     <div className="min-h-screen bg-background">
