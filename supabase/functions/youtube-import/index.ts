@@ -27,9 +27,6 @@ Deno.serve(async (req) => {
 
   try {
     const authHeader = req.headers.get('Authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
-      return json({ error: 'Unauthorized' }, 401);
-    }
 
     const supaUrl = Deno.env.get('SUPABASE_URL')!;
     const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
@@ -50,6 +47,7 @@ Deno.serve(async (req) => {
     if (mode !== 'preview') {
       // Preview mode is read-only and only talks to YouTube. Database writes
       // still require an admin caller.
+      if (!authHeader?.startsWith('Bearer ')) return json({ error: 'Unauthorized' }, 401);
       const authed = createClient(supaUrl, anonKey, {
         global: { headers: { Authorization: authHeader } },
       });
