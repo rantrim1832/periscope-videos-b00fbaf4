@@ -292,12 +292,22 @@ const AdminCuratedVideos = () => {
       ...r,
       suggested_queries: Array.isArray(r.suggested_queries) ? r.suggested_queries : [],
     })) as Category[];
-    // Fallback to legacy static list if the DB is empty for any reason.
-    const effective = list.length > 0 ? list : CURATED_CATEGORIES.map((c, i) => ({
-      id: c.slug, slug: c.slug, label: c.label, hint: c.hint,
-      feed_category: c.feedCategory, suggested_queries: c.suggestedQueries,
-      sort_order: i * 10, is_active: true,
-    }));
+    // Keep built-in topics visible even when the database already contains
+    // older saved topics. Saved rows win when a slug exists in both places.
+    const savedSlugs = new Set(list.map((category) => category.slug));
+    const missingBuiltIns = CURATED_CATEGORIES
+      .filter((category) => !savedSlugs.has(category.slug))
+      .map((category, index) => ({
+        id: `builtin:${category.slug}`,
+        slug: category.slug,
+        label: category.label,
+        hint: category.hint,
+        feed_category: category.feedCategory,
+        suggested_queries: category.suggestedQueries,
+        sort_order: (list.length + index) * 10,
+        is_active: true,
+      }));
+    const effective = [...list, ...missingBuiltIns];
     setCategories(effective);
     if (!slug && effective[0]) {
       setSlug(effective[0].slug);
@@ -352,7 +362,7 @@ const AdminCuratedVideos = () => {
     };
     setSavingCat(true);
     try {
-      if (editingId === 'new') {
+      if (editingId === 'new' || editingId?.startsWith('builtin:')) {
         const { error } = await supabase.from('curated_categories').insert(payload);
         if (error) throw error;
       } else if (editingId) {
@@ -370,6 +380,9 @@ const AdminCuratedVideos = () => {
   };
 
   const deleteCategory = async (c: Category) => {
+    if (c.id.startsWith('builtin:')) {
+      return toast({ title: 'Built-in topic', description: 'Built-in topics stay available so their videos can always be previewed.' });
+    }
     if (!confirm(`Delete topic "${c.label}"? Videos already imported stay in the library.`)) return;
     const { error } = await supabase.from('curated_categories').delete().eq('id', c.id);
     if (error) return toast({ title: 'Delete failed', description: error.message, variant: 'destructive' });
