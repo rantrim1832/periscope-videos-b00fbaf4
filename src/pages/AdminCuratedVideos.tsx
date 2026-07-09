@@ -342,6 +342,46 @@ const AdminCuratedVideos = () => {
     }
   };
 
+  const previewOneQuery = async (catSlug: string, q: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('youtube-import', {
+        body: { query: q, category: catSlug, maxResults: 25, mode: 'preview' },
+      });
+      if (error) throw error;
+      return {
+        totalFound: data.totalFound ?? 0,
+        alreadyImported: data.alreadyImported ?? 0,
+        candidates: data.candidates ?? [],
+      };
+    } catch (e: any) {
+      toast({ title: 'Preview failed', description: e.message ?? String(e), variant: 'destructive' });
+      return null;
+    }
+  };
+
+  const importSelectedIds = async (catSlug: string, q: string, videoIds: string[]) => {
+    const key = `${catSlug}::${q}`;
+    setSeedingKey(key);
+    try {
+      const { data, error } = await supabase.functions.invoke('youtube-import', {
+        body: { query: q, category: catSlug, maxResults: 25, videoIds },
+      });
+      if (error) throw error;
+      toast({
+        title: `Imported ${data.imported} selected videos`,
+        description: `${data.skipped} skipped · ${data.totalFound} found for "${q}"`,
+      });
+      setBrowserRefresh((n) => n + 1);
+      load();
+      return { imported: data.imported ?? 0, skipped: data.skipped ?? 0, totalFound: data.totalFound ?? 0 };
+    } catch (e: any) {
+      toast({ title: 'Import failed', description: e.message ?? String(e), variant: 'destructive' });
+      return null;
+    } finally {
+      setSeedingKey(null);
+    }
+  };
+
   const removeAsync = async (id: string) => {
     await remove(id);
   };
@@ -418,6 +458,8 @@ const AdminCuratedVideos = () => {
           seedingKey={seedingKey}
           onDelete={removeAsync}
           refreshKey={browserRefresh}
+          onPreviewQuery={previewOneQuery}
+          onImportSelected={importSelectedIds}
         />
 
         <Card className="mb-6">
