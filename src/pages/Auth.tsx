@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,6 +7,9 @@ import { useToast } from '@/hooks/use-toast';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Video } from 'lucide-react';
 import { Session, User } from '@supabase/supabase-js';
+import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile';
+
+const TURNSTILE_SITE_KEY = '0x4AAAAAADyx4N9eVSdP9fV4';
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
@@ -17,6 +20,8 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const turnstileRef = useRef<TurnstileInstance | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -58,6 +63,26 @@ const Auth = () => {
     setLoading(true);
 
     try {
+      if (!captchaToken) {
+        toast({
+          title: 'Verification required',
+          description: 'Please complete the captcha challenge.',
+          variant: 'destructive',
+        });
+        setLoading(false);
+        return;
+      }
+
+      const { data: verifyData, error: verifyError } = await supabase.functions.invoke(
+        'verify-turnstile',
+        { body: { token: captchaToken } }
+      );
+      if (verifyError || !verifyData?.success) {
+        turnstileRef.current?.reset();
+        setCaptchaToken(null);
+        throw new Error('Captcha verification failed. Please try again.');
+      }
+
       if (isSignUp) {
         const redirectUrl = returnTo && returnTo.startsWith('/')
           ? `${window.location.origin}${returnTo}`
@@ -96,6 +121,8 @@ const Auth = () => {
         description: error instanceof Error ? error.message : "Something went wrong",
         variant: "destructive",
       });
+      turnstileRef.current?.reset();
+      setCaptchaToken(null);
     } finally {
       setLoading(false);
     }
@@ -149,6 +176,16 @@ const Auth = () => {
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? 'Processing...' : (isSignUp ? 'Sign Up' : 'Sign In')}
             </Button>
+            <div className="flex justify-center">
+              <Turnstile
+                ref={turnstileRef}
+                siteKey={TURNSTILE_SITE_KEY}
+                onSuccess={(token) => setCaptchaToken(token)}
+                onExpire={() => setCaptchaToken(null)}
+                onError={() => setCaptchaToken(null)}
+                options={{ theme: 'auto' }}
+              />
+            </div>
           </form>
           <div className="mt-4 text-center">
             <button
