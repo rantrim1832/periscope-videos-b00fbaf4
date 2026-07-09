@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      curated_categories: {
+        Row: {
+          created_at: string
+          feed_category: string
+          hint: string
+          id: string
+          is_active: boolean
+          label: string
+          slug: string
+          sort_order: number
+          suggested_queries: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          feed_category?: string
+          hint?: string
+          id?: string
+          is_active?: boolean
+          label: string
+          slug: string
+          sort_order?: number
+          suggested_queries?: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          feed_category?: string
+          hint?: string
+          id?: string
+          is_active?: boolean
+          label?: string
+          slug?: string
+          sort_order?: number
+          suggested_queries?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
       imported_properties: {
         Row: {
           address: string | null
