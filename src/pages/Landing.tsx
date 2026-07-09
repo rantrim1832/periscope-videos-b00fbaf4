@@ -112,22 +112,25 @@ const Landing = () => {
     <div className="min-h-dvh bg-background">
       {/* Nav */}
       <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur">
-        <div className="container flex h-16 items-center justify-between">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="bg-gradient-to-br from-primary to-secondary p-2 rounded-lg">
-              <Video className="h-5 w-5 text-primary-foreground" aria-hidden="true" />
+        <div className="container flex h-14 md:h-16 items-center justify-between gap-2">
+          <Link to="/" className="flex items-center gap-2 min-w-0">
+            <div className="bg-gradient-to-br from-primary to-secondary p-1.5 md:p-2 rounded-lg shrink-0">
+              <Video className="h-4 w-4 md:h-5 md:w-5 text-primary-foreground" aria-hidden="true" />
             </div>
-            <div>
-              <div className="font-bold text-lg leading-none text-primary">Periscope</div>
-              <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Apartment reviews</div>
+            <div className="min-w-0">
+              <div className="font-bold text-base md:text-lg leading-none text-primary truncate">Periscope</div>
+              <div className="hidden sm:block text-[10px] uppercase tracking-widest text-muted-foreground">Apartment reviews</div>
             </div>
           </Link>
-          <nav className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" asChild>
+          <nav className="flex items-center gap-1 md:gap-2 shrink-0">
+            <Button variant="ghost" size="sm" asChild className="px-2 md:px-3">
               <Link to="/auth">Sign in</Link>
             </Button>
-            <Button variant="hero" size="sm" asChild>
-              <Link to="/auth?returnTo=%2Fbrowse">Create free account</Link>
+            <Button variant="hero" size="sm" asChild className="px-3 md:px-4">
+              <Link to="/auth?returnTo=%2Fbrowse">
+                <span className="sm:hidden">Sign up</span>
+                <span className="hidden sm:inline">Create free account</span>
+              </Link>
             </Button>
           </nav>
         </div>
@@ -135,22 +138,22 @@ const Landing = () => {
 
       {/* Hero */}
       <section className="relative overflow-hidden border-b border-border/40 bg-gradient-to-b from-primary/[0.08] via-background to-background">
-        <div className="container py-16 md:py-28 grid md:grid-cols-2 gap-10 md:gap-16 items-center">
-          <div className="space-y-6">
-            <span className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-primary">
+        <div className="container py-10 md:py-28 grid md:grid-cols-2 gap-8 md:gap-16 items-center">
+          <div className="space-y-5 md:space-y-6">
+            <span className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[11px] md:text-xs font-semibold uppercase tracking-wider text-primary">
               <Eye className="h-3 w-3" /> See it before you sign
             </span>
-            <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-balance leading-[1.05]">
+            <h1 className="text-[2.25rem] leading-[1.05] md:text-6xl font-bold tracking-tight text-balance">
               Apartment <span className="text-primary">video reviews</span>.
             </h1>
-            <p className="text-lg md:text-xl text-muted-foreground max-w-xl">
+            <p className="text-base md:text-xl text-muted-foreground max-w-xl">
               See real video reviews from real residents before you sign the lease. The 6&nbsp;PM gym, the deposit fight, the walls you can hear through — not the brochure.
             </p>
-            <div className="flex flex-wrap gap-3 pt-2">
-              <Button variant="hero" size="lg" asChild>
+            <div className="flex flex-col sm:flex-row flex-wrap gap-3 pt-1 md:pt-2">
+              <Button variant="hero" size="lg" asChild className="w-full sm:w-auto">
                 <Link to={AUTH_RENTER}>Create free account</Link>
               </Button>
-              <Button variant="outline" size="lg" asChild>
+              <Button variant="outline" size="lg" asChild className="w-full sm:w-auto">
                 <Link to="/auth">I already have one</Link>
               </Button>
             </div>
@@ -160,7 +163,7 @@ const Landing = () => {
               <Link to="/privacy" className="underline">Privacy Policy</Link>.
             </p>
           </div>
-          <div className="relative">
+          <div className="relative hidden md:block">
             <div className="aspect-[4/5] rounded-3xl border border-border/60 bg-gradient-to-br from-primary/15 via-secondary/10 to-transparent p-8 shadow-elevated">
               <div className="h-full rounded-2xl bg-card/60 backdrop-blur border border-border/40 flex flex-col justify-between p-6">
                 <div className="flex items-center justify-between">
