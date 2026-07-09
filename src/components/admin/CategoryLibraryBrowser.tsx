@@ -56,6 +56,8 @@ export function CategoryLibraryBrowser({
   refreshKey,
   onPreviewQuery,
   onImportSelected,
+  openSlug,
+  openTick,
 }: {
   categories: BrowserCategory[];
   onSeedQuery: (slug: string, query: string) => Promise<{ imported: number; skipped: number; totalFound: number } | null>;
@@ -64,6 +66,8 @@ export function CategoryLibraryBrowser({
   refreshKey: number;
   onPreviewQuery: (slug: string, query: string) => Promise<PreviewResult | null>;
   onImportSelected: (slug: string, query: string, videoIds: string[]) => Promise<{ imported: number; skipped: number; totalFound: number } | null>;
+  openSlug?: string | null;
+  openTick?: number;
 }) {
   const { toast } = useToast();
   const [counts, setCounts] = useState<Record<string, number>>({});
@@ -98,6 +102,21 @@ export function CategoryLibraryBrowser({
     loadCounts();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refreshKey]);
+
+  // Allow parent to programmatically expand a topic (used by the "Preview
+  // videos" button on the Topics editor above).
+  useEffect(() => {
+    if (!openSlug) return;
+    setExpanded(openSlug);
+    if (!videosBySlug[openSlug]) loadVideos(openSlug);
+    // Auto-open the first query's preview so the user sees videos immediately.
+    const cat = categories.find((c) => c.slug === openSlug);
+    const firstQ = cat?.suggested_queries?.[0];
+    if (firstQ) {
+      openPreview(openSlug, firstQ);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openSlug, openTick]);
 
   const loadVideos = async (slug: string) => {
     setLoadingSlug(slug);

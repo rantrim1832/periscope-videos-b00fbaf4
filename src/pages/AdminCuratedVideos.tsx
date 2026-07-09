@@ -9,7 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { CURATED_CATEGORIES } from '@/lib/curatedCategories';
 import { parseEmbed } from '@/services/providers/embed';
 import { Loader2, Youtube, Link2, Trash2, Sparkles, Plus, Save, Pencil } from 'lucide-react';
-import { Building2, Star } from 'lucide-react';
+import { Building2, Star, Eye } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { CategoryLibraryBrowser } from '@/components/admin/CategoryLibraryBrowser';
 
@@ -247,6 +247,17 @@ const AdminCuratedVideos = () => {
   const [browserRefresh, setBrowserRefresh] = useState(0);
   const [seedingKey, setSeedingKey] = useState<string | null>(null);
   const [previewCache, setPreviewCache] = useState<Record<string, YouTubePreviewCandidate[]>>({});
+  const [openBrowserSlug, setOpenBrowserSlug] = useState<string | null>(null);
+  const [openBrowserTick, setOpenBrowserTick] = useState(0);
+
+  const jumpToPreview = (catSlug: string) => {
+    setOpenBrowserSlug(catSlug);
+    setOpenBrowserTick((n) => n + 1);
+    // Scroll browser section into view
+    setTimeout(() => {
+      document.getElementById('category-library-browser')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
+  };
 
   // Topic editor state
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -600,6 +611,9 @@ const AdminCuratedVideos = () => {
                       </div>
                     </div>
                     <div className="flex gap-2">
+                      <Button size="sm" onClick={() => jumpToPreview(c.slug)} disabled={editingId !== null}>
+                        <Eye className="w-4 h-4 mr-1" /> Preview videos
+                      </Button>
                       <Button size="sm" variant="outline" onClick={() => startEdit(c)} disabled={editingId !== null}>Edit</Button>
                       <Button size="sm" variant="ghost" onClick={() => deleteCategory(c)} disabled={editingId !== null}>
                         <Trash2 className="w-4 h-4" />
@@ -619,6 +633,7 @@ const AdminCuratedVideos = () => {
           </CardContent>
         </Card>}
 
+        <div id="category-library-browser" />
         <CategoryLibraryBrowser
           categories={categories}
           onSeedQuery={seedOneQuery}
@@ -627,6 +642,8 @@ const AdminCuratedVideos = () => {
           refreshKey={browserRefresh}
           onPreviewQuery={previewOneQuery}
           onImportSelected={importSelectedIds}
+          openSlug={openBrowserSlug}
+          openTick={openBrowserTick}
         />
 
         <Card className="mb-6">
