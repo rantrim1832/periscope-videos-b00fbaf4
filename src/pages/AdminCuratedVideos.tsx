@@ -8,7 +8,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { CURATED_CATEGORIES } from '@/lib/curatedCategories';
 import { parseEmbed } from '@/services/providers/embed';
-import { Loader2, Youtube, Link2, Trash2, Sparkles } from 'lucide-react';
+import { Loader2, Youtube, Link2, Trash2, Sparkles, Plus, Save, Pencil } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
 
 type Row = {
   id: string;
@@ -21,17 +22,34 @@ type Row = {
   moderation_status: string;
 };
 
+type Category = {
+  id: string;
+  slug: string;
+  label: string;
+  hint: string;
+  feed_category: string;
+  suggested_queries: string[];
+  sort_order: number;
+  is_active: boolean;
+};
+
+const FEED_CATEGORY_OPTIONS = [
+  'Maintenance issues','Deposit disputes','Property tours','Renter tips',
+  'Resident warnings','Property comparison',
+];
+
 const AdminCuratedVideos = () => {
   const { toast } = useToast();
-  const [slug, setSlug] = useState(CURATED_CATEGORIES[0].slug);
-  const [query, setQuery] = useState(CURATED_CATEGORIES[0].suggestedQueries[0]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [slug, setSlug] = useState<string>('');
+  const [query, setQuery] = useState<string>('');
   const [count, setCount] = useState(25);
   const [importing, setImporting] = useState(false);
   const [bulkSeeding, setBulkSeeding] = useState(false);
   const [perQuery, setPerQuery] = useState(15);
 
   const [pasteUrl, setPasteUrl] = useState('');
-  const [pasteSlug, setPasteSlug] = useState(CURATED_CATEGORIES[0].slug);
+  const [pasteSlug, setPasteSlug] = useState<string>('');
   const [pasteTitle, setPasteTitle] = useState('');
   const [pasteCreator, setPasteCreator] = useState('');
   const [pasting, setPasting] = useState(false);
@@ -39,6 +57,37 @@ const AdminCuratedVideos = () => {
   const [rows, setRows] = useState<Row[]>([]);
   const [filter, setFilter] = useState<string>('all');
   const [loading, setLoading] = useState(true);
+
+  // Topic editor state
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [draft, setDraft] = useState<Partial<Category>>({});
+  const [savingCat, setSavingCat] = useState(false);
+
+  const loadCategories = async () => {
+    const { data, error } = await supabase
+      .from('curated_categories')
+      .select('*')
+      .order('sort_order', { ascending: true });
+    if (error) return toast({ title: 'Load topics failed', description: error.message, variant: 'destructive' });
+    const list = (data ?? []).map((r: any) => ({
+      ...r,
+      suggested_queries: Array.isArray(r.suggested_queries) ? r.suggested_queries : [],
+    })) as Category[];
+    // Fallback to legacy static list if the DB is empty for any reason.
+    const effective = list.length > 0 ? list : CURATED_CATEGORIES.map((c, i) => ({
+      id: c.slug, slug: c.slug, label: c.label, hint: c.hint,
+      feed_category: c.feedCategory, suggested_queries: c.suggestedQueries,
+      sort_order: i * 10, is_active: true,
+    }));
+    setCategories(effective);
+    if (!slug && effective[0]) {
+      setSlug(effective[0].slug);
+      setPasteSlug(effective[0].slug);
+      setQuery(effective[0].suggested_queries[0] ?? '');
+    }
+  };
+
+  useEffect(() => { loadCategories(); /* eslint-disable-next-line */ }, []);
 
   const load = async () => {
     setLoading(true);
@@ -52,6 +101,60 @@ const AdminCuratedVideos = () => {
     if (error) toast({ title: 'Load failed', description: error.message, variant: 'destructive' });
     setRows((data ?? []) as Row[]);
     setLoading(false);
+  };
+
+  const startEdit = (c: Category) => {
+    setEditingId(c.id);
+    setDraft({ ...c, suggested_queries: [...c.suggested_queries] });
+  };
+
+  const startNew = () => {
+    setEditingId('new');
+    setDraft({
+      slug: '', label: '', hint: '', feed_category: 'Renter tips',
+      suggested_queries: [], sort_order: (categories.at(-1)?.sort_order ?? 0) + 10, is_active: true,
+    });
+  };
+
+  const saveDraft = async () => {
+    const d = draft;
+    if (!d.slug?.trim() || !d.label?.trim()) {
+      return toast({ title: 'Slug and label required', variant: 'destructive' });
+    }
+    const cleanSlug = d.slug.trim().toLowerCase().replace(/[^a-z0-9-]+/g, '-');
+    const payload = {
+      slug: cleanSlug,
+      label: d.label.trim(),
+      hint: d.hint?.trim() ?? '',
+      feed_category: d.feed_category ?? 'Renter tips',
+      suggested_queries: (d.suggested_queries ?? []).map((s) => s.trim()).filter(Boolean),
+      sort_order: Number(d.sort_order ?? 0),
+      is_active: d.is_active ?? true,
+    };
+    setSavingCat(true);
+    try {
+      if (editingId === 'new') {
+        const { error } = await supabase.from('curated_categories').insert(payload);
+        if (error) throw error;
+      } else if (editingId) {
+        const { error } = await supabase.from('curated_categories').update(payload).eq('id', editingId);
+        if (error) throw error;
+      }
+      toast({ title: 'Topic saved' });
+      setEditingId(null); setDraft({});
+      loadCategories();
+    } catch (e: any) {
+      toast({ title: 'Save failed', description: e.message ?? String(e), variant: 'destructive' });
+    } finally {
+      setSavingCat(false);
+    }
+  };
+
+  const deleteCategory = async (c: Category) => {
+    if (!confirm(`Delete topic "${c.label}"? Videos already imported stay in the library.`)) return;
+    const { error } = await supabase.from('curated_categories').delete().eq('id', c.id);
+    if (error) return toast({ title: 'Delete failed', description: error.message, variant: 'destructive' });
+    loadCategories();
   };
 
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [filter]);
@@ -140,7 +243,7 @@ const AdminCuratedVideos = () => {
     setRows((r) => r.filter((x) => x.id !== id));
   };
 
-  const currentCat = CURATED_CATEGORIES.find((c) => c.slug === slug)!;
+  const currentCat = categories.find((c) => c.slug === slug) ?? categories[0];
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -197,11 +300,11 @@ const AdminCuratedVideos = () => {
                 onChange={(e) => {
                   const s = e.target.value;
                   setSlug(s);
-                  const c = CURATED_CATEGORIES.find((x) => x.slug === s);
-                  if (c) setQuery(c.suggestedQueries[0]);
+                  const c = categories.find((x) => x.slug === s);
+                  if (c && c.suggested_queries[0]) setQuery(c.suggested_queries[0]);
                 }}
               >
-                {CURATED_CATEGORIES.map((c) => (
+                {categories.map((c) => (
                   <option key={c.slug} value={c.slug}>{c.label}</option>
                 ))}
               </select>
@@ -212,7 +315,7 @@ const AdminCuratedVideos = () => {
               </Button>
             </div>
             <div className="flex flex-wrap gap-2">
-              {currentCat.suggestedQueries.map((q) => (
+              {(currentCat?.suggested_queries ?? []).map((q) => (
                 <button
                   key={q}
                   onClick={() => setQuery(q)}
@@ -237,7 +340,7 @@ const AdminCuratedVideos = () => {
                 className="h-10 rounded-md border border-input bg-background px-3 text-sm"
                 value={pasteSlug} onChange={(e) => setPasteSlug(e.target.value)}
               >
-                {CURATED_CATEGORIES.map((c) => (
+                {categories.map((c) => (
                   <option key={c.slug} value={c.slug}>{c.label}</option>
                 ))}
               </select>
@@ -258,7 +361,7 @@ const AdminCuratedVideos = () => {
             onChange={(e) => setFilter(e.target.value)}
           >
             <option value="all">All categories</option>
-            {CURATED_CATEGORIES.map((c) => (
+            {categories.map((c) => (
               <option key={c.slug} value={c.slug}>{c.label}</option>
             ))}
           </select>
