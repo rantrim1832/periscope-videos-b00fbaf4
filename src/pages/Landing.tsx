@@ -248,3 +248,109 @@ const Landing = () => {
 };
 
 export default Landing;
+
+/**
+ * A YouTube-style horizontal shelf of locked video cards for one category.
+ * All cards link to the auth flow — this is a tease, not a player.
+ */
+function FeedRail({
+  category,
+  items,
+  authHref,
+}: {
+  category: string;
+  items: FeedItem[];
+  authHref: string;
+}) {
+  const loading = items.length === 0;
+  // Pad short rails with skeletons so every shelf reads as "there's more".
+  const cards = loading
+    ? Array.from({ length: 6 }).map((_, i) => ({ skeleton: true, key: `s-${i}` }))
+    : items.map((i) => ({ skeleton: false, key: i.id, item: i }));
+
+  return (
+    <div>
+      <div className="flex items-baseline justify-between gap-4 mb-3 px-1">
+        <h3 className="text-lg md:text-xl font-bold tracking-tight">{category}</h3>
+        <Link
+          to={authHref}
+          className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+        >
+          Watch all <ChevronRight className="h-3.5 w-3.5" />
+        </Link>
+      </div>
+
+      <div className="relative -mx-4 md:-mx-6">
+        {/* Right-edge fade hint — signals horizontal scroll */}
+        <div className="pointer-events-none absolute right-0 top-0 bottom-3 w-16 bg-gradient-to-l from-muted/40 to-transparent z-10 hidden md:block" />
+
+        <div className="flex gap-3 md:gap-4 overflow-x-auto no-scrollbar snap-x snap-mandatory scroll-px-4 md:scroll-px-6 px-4 md:px-6 pb-3">
+          {cards.map((c) =>
+            c.skeleton ? (
+              <div
+                key={c.key}
+                className="shrink-0 w-[46vw] max-w-[220px] md:w-[220px] aspect-[9/16] rounded-xl bg-muted animate-pulse snap-start"
+              />
+            ) : (
+              <Link
+                key={c.key}
+                to={authHref}
+                className="group relative shrink-0 w-[46vw] max-w-[220px] md:w-[220px] aspect-[9/16] overflow-hidden rounded-xl border border-border/60 bg-card shadow-card hover:shadow-card-hover transition-all hover:-translate-y-0.5 snap-start"
+              >
+                {c.item!.thumbnailUrl ? (
+                  <img
+                    src={c.item!.thumbnailUrl}
+                    alt=""
+                    loading="lazy"
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                ) : (
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/25 to-secondary/25" />
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-foreground/95 via-foreground/40 to-transparent" />
+
+                {/* Center play button, YouTube-shorts style */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-full bg-background/90 text-primary shadow-lg backdrop-blur transition-transform group-hover:scale-110">
+                    <Play className="h-5 w-5 translate-x-[1px] fill-current" />
+                  </div>
+                </div>
+
+                {/* Lock chip — reveals gate on hover */}
+                <div className="absolute left-2 top-2 flex items-center gap-1 rounded-full bg-background/90 px-2 py-1 text-[10px] font-semibold text-foreground backdrop-blur">
+                  <Lock className="h-3 w-3" /> Sign up
+                </div>
+
+                <div className="absolute inset-x-0 bottom-0 p-3 space-y-1">
+                  <p className="line-clamp-2 text-sm font-semibold text-background leading-tight">
+                    {c.item!.title}
+                  </p>
+                  <div className="flex items-center gap-1 text-[11px] text-background/85">
+                    <MapPin className="h-3 w-3 shrink-0" />
+                    <span className="truncate">{c.item!.propertyName}</span>
+                  </div>
+                </div>
+              </Link>
+            )
+          )}
+
+          {/* Trailing "see all" card */}
+          {!loading && (
+            <Link
+              to={authHref}
+              className="shrink-0 w-[46vw] max-w-[220px] md:w-[220px] aspect-[9/16] rounded-xl border-2 border-dashed border-primary/40 bg-primary/5 flex flex-col items-center justify-center gap-3 text-primary hover:bg-primary/10 transition-colors snap-start"
+            >
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/15">
+                <Lock className="h-5 w-5" />
+              </div>
+              <div className="text-center px-4">
+                <div className="font-semibold text-sm">Sign up free</div>
+                <div className="text-[11px] text-muted-foreground mt-1">Unlock every video</div>
+              </div>
+            </Link>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
