@@ -1,7 +1,15 @@
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import { Video, Shield, Building2, PlayCircle, MessageSquare, Eye } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Video, Shield, Building2, PlayCircle, MessageSquare, Eye, Lock, MapPin, Home, Users } from 'lucide-react';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { getPropertyProvider } from '@/data/propertyProvider';
+import { FEED_CATEGORIES } from '@/domain/property';
+
+const AUTH_RENTER = '/auth?returnTo=%2Ffeed';
+const AUTH_MANAGER = '/auth?returnTo=%2Fmanager';
 
 /**
  * Public marketing landing page shown to unauthenticated visitors at `/`.
@@ -12,6 +20,18 @@ const Landing = () => {
     'Periscope — Real apartment reviews & resident video tours',
     'See what living in a large apartment building is really like. Real resident reviews, video tours, and honest ratings — before you sign the lease.'
   );
+
+  const { data: feedItems = [] } = useQuery({
+    queryKey: ['landing-feed'],
+    queryFn: () => getPropertyProvider().feed(),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const [category, setCategory] = useState<string>('All');
+  const filtered = useMemo(() => {
+    const list = category === 'All' ? feedItems : feedItems.filter((i) => i.category === category);
+    return list.slice(0, 12);
+  }, [feedItems, category]);
 
   return (
     <div className="min-h-dvh bg-background">
@@ -53,7 +73,7 @@ const Landing = () => {
             </p>
             <div className="flex flex-wrap gap-3 pt-2">
               <Button variant="hero" size="lg" asChild>
-                <Link to="/auth?returnTo=%2Fbrowse">Create free account</Link>
+                <Link to={AUTH_RENTER}>Create free account</Link>
               </Button>
               <Button variant="outline" size="lg" asChild>
                 <Link to="/auth">I already have one</Link>
@@ -92,6 +112,133 @@ const Landing = () => {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Join paths: Renters vs Property managers */}
+      <section className="container py-14 md:py-20">
+        <div className="text-center max-w-2xl mx-auto mb-10">
+          <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Join Periscope</h2>
+          <p className="text-muted-foreground mt-3">Two ways in — pick the one that fits you. Free either way.</p>
+        </div>
+        <div className="grid md:grid-cols-2 gap-6">
+          <div className="rounded-2xl border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-background to-background p-8 flex flex-col">
+            <div className="w-12 h-12 rounded-xl bg-primary/15 text-primary flex items-center justify-center mb-4">
+              <Users className="h-6 w-6" />
+            </div>
+            <h3 className="text-2xl font-bold mb-2">Renters — join free</h3>
+            <p className="text-muted-foreground mb-6 flex-1">
+              Watch real video reviews. Post your own. Compare buildings side by side. See the Truth Score before you tour.
+            </p>
+            <Button variant="hero" size="lg" asChild className="w-full">
+              <Link to={AUTH_RENTER}>Sign up as a renter</Link>
+            </Button>
+          </div>
+          <div className="rounded-2xl border-2 border-secondary/40 bg-gradient-to-br from-secondary/10 via-background to-background p-8 flex flex-col">
+            <div className="w-12 h-12 rounded-xl bg-secondary/15 text-secondary flex items-center justify-center mb-4">
+              <Building2 className="h-6 w-6" />
+            </div>
+            <h3 className="text-2xl font-bold mb-2">Property managers — join free</h3>
+            <p className="text-muted-foreground mb-6 flex-1">
+              Claim your building. Upload official tours. Respond to residents. Get alerts the moment a new review is posted.
+            </p>
+            <Button variant="outline" size="lg" asChild className="w-full">
+              <Link to={AUTH_MANAGER}>Sign up as a manager</Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Locked feed preview */}
+      <section className="border-y border-border/40 bg-muted/20">
+        <div className="container py-14 md:py-20">
+          <div className="flex items-end justify-between gap-4 mb-6">
+            <div>
+              <span className="text-xs font-semibold uppercase tracking-wider text-primary">The feed</span>
+              <h2 className="text-2xl md:text-3xl font-bold tracking-tight mt-1">Real videos from real residents</h2>
+              <p className="text-muted-foreground mt-2 text-sm md:text-base">Browse the categories below. Create a free account to watch.</p>
+            </div>
+          </div>
+
+          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-3 mb-6 -mx-4 px-4">
+            {FEED_CATEGORIES.map((c) => (
+              <button
+                key={c}
+                onClick={() => setCategory(c)}
+                className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
+                  category === c
+                    ? 'bg-primary text-primary-foreground border-primary'
+                    : 'bg-background text-foreground border-border hover:border-primary/50'
+                }`}
+              >
+                {c}
+              </button>
+            ))}
+          </div>
+
+          {filtered.length === 0 ? (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="aspect-[9/16] rounded-xl bg-muted animate-pulse" />
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {filtered.map((item) => (
+                <Link
+                  key={item.id}
+                  to={AUTH_RENTER}
+                  className="group relative aspect-[9/16] overflow-hidden rounded-xl border border-border/60 bg-card shadow-card hover:shadow-card-hover transition-all hover:-translate-y-0.5"
+                >
+                  {item.thumbnailUrl ? (
+                    <img
+                      src={item.thumbnailUrl}
+                      alt=""
+                      loading="lazy"
+                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 bg-gradient-to-br from-primary/25 to-secondary/25" />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-foreground/95 via-foreground/40 to-transparent" />
+
+                  {/* Lock overlay */}
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex items-center gap-2 rounded-full bg-background/95 px-3 py-1.5 text-xs font-semibold text-foreground backdrop-blur">
+                      <Lock className="h-3.5 w-3.5" /> Sign up to watch
+                    </div>
+                  </div>
+
+                  <div className="absolute left-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-background/90 text-primary backdrop-blur">
+                    <Lock className="h-3.5 w-3.5" />
+                  </div>
+                  {item.category && (
+                    <Badge variant="default" className="absolute right-2 top-2 bg-background/90 text-foreground text-[10px] backdrop-blur">
+                      {item.category}
+                    </Badge>
+                  )}
+
+                  <div className="absolute inset-x-0 bottom-0 p-3 space-y-1">
+                    <p className="line-clamp-2 text-sm font-semibold text-background leading-tight">
+                      {item.title}
+                    </p>
+                    <div className="flex items-center gap-1 text-[11px] text-background/85">
+                      <MapPin className="h-3 w-3 shrink-0" />
+                      <span className="truncate">{item.propertyName}</span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+
+          <div className="text-center mt-8">
+            <Button variant="hero" size="lg" asChild>
+              <Link to={AUTH_RENTER}>
+                <PlayCircle className="h-4 w-4" /> Create free account to watch
+              </Link>
+            </Button>
           </div>
         </div>
       </section>
