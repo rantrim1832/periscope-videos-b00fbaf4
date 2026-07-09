@@ -659,6 +659,30 @@ const AdminCuratedVideos = () => {
 
         <Card className="mb-6">
           <CardHeader>
+            <CardTitle className="flex items-center gap-2"><Building2 className="w-5 h-5 text-primary" /> Enrich properties</CardTitle>
+            <CardDescription>
+              Link seeded YouTube videos to matching properties, and pull cached Google reviews. Both feed into the Truth Score.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex flex-wrap items-center gap-3">
+              <Button onClick={runLinkVideosToProperties} disabled={linking} variant="outline">
+                {linking ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Link2 className="w-4 h-4 mr-2" />}
+                Link videos to properties
+              </Button>
+              <Button onClick={runFetchGoogleReviews} disabled={fetchingGoogle} variant="outline">
+                {fetchingGoogle ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Star className="w-4 h-4 mr-2" />}
+                Fetch Google reviews (25)
+              </Button>
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              High-confidence video matches auto-approve; medium go to moderation. Google reviews cache up to 5 per property (Google's limit).
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="mb-6">
+          <CardHeader>
             <CardTitle className="flex items-center gap-2"><Youtube className="w-5 h-5 text-red-500" /> YouTube bulk import</CardTitle>
             <CardDescription>Search YouTube and add up to 50 embeddable videos into a category at once.</CardDescription>
           </CardHeader>
