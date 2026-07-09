@@ -8,7 +8,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { CURATED_CATEGORIES } from '@/lib/curatedCategories';
 import { parseEmbed } from '@/services/providers/embed';
-import { Loader2, Youtube, Link2, Trash2, Sparkles } from 'lucide-react';
+import { Loader2, Youtube, Link2, Trash2, Sparkles, Plus, Save, Pencil } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
 
 type Row = {
   id: string;
@@ -21,17 +22,101 @@ type Row = {
   moderation_status: string;
 };
 
+type Category = {
+  id: string;
+  slug: string;
+  label: string;
+  hint: string;
+  feed_category: string;
+  suggested_queries: string[];
+  sort_order: number;
+  is_active: boolean;
+};
+
+const FEED_CATEGORY_OPTIONS = [
+  'Maintenance issues','Deposit disputes','Property tours','Renter tips',
+  'Resident warnings','Property comparison',
+];
+
+function TopicEditor({
+  draft, setDraft, onSave, onCancel, saving,
+}: {
+  draft: Partial<Category>;
+  setDraft: (d: Partial<Category>) => void;
+  onSave: () => void;
+  onCancel: () => void;
+  saving: boolean;
+}) {
+  const queriesText = (draft.suggested_queries ?? []).join('\n');
+  return (
+    <div className="p-3 space-y-3">
+      <div className="grid gap-2 md:grid-cols-2">
+        <div>
+          <label className="text-xs text-muted-foreground block mb-1">Label</label>
+          <Input value={draft.label ?? ''} onChange={(e) => setDraft({ ...draft, label: e.target.value })} placeholder="e.g. Move-in day mishaps" />
+        </div>
+        <div>
+          <label className="text-xs text-muted-foreground block mb-1">Slug (URL-safe, lowercase)</label>
+          <Input value={draft.slug ?? ''} onChange={(e) => setDraft({ ...draft, slug: e.target.value })} placeholder="e.g. move-in-mishaps" />
+        </div>
+        <div className="md:col-span-2">
+          <label className="text-xs text-muted-foreground block mb-1">Hint (short description)</label>
+          <Input value={draft.hint ?? ''} onChange={(e) => setDraft({ ...draft, hint: e.target.value })} placeholder="What kind of videos live here?" />
+        </div>
+        <div>
+          <label className="text-xs text-muted-foreground block mb-1">Feed rail</label>
+          <select
+            className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+            value={draft.feed_category ?? 'Renter tips'}
+            onChange={(e) => setDraft({ ...draft, feed_category: e.target.value })}
+          >
+            {FEED_CATEGORY_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="text-xs text-muted-foreground block mb-1">Sort order</label>
+          <Input type="number" value={draft.sort_order ?? 0} onChange={(e) => setDraft({ ...draft, sort_order: Number(e.target.value) })} />
+        </div>
+      </div>
+      <div>
+        <label className="text-xs text-muted-foreground block mb-1">
+          Suggested YouTube search queries (one per line — bulk seed runs every line)
+        </label>
+        <Textarea
+          rows={6}
+          value={queriesText}
+          onChange={(e) => setDraft({ ...draft, suggested_queries: e.target.value.split('\n') })}
+          placeholder={'apartment tour before signing\napartment red flags\n...'}
+        />
+      </div>
+      <div className="flex items-center gap-3">
+        <label className="text-xs text-muted-foreground flex items-center gap-2">
+          <input type="checkbox" checked={draft.is_active ?? true} onChange={(e) => setDraft({ ...draft, is_active: e.target.checked })} />
+          Active
+        </label>
+        <div className="ml-auto flex gap-2">
+          <Button size="sm" variant="ghost" onClick={onCancel} disabled={saving}>Cancel</Button>
+          <Button size="sm" onClick={onSave} disabled={saving}>
+            {saving ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Save className="w-4 h-4 mr-1" />} Save
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const AdminCuratedVideos = () => {
   const { toast } = useToast();
-  const [slug, setSlug] = useState(CURATED_CATEGORIES[0].slug);
-  const [query, setQuery] = useState(CURATED_CATEGORIES[0].suggestedQueries[0]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [slug, setSlug] = useState<string>('');
+  const [query, setQuery] = useState<string>('');
   const [count, setCount] = useState(25);
   const [importing, setImporting] = useState(false);
   const [bulkSeeding, setBulkSeeding] = useState(false);
   const [perQuery, setPerQuery] = useState(15);
 
   const [pasteUrl, setPasteUrl] = useState('');
-  const [pasteSlug, setPasteSlug] = useState(CURATED_CATEGORIES[0].slug);
+  const [pasteSlug, setPasteSlug] = useState<string>('');
   const [pasteTitle, setPasteTitle] = useState('');
   const [pasteCreator, setPasteCreator] = useState('');
   const [pasting, setPasting] = useState(false);
@@ -39,6 +124,37 @@ const AdminCuratedVideos = () => {
   const [rows, setRows] = useState<Row[]>([]);
   const [filter, setFilter] = useState<string>('all');
   const [loading, setLoading] = useState(true);
+
+  // Topic editor state
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [draft, setDraft] = useState<Partial<Category>>({});
+  const [savingCat, setSavingCat] = useState(false);
+
+  const loadCategories = async () => {
+    const { data, error } = await supabase
+      .from('curated_categories')
+      .select('*')
+      .order('sort_order', { ascending: true });
+    if (error) return toast({ title: 'Load topics failed', description: error.message, variant: 'destructive' });
+    const list = (data ?? []).map((r: any) => ({
+      ...r,
+      suggested_queries: Array.isArray(r.suggested_queries) ? r.suggested_queries : [],
+    })) as Category[];
+    // Fallback to legacy static list if the DB is empty for any reason.
+    const effective = list.length > 0 ? list : CURATED_CATEGORIES.map((c, i) => ({
+      id: c.slug, slug: c.slug, label: c.label, hint: c.hint,
+      feed_category: c.feedCategory, suggested_queries: c.suggestedQueries,
+      sort_order: i * 10, is_active: true,
+    }));
+    setCategories(effective);
+    if (!slug && effective[0]) {
+      setSlug(effective[0].slug);
+      setPasteSlug(effective[0].slug);
+      setQuery(effective[0].suggested_queries[0] ?? '');
+    }
+  };
+
+  useEffect(() => { loadCategories(); /* eslint-disable-next-line */ }, []);
 
   const load = async () => {
     setLoading(true);
@@ -52,6 +168,60 @@ const AdminCuratedVideos = () => {
     if (error) toast({ title: 'Load failed', description: error.message, variant: 'destructive' });
     setRows((data ?? []) as Row[]);
     setLoading(false);
+  };
+
+  const startEdit = (c: Category) => {
+    setEditingId(c.id);
+    setDraft({ ...c, suggested_queries: [...c.suggested_queries] });
+  };
+
+  const startNew = () => {
+    setEditingId('new');
+    setDraft({
+      slug: '', label: '', hint: '', feed_category: 'Renter tips',
+      suggested_queries: [], sort_order: (categories[categories.length - 1]?.sort_order ?? 0) + 10, is_active: true,
+    });
+  };
+
+  const saveDraft = async () => {
+    const d = draft;
+    if (!d.slug?.trim() || !d.label?.trim()) {
+      return toast({ title: 'Slug and label required', variant: 'destructive' });
+    }
+    const cleanSlug = d.slug.trim().toLowerCase().replace(/[^a-z0-9-]+/g, '-');
+    const payload = {
+      slug: cleanSlug,
+      label: d.label.trim(),
+      hint: d.hint?.trim() ?? '',
+      feed_category: d.feed_category ?? 'Renter tips',
+      suggested_queries: (d.suggested_queries ?? []).map((s) => s.trim()).filter(Boolean),
+      sort_order: Number(d.sort_order ?? 0),
+      is_active: d.is_active ?? true,
+    };
+    setSavingCat(true);
+    try {
+      if (editingId === 'new') {
+        const { error } = await supabase.from('curated_categories').insert(payload);
+        if (error) throw error;
+      } else if (editingId) {
+        const { error } = await supabase.from('curated_categories').update(payload).eq('id', editingId);
+        if (error) throw error;
+      }
+      toast({ title: 'Topic saved' });
+      setEditingId(null); setDraft({});
+      loadCategories();
+    } catch (e: any) {
+      toast({ title: 'Save failed', description: e.message ?? String(e), variant: 'destructive' });
+    } finally {
+      setSavingCat(false);
+    }
+  };
+
+  const deleteCategory = async (c: Category) => {
+    if (!confirm(`Delete topic "${c.label}"? Videos already imported stay in the library.`)) return;
+    const { error } = await supabase.from('curated_categories').delete().eq('id', c.id);
+    if (error) return toast({ title: 'Delete failed', description: error.message, variant: 'destructive' });
+    loadCategories();
   };
 
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [filter]);
@@ -140,7 +310,7 @@ const AdminCuratedVideos = () => {
     setRows((r) => r.filter((x) => x.id !== id));
   };
 
-  const currentCat = CURATED_CATEGORIES.find((c) => c.slug === slug)!;
+  const currentCat = categories.find((c) => c.slug === slug) ?? categories[0];
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -155,6 +325,56 @@ const AdminCuratedVideos = () => {
             Only the official embed is stored — the creator keeps full credit.
           </p>
         </div>
+
+        <Card className="mb-6">
+          <CardHeader>
+            <div className="flex items-start justify-between gap-3 flex-wrap">
+              <div>
+                <CardTitle className="flex items-center gap-2"><Pencil className="w-5 h-5 text-primary" /> Topics</CardTitle>
+                <CardDescription>Add, rename, or delete the categories used by import and bulk seed.</CardDescription>
+              </div>
+              <Button size="sm" onClick={startNew} disabled={editingId !== null}>
+                <Plus className="w-4 h-4 mr-1" /> New topic
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {categories.map((c) => (
+              <div key={c.id} className="border border-border rounded-md">
+                {editingId === c.id ? (
+                  <TopicEditor
+                    draft={draft} setDraft={setDraft} onSave={saveDraft} onCancel={() => { setEditingId(null); setDraft({}); }} saving={savingCat}
+                  />
+                ) : (
+                  <div className="flex items-center justify-between gap-3 p-3 flex-wrap">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium">{c.label} <span className="text-muted-foreground font-normal">· {c.slug}</span></p>
+                      <p className="text-xs text-muted-foreground line-clamp-1">{c.hint}</p>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        <Badge variant="outline" className="text-[10px]">{c.feed_category}</Badge>
+                        <Badge variant="muted" className="text-[10px]">{c.suggested_queries.length} queries</Badge>
+                        {!c.is_active && <Badge variant="destructive" className="text-[10px]">inactive</Badge>}
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="outline" onClick={() => startEdit(c)} disabled={editingId !== null}>Edit</Button>
+                      <Button size="sm" variant="ghost" onClick={() => deleteCategory(c)} disabled={editingId !== null}>
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+            {editingId === 'new' && (
+              <div className="border border-primary rounded-md">
+                <TopicEditor
+                  draft={draft} setDraft={setDraft} onSave={saveDraft} onCancel={() => { setEditingId(null); setDraft({}); }} saving={savingCat}
+                />
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         <Card className="mb-6">
           <CardHeader>
@@ -197,11 +417,11 @@ const AdminCuratedVideos = () => {
                 onChange={(e) => {
                   const s = e.target.value;
                   setSlug(s);
-                  const c = CURATED_CATEGORIES.find((x) => x.slug === s);
-                  if (c) setQuery(c.suggestedQueries[0]);
+                  const c = categories.find((x) => x.slug === s);
+                  if (c && c.suggested_queries[0]) setQuery(c.suggested_queries[0]);
                 }}
               >
-                {CURATED_CATEGORIES.map((c) => (
+                {categories.map((c) => (
                   <option key={c.slug} value={c.slug}>{c.label}</option>
                 ))}
               </select>
@@ -212,7 +432,7 @@ const AdminCuratedVideos = () => {
               </Button>
             </div>
             <div className="flex flex-wrap gap-2">
-              {currentCat.suggestedQueries.map((q) => (
+              {(currentCat?.suggested_queries ?? []).map((q) => (
                 <button
                   key={q}
                   onClick={() => setQuery(q)}
@@ -237,7 +457,7 @@ const AdminCuratedVideos = () => {
                 className="h-10 rounded-md border border-input bg-background px-3 text-sm"
                 value={pasteSlug} onChange={(e) => setPasteSlug(e.target.value)}
               >
-                {CURATED_CATEGORIES.map((c) => (
+                {categories.map((c) => (
                   <option key={c.slug} value={c.slug}>{c.label}</option>
                 ))}
               </select>
@@ -258,7 +478,7 @@ const AdminCuratedVideos = () => {
             onChange={(e) => setFilter(e.target.value)}
           >
             <option value="all">All categories</option>
-            {CURATED_CATEGORIES.map((c) => (
+            {categories.map((c) => (
               <option key={c.slug} value={c.slug}>{c.label}</option>
             ))}
           </select>
