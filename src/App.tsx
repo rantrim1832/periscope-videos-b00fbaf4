@@ -29,6 +29,7 @@ const AdminProperties = lazy(() => import("./pages/AdminProperties"));
 const AdminScrapingStats = lazy(() => import("./pages/AdminScrapingStats"));
 const AdminCSVUpload = lazy(() => import("./pages/AdminCSVUpload"));
 const AdminSafety = lazy(() => import("./pages/AdminSafety"));
+const AdminCuratedVideos = lazy(() => import("./pages/AdminCuratedVideos"));
 const Auth = lazy(() => import("./pages/Auth"));
 const Property = lazy(() => import("./pages/Property"));
 const Compare = lazy(() => import("./pages/Compare"));
@@ -135,6 +136,7 @@ const App = () => (
                 <Route path="/admin/stats" element={<AdminRoute><AdminScrapingStats /></AdminRoute>} />
                 <Route path="/admin/csv-upload" element={<AdminRoute><AdminCSVUpload /></AdminRoute>} />
                 <Route path="/admin/safety" element={<AdminRoute><AdminSafety /></AdminRoute>} />
+                <Route path="/admin/curated" element={<AdminRoute><AdminCuratedVideos /></AdminRoute>} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

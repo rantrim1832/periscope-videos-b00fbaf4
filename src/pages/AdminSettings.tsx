@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { Shield, Crown, Users, Settings } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const AdminSettings = () => {
@@ -88,6 +89,12 @@ const AdminSettings = () => {
                   <Link to="/admin/scraper">
                     <Users className="w-4 h-4 mr-2" />
                     Property Scraper
+                  </Link>
+                </Button>
+                <Button asChild className="w-full justify-start text-sm md:text-base" variant="outline">
+                  <Link to="/admin/curated">
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    Curated video library
                   </Link>
                 </Button>
               </CardContent>

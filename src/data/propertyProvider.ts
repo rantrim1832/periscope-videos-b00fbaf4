@@ -426,7 +426,15 @@ export class CanonicalPropertyProvider implements PropertyDataProvider {
       creatorId: r.resident_id ?? undefined,
       creatorName: r.resident?.display_name ?? r.resident?.pseudonym ?? r.author_pseudonym ?? undefined,
     }));
-    if (reviewItems.length > 0) return reviewItems;
+
+    // Blend in curated seeded_videos (public YouTube/TikTok/Instagram embeds)
+    // so every category has plenty of content immediately.
+    const curatedItems = await this.fetchCuratedFeedItems();
+    if (reviewItems.length > 0 || curatedItems.length > 0) {
+      // Interleave curated between real reviews so the feed feels alive but
+      // real resident reviews stay near the top.
+      return [...reviewItems, ...curatedItems];
+    }
 
     // Launch fallback: until resident videos exist, make the entertainment feed
     // alive with official/public seeded visuals. These are clearly official
@@ -495,6 +503,44 @@ export class CanonicalPropertyProvider implements PropertyDataProvider {
         location: [c.canonical_property?.city, c.canonical_property?.state].filter(Boolean).join(', '),
         creatorName: 'Official · Public source',
       };
+    });
+  }
+
+  /**
+   * Load curated (seeded) videos and turn them into FeedItems.
+   * Category comes from the `cat:<slug>` hashtag; the slug maps to a
+   * FEED_CATEGORIES value via `feedCategoryForSlug`.
+   */
+  private async fetchCuratedFeedItems(): Promise<FeedItem[]> {
+    const { data } = await this.db
+      .from('seeded_videos')
+      .select('id, title, embed_url, caption, hashtags, source, city, created_at')
+      .eq('moderation_status', 'approved')
+      .order('created_at', { ascending: false })
+      .limit(400);
+    const { feedCategoryForSlug } = await import('@/lib/curatedCategories');
+    return (data ?? []).map((r: any) => {
+      const tags: string[] = Array.isArray(r.hashtags) ? r.hashtags : [];
+      const catTag = tags.find((t) => typeof t === 'string' && t.startsWith('cat:'));
+      const chTag = tags.find((t) => typeof t === 'string' && t.startsWith('ch:'));
+      const ytTag = tags.find((t) => typeof t === 'string' && t.startsWith('yt:'));
+      const slug = catTag ? catTag.slice(4) : 'reviews';
+      const category = feedCategoryForSlug(slug);
+      const thumb = ytTag ? `https://img.youtube.com/vi/${ytTag.slice(3)}/hqdefault.jpg` : undefined;
+      return {
+        id: `seed:${r.id}`,
+        source: 'imported' as const,
+        title: r.title,
+        thumbnailUrl: thumb,
+        embedUrl: r.embed_url,
+        platform: r.source,
+        category,
+        verified: false,
+        propertyId: '',
+        propertyName: chTag ? chTag.slice(3) : 'Featured creator',
+        location: r.city ?? '',
+        creatorName: chTag ? chTag.slice(3) : (r.caption?.split('·')?.[0]?.trim() || 'Public source'),
+      } as FeedItem;
     });
   }
 }
