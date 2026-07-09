@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Video, Shield, Building2, PlayCircle, MessageSquare, Eye, Lock, MapPin, Home, Users } from 'lucide-react';
+import { Video, Shield, Building2, PlayCircle, MessageSquare, Eye, Lock, MapPin, Users } from 'lucide-react';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { getPropertyProvider } from '@/data/propertyProvider';
 import { FEED_CATEGORIES } from '@/domain/property';
