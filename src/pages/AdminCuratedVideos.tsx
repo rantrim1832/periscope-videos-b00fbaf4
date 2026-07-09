@@ -261,6 +261,56 @@ const AdminCuratedVideos = () => {
 
         <Card className="mb-6">
           <CardHeader>
+            <div className="flex items-start justify-between gap-3 flex-wrap">
+              <div>
+                <CardTitle className="flex items-center gap-2"><Pencil className="w-5 h-5 text-primary" /> Topics</CardTitle>
+                <CardDescription>Add, rename, or delete the categories used by import and bulk seed.</CardDescription>
+              </div>
+              <Button size="sm" onClick={startNew} disabled={editingId !== null}>
+                <Plus className="w-4 h-4 mr-1" /> New topic
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {categories.map((c) => (
+              <div key={c.id} className="border border-border rounded-md">
+                {editingId === c.id ? (
+                  <TopicEditor
+                    draft={draft} setDraft={setDraft} onSave={saveDraft} onCancel={() => { setEditingId(null); setDraft({}); }} saving={savingCat}
+                  />
+                ) : (
+                  <div className="flex items-center justify-between gap-3 p-3 flex-wrap">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium">{c.label} <span className="text-muted-foreground font-normal">· {c.slug}</span></p>
+                      <p className="text-xs text-muted-foreground line-clamp-1">{c.hint}</p>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        <Badge variant="outline" className="text-[10px]">{c.feed_category}</Badge>
+                        <Badge variant="muted" className="text-[10px]">{c.suggested_queries.length} queries</Badge>
+                        {!c.is_active && <Badge variant="destructive" className="text-[10px]">inactive</Badge>}
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="outline" onClick={() => startEdit(c)} disabled={editingId !== null}>Edit</Button>
+                      <Button size="sm" variant="ghost" onClick={() => deleteCategory(c)} disabled={editingId !== null}>
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+            {editingId === 'new' && (
+              <div className="border border-primary rounded-md">
+                <TopicEditor
+                  draft={draft} setDraft={setDraft} onSave={saveDraft} onCancel={() => { setEditingId(null); setDraft({}); }} saving={savingCat}
+                />
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="mb-6">
+          <CardHeader>
             <CardTitle className="flex items-center gap-2"><Sparkles className="w-5 h-5 text-primary" /> One-click bulk seed</CardTitle>
             <CardDescription>
               Runs every suggested query across every category — the fastest way to fill an empty feed with hundreds of real apartment videos.
