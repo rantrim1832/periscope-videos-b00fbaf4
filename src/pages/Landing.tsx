@@ -99,8 +99,8 @@ const Landing = () => {
       {/* Value props */}
       <section className="container py-16 md:py-24">
         <div className="text-center max-w-2xl mx-auto mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight">What renters actually get to see</h2>
-          <p className="text-muted-foreground mt-3">A signup unlocks the entire resident-truth graph — reviews, tours, evidence, comparisons.</p>
+          <h2 className="text-3xl md:text-4xl font-bold tracking-tight">What you get with a free account</h2>
+          <p className="text-muted-foreground mt-3">Real reviews, resident video tours, honest ratings, and side-by-side comparisons — all in one place.</p>
         </div>
         <div className="grid md:grid-cols-3 gap-6">
           {[
