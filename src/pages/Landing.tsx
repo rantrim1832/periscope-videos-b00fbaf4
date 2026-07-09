@@ -131,6 +131,15 @@ const Landing = () => {
     'See what living in a large apartment building is really like. Real resident reviews, video tours, and honest ratings — before you sign the lease.'
   );
 
+  // Pull approved curated YouTube videos. When present, we swap real
+  // thumbnails + titles into the marquee rails and route each card to
+  // the in-app /watch/:id player (keeping viewers on the Periscope
+  // domain). When empty (fresh install / not seeded), the static
+  // teasers below remain as-is so the landing page never looks bare.
+  const { teasers: real } = useCuratedTeasers(60);
+  const rails = mergeRailsWithReal(RAILS, real);
+  const heroStrip = mergeHeroWithReal(HERO_STRIP, real);
+
   return (
     <div className="min-h-dvh bg-background">
       {/* Nav */}
@@ -202,7 +211,7 @@ const Landing = () => {
           <MarqueeRail
             title=""
             hint=""
-            items={HERO_STRIP}
+            items={heroStrip}
             direction="left"
             duration="55s"
             hideHeader
@@ -234,7 +243,7 @@ const Landing = () => {
           </div>
 
           <div className="space-y-6 md:space-y-12">
-            {RAILS.map((rail) => (
+            {rails.map((rail) => (
               <MarqueeRail key={rail.title} {...rail} />
             ))}
           </div>
