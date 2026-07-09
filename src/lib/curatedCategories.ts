@@ -110,6 +110,57 @@ export const CURATED_CATEGORIES: CuratedCategory[] = [
       'apartment complex review',
     ],
   },
+  {
+    slug: 'viral-hits',
+    label: '🔥 Viral apartment hits',
+    hint: 'Big-view apartment videos exploding on YouTube right now.',
+    feedCategory: 'Property tours',
+    suggestedQueries: [
+      'apartment tour viral',
+      'insane apartment tour',
+      'craziest apartment i ever toured',
+      'apartment tour gone viral',
+      'you won\'t believe this apartment',
+    ],
+  },
+  {
+    slug: 'funny-fails',
+    label: '😂 Funny apartment fails',
+    hint: 'Comedy sketches, apartment fails, tenant vs landlord bits.',
+    feedCategory: 'Renter tips',
+    suggestedQueries: [
+      'apartment fails compilation',
+      'funny apartment tour',
+      'landlord vs tenant comedy',
+      'apartment hunting comedy sketch',
+      'roommate fails funny',
+    ],
+  },
+  {
+    slug: 'hot-takes',
+    label: '🌶️ Hot takes & rants',
+    hint: 'Renter rants, angry tenant stories, spicy landlord call-outs.',
+    feedCategory: 'Resident warnings',
+    suggestedQueries: [
+      'apartment rant',
+      'never rent here rant',
+      'angry tenant story',
+      'slumlord expose',
+      'renting horror story',
+    ],
+  },
+  {
+    slug: 'tiktok-famous',
+    label: '📱 TikTok-famous buildings',
+    hint: 'Buildings that blew up on social — the ones everyone is talking about.',
+    feedCategory: 'Property tours',
+    suggestedQueries: [
+      'famous apartment building tiktok',
+      'viral luxury apartment nyc',
+      'famous la apartment building',
+      'tiktok famous apartment tour',
+    ],
+  },
 ];
 
 export function categoryBySlug(slug: string): CuratedCategory | undefined {
