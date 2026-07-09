@@ -136,3 +136,35 @@ All colors MUST be HSL.
   .text-balance { text-wrap: balance; }
   .text-pretty { text-wrap: pretty; }
 }
+
+/* Streaming-style auto-scrolling marquee rails for the landing page.
+   Track holds two copies of the cards; translating -50% loops seamlessly. */
+@layer utilities {
+  @keyframes marquee-left {
+    from { transform: translate3d(0, 0, 0); }
+    to   { transform: translate3d(-50%, 0, 0); }
+  }
+  @keyframes marquee-right {
+    from { transform: translate3d(-50%, 0, 0); }
+    to   { transform: translate3d(0, 0, 0); }
+  }
+  .marquee-track {
+    display: flex;
+    width: max-content;
+    will-change: transform;
+    animation: marquee-left var(--marquee-duration, 60s) linear infinite;
+  }
+  .marquee-track-reverse { animation-name: marquee-right; }
+  .marquee-pause:hover .marquee-track { animation-play-state: paused; }
+  @media (prefers-reduced-motion: reduce) {
+    .marquee-track { animation: none; }
+  }
+
+  /* Slow Ken-Burns zoom so still thumbnails feel like video. */
+  @keyframes ken-burns {
+    0%   { transform: scale(1)    translate3d(0, 0, 0); }
+    50%  { transform: scale(1.12) translate3d(-1.5%, -1%, 0); }
+    100% { transform: scale(1)    translate3d(0, 0, 0); }
+  }
+  .ken-burns { animation: ken-burns 14s ease-in-out infinite; }
+}
