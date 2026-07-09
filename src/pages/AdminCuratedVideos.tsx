@@ -418,7 +418,7 @@ const AdminCuratedVideos = () => {
           </p>
         </div>
 
-        <Card className="mb-6">
+        {topicsEditable && <Card className="mb-6">
           <CardHeader>
             <div className="flex items-start justify-between gap-3 flex-wrap">
               <div>
