@@ -6,6 +6,26 @@ import {
 } from 'lucide-react';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
+// Landing thumbnails — generated apartment scenes so every card reads as
+// a real multifamily interior/exterior/amenity/person, never a random
+// stock photo of a house or theatre.
+import imgLiving      from '@/assets/landing/apt-living.jpg';
+import imgKitchen     from '@/assets/landing/apt-kitchen.jpg';
+import imgBedroom     from '@/assets/landing/apt-bedroom.jpg';
+import imgBathLeak    from '@/assets/landing/apt-bath-leak.jpg';
+import imgHighrise    from '@/assets/landing/apt-exterior-highrise.jpg';
+import imgMidrise     from '@/assets/landing/apt-exterior-midrise.jpg';
+import imgGym         from '@/assets/landing/apt-gym.jpg';
+import imgPool        from '@/assets/landing/apt-pool.jpg';
+import imgLobby       from '@/assets/landing/apt-lobby.jpg';
+import imgPackages    from '@/assets/landing/apt-packages.jpg';
+import imgTourWoman   from '@/assets/landing/apt-tour-woman.jpg';
+import imgLease       from '@/assets/landing/apt-lease.jpg';
+import imgNeighborhood from '@/assets/landing/apt-neighborhood.jpg';
+import imgCoworking   from '@/assets/landing/apt-coworking.jpg';
+import imgLaundry     from '@/assets/landing/apt-laundry.jpg';
+import imgHallway     from '@/assets/landing/apt-hallway.jpg';
+
 const AUTH_RENTER = '/auth?returnTo=%2Ffeed';
 const AUTH_MANAGER = '/auth?returnTo=%2Fmanager';
 
@@ -20,61 +40,61 @@ type Teaser = {
   title: string;
   property: string;
   location: string;
-  photo: string;      // unsplash photo id
+  photo: string;      // imported image URL
   duration: string;   // "2:14"
   views: string;      // "12K views"
   badge?: string;     // "Live", "New", "Verified"
 };
 
-// Build a full Unsplash URL for a vertical poster.
-const u = (id: string) =>
-  `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=520&h=780&q=70`;
-
+// 16 teasers — one per generated apartment scene. Each thumbnail appears
+// exactly once. Categories are the ones renters care about, not "resident
+// tours". 4 rails × 4 cards each.
 const TEASERS: Teaser[] = [
-  // Row 1 — Property tours
-  { id: 't1',  title: 'Inside the corner unit at Hudson Yards',       property: 'The Hudson',        location: 'New York, NY',    photo: '1560448204-e02f11c3d0e2', duration: '3:42', views: '18K views', badge: 'Verified' },
-  { id: 't2',  title: 'Full 2BR walkthrough — nothing staged',        property: 'Marlowe Lofts',     location: 'Chicago, IL',     photo: '1502672260266-1c1ef2d93688', duration: '4:11', views: '9.2K views' },
-  { id: 't3',  title: 'The rooftop pool on a Sunday at 4pm',          property: 'Skyline 88',        location: 'Miami, FL',       photo: '1519643381401-22c77e60520e', duration: '1:58', views: '24K views', badge: 'New' },
-  { id: 't4',  title: 'What the model unit hides',                    property: 'Ashford Park',      location: 'Atlanta, GA',     photo: '1512918728675-ed5a9ecdebfd', duration: '2:33', views: '6.4K views' },
-  { id: 't5',  title: 'Studio at 850 sq ft — real footage',           property: 'The Ellison',       location: 'Austin, TX',      photo: '1493809842364-78817add7ffb', duration: '2:07', views: '11K views' },
-  { id: 't6',  title: 'Golden hour on the 22nd floor',                property: 'Beacon West',       location: 'Seattle, WA',     photo: '1600585154340-be6161a56a0c', duration: '1:42', views: '15K views', badge: 'Live' },
-  { id: 't7',  title: 'The lobby you saw vs. the lobby at 11pm',      property: 'Vermilion',         location: 'Denver, CO',      photo: '1600607687939-ce8a6c25118c', duration: '3:05', views: '7.8K views' },
+  // ---------- Maintenance nightmares (4) ----------
+  { id: 'm1', title: 'Leak from the unit above — day 9, still nothing',  property: 'Parkline 12',    location: 'Boston, MA',       photo: imgBathLeak,    duration: '3:41', views: '42K views', badge: 'Verified' },
+  { id: 'm2', title: 'Kitchen sink flood — the maintenance recording',   property: 'Grove & Vine',   location: 'Raleigh, NC',      photo: imgKitchen,     duration: '4:12', views: '9.6K views', badge: 'New' },
+  { id: 'm3', title: 'Elevator out for 6 weeks — 22nd floor walk-up',    property: 'Nine Ten',       location: 'Philadelphia, PA', photo: imgHallway,     duration: '2:57', views: '18K views' },
+  { id: 'm4', title: 'AC broke in July — full 3-week timeline',          property: 'The Ellison',    location: 'Austin, TX',       photo: imgLiving,      duration: '5:04', views: '22K views' },
 
-  // Row 2 — Resident warnings + maintenance
-  { id: 't8',  title: 'What they don\'t tell you about the walls',    property: 'Parkline 12',       location: 'Boston, MA',      photo: '1600566753190-17f0baa2a6c3', duration: '2:44', views: '31K views', badge: 'Verified' },
-  { id: 't9',  title: 'Maintenance took 14 days — here\'s why',       property: 'The Kingsley',      location: 'Dallas, TX',      photo: '1560185007-cde436f6a4d0', duration: '4:22', views: '5.1K views' },
-  { id: 't10', title: 'Do not sign until you see this closet',        property: 'Coastal 60',        location: 'San Diego, CA',   photo: '1600585154526-990dced4db0d', duration: '1:29', views: '19K views' },
-  { id: 't11', title: 'Elevator status: honest tour',                 property: 'Nine Ten',          location: 'Philadelphia, PA',photo: '1449844908441-8829872d2607', duration: '2:18', views: '4.7K views' },
-  { id: 't12', title: 'The gym at 6pm on a Tuesday',                  property: 'Ridgeview',         location: 'Portland, OR',    photo: '1554995207-c18c203602cb', duration: '1:11', views: '22K views', badge: 'New' },
-  { id: 't13', title: 'Package room reality check',                   property: 'Union & Pine',      location: 'Nashville, TN',   photo: '1484154218962-a197022b5858', duration: '2:56', views: '8.3K views' },
-  { id: 't14', title: 'Trash chute floor — you\'ve been warned',      property: 'Halcyon Grove',    location: 'Phoenix, AZ',     photo: '1522156373667-4c7234bbd804', duration: '1:47', views: '13K views' },
+  // ---------- Application & lease drama (4) ----------
+  { id: 'a1', title: 'The $475 in fees they never mentioned',            property: 'The Meridian',   location: 'Los Angeles, CA',  photo: imgLease,       duration: '3:26', views: '54K views', badge: 'Verified' },
+  { id: 'a2', title: 'Touring 6 units in one day — what I noticed',      property: 'The Hudson',     location: 'New York, NY',     photo: imgTourWoman,   duration: '4:38', views: '27K views' },
+  { id: 'a3', title: 'Denied over a background typo — full story',       property: 'Coastal 60',     location: 'San Diego, CA',    photo: imgBedroom,     duration: '3:52', views: '11K views', badge: 'New' },
+  { id: 'a4', title: 'Deposit came back in 87 days — my paper trail',    property: 'The Rowan',      location: 'Orlando, FL',      photo: imgLobby,       duration: '2:44', views: '15K views' },
 
-  // Row 3 — Manager official / amenities
-  { id: 't15', title: 'Official tour: pool, gym, coworking',          property: 'The Meridian',      location: 'Los Angeles, CA', photo: '1568605114967-8130f3a36994', duration: '5:12', views: '27K views', badge: 'Official' },
-  { id: 't16', title: 'Meet the resident concierge team',             property: 'Bayfront 33',       location: 'San Francisco, CA', photo: '1600880292203-757bb62b4baf', duration: '3:34', views: '10K views' },
-  { id: 't17', title: 'Model 1BR walkthrough with staging notes',     property: 'The Ivy',           location: 'Washington, DC',  photo: '1521791136064-7986c2920216', duration: '4:48', views: '6.9K views' },
-  { id: 't18', title: 'Pet spa, dog run, and puppy hours',            property: 'Cedar & 5th',       location: 'Minneapolis, MN', photo: '1502005229762-cf1b2da7c5d6', duration: '2:21', views: '12K views', badge: 'Official' },
-  { id: 't19', title: 'Rooftop cinema every Friday night',            property: 'Alto Twelve',       location: 'Las Vegas, NV',   photo: '1560448076-b1e2bf6b7ee1', duration: '1:38', views: '17K views' },
-  { id: 't20', title: 'Sunset lounge — first-look preview',           property: 'The Selby',         location: 'Charlotte, NC',   photo: '1560184611-ff3e53f00e8f', duration: '2:02', views: '9.6K views' },
-  { id: 't21', title: 'Coworking on 4 — real speeds tested',          property: 'Northline Flats',   location: 'Salt Lake City, UT', photo: '1512917774080-9991f1c4c750', duration: '3:16', views: '5.5K views' },
+  // ---------- Local area vibe (4) ----------
+  { id: 'v1', title: 'The block at night — walking safety honest take',  property: 'Highline 27',    location: 'Brooklyn, NY',     photo: imgNeighborhood,duration: '4:22', views: '38K views', badge: 'Live' },
+  { id: 'v2', title: 'Coffee shops within 4 blocks — ranked',            property: 'Union & Pine',   location: 'Nashville, TN',    photo: imgMidrise,     duration: '5:41', views: '24K views' },
+  { id: 'v3', title: 'Rush-hour traffic outside the building',           property: 'Beacon West',    location: 'Seattle, WA',      photo: imgHighrise,    duration: '2:33', views: '12K views' },
+  { id: 'v4', title: 'Grocery, gym, coffee — the real 15-min walk',      property: 'Ashford Park',   location: 'Atlanta, GA',      photo: imgHighrise,    duration: '3:07', views: '7.4K views' },
 
-  // Row 4 — Deposit + move-out stories
-  { id: 't22', title: 'The $1,400 deposit fight — full timeline',     property: 'Grove & Vine',      location: 'Raleigh, NC',     photo: '1600566753086-00f18fb6b3ea', duration: '6:04', views: '41K views', badge: 'Verified' },
-  { id: 't23', title: 'Move-out inspection — what they mark',         property: 'The Rowan',         location: 'Orlando, FL',     photo: '1600607687920-4e2a09cf159d', duration: '3:29', views: '14K views' },
-  { id: 't24', title: 'Rent renewal — negotiation on camera',         property: 'Astoria Point',     location: 'Queens, NY',      photo: '1600585154340-be6161a56a0c', duration: '4:57', views: '8.8K views' },
-  { id: 't25', title: 'First 24 hours — moving in unboxed',           property: 'The Cascade',       location: 'Sacramento, CA',  photo: '1560448204-603b3fc33ddc', duration: '2:41', views: '11K views', badge: 'New' },
-  { id: 't26', title: 'Why I broke my lease — full story',            property: 'Sable Court',       location: 'Kansas City, MO', photo: '1493809842364-78817add7ffb', duration: '7:18', views: '33K views' },
-  { id: 't27', title: 'Roommate walk-through, no filter',             property: 'Highline 27',       location: 'Brooklyn, NY',    photo: '1522708323590-d24dbb6b0267', duration: '3:52', views: '6.2K views' },
-  { id: 't28', title: 'Parking garage tour — spot #147',              property: 'The Fenwick',       location: 'Cleveland, OH',   photo: '1600607687644-c7171b4249f3', duration: '1:24', views: '4.1K views' },
+  // ---------- Amenities — the real story (4) ----------
+  { id: 'e1', title: 'The gym at 6pm on a Tuesday — packed',             property: 'Ridgeview',      location: 'Portland, OR',     photo: imgGym,         duration: '1:47', views: '33K views', badge: 'Verified' },
+  { id: 'e2', title: 'Rooftop pool at 4pm — is it worth it?',            property: 'Skyline 88',     location: 'Miami, FL',        photo: imgPool,        duration: '2:41', views: '48K views', badge: 'New' },
+  { id: 'e3', title: 'Coworking lounge — wifi speeds tested live',       property: 'Northline Flats',location: 'Salt Lake City, UT',photo: imgCoworking,   duration: '3:16', views: '9.8K views' },
+  { id: 'e4', title: 'Package room + laundry — real hours',              property: 'Cedar & 5th',    location: 'Minneapolis, MN',  photo: imgPackages,    duration: '2:15', views: '14K views' },
 ];
 
-// Slice teasers into four rails of different lengths so each shelf feels
-// distinct. Each rail also gets its own direction + speed downstream.
+// Second image for the "grocery walk" so we don't repeat the highrise
+// twice within Local area vibe. Swap the 4th card to laundry — reads as a
+// building service anyway.
+TEASERS[11].photo = imgLaundry;
+
+// Rails renamed to the categories renters actually search for. Each rail
+// scrolls a different direction/speed so shelves feel alive but not chaotic.
 const RAILS: Array<{ title: string; hint: string; items: Teaser[]; direction: 'left' | 'right'; duration: string }> = [
-  { title: 'Featured resident tours',    hint: 'Verified walkthroughs',     items: TEASERS.slice(0, 7),   direction: 'left',  duration: '65s' },
-  { title: 'Warnings & maintenance',     hint: 'What managers won\'t say',  items: TEASERS.slice(7, 14),  direction: 'right', duration: '80s' },
-  { title: 'Official from managers',     hint: 'Amenities & first looks',   items: TEASERS.slice(14, 21), direction: 'left',  duration: '95s' },
-  { title: 'Deposits, move-outs, real talk', hint: 'The stuff nobody films', items: TEASERS.slice(21, 28), direction: 'right', duration: '75s' },
+  { title: 'Maintenance nightmares',       hint: 'What actually got fixed — and what didn\'t',   items: TEASERS.slice(0, 4),   direction: 'left',  duration: '65s' },
+  { title: 'Application & lease drama',    hint: 'Fees, denials, and the fine print',            items: TEASERS.slice(4, 8),   direction: 'right', duration: '75s' },
+  { title: 'Local area vibe',              hint: 'The block, the walk, the noise',               items: TEASERS.slice(8, 12),  direction: 'left',  duration: '80s' },
+  { title: 'Amenities — the real story',   hint: 'Pool, gym, package room — at the worst hour',  items: TEASERS.slice(12, 16), direction: 'right', duration: '70s' },
+];
+
+// Featured strip for the hero preview — a single fast-moving rail mixed
+// from every category so visitors see the range immediately.
+const HERO_STRIP: Teaser[] = [
+  TEASERS[12], TEASERS[0], TEASERS[8],  TEASERS[4],
+  TEASERS[13], TEASERS[2], TEASERS[10], TEASERS[6],
+  TEASERS[15], TEASERS[1], TEASERS[11], TEASERS[7],
 ];
 
 const TESTIMONIALS = [
@@ -136,95 +156,54 @@ const Landing = () => {
         </div>
       </header>
 
-      {/* Hero */}
-      <section className="relative overflow-hidden border-b border-border/40 bg-gradient-to-b from-primary/[0.08] via-background to-background">
-        <div className="container py-10 md:py-28 grid md:grid-cols-2 gap-8 md:gap-16 items-center">
-          <div className="space-y-5 md:space-y-6">
-            <span className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[11px] md:text-xs font-semibold uppercase tracking-wider text-primary">
-              <Eye className="h-3 w-3" /> See it before you sign
-            </span>
-            <h1 className="text-[2.25rem] leading-[1.05] md:text-6xl font-bold tracking-tight text-balance">
-              Apartment <span className="text-primary">video reviews</span>.
-            </h1>
-            <p className="text-base md:text-xl text-muted-foreground max-w-xl">
-              See real video reviews from real residents before you sign the lease. The 6&nbsp;PM gym, the deposit fight, the walls you can hear through — not the brochure.
-            </p>
-            <div className="flex flex-col sm:flex-row flex-wrap gap-3 pt-1 md:pt-2">
-              <Button variant="hero" size="lg" asChild className="w-full sm:w-auto">
-                <Link to={AUTH_RENTER}>Create free account</Link>
-              </Button>
-              <Button variant="outline" size="lg" asChild className="w-full sm:w-auto">
-                <Link to="/auth">I already have one</Link>
-              </Button>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Free forever for renters. No credit card. By continuing you agree to our{' '}
-              <Link to="/terms" className="underline">Terms</Link> and{' '}
-              <Link to="/privacy" className="underline">Privacy Policy</Link>.
-            </p>
+      {/* Compact hero — headline + CTAs, with a live marquee rail laced
+          directly beneath it so visitors see the videos immediately. */}
+      <section className="relative overflow-hidden border-b border-border/40 bg-gradient-to-b from-primary/[0.10] via-background to-muted/20">
+        <div className="container pt-8 md:pt-14 pb-4 md:pb-6 text-center">
+          <span className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[11px] md:text-xs font-semibold uppercase tracking-wider text-primary">
+            <Eye className="h-3 w-3" /> See it before you sign
+          </span>
+          <h1 className="mt-4 text-[2rem] leading-[1.05] md:text-5xl font-bold tracking-tight text-balance">
+            Apartment <span className="text-primary">video reviews</span>.
+          </h1>
+          <p className="mt-3 text-sm md:text-lg text-muted-foreground max-w-2xl mx-auto">
+            The 6&nbsp;PM gym, the maintenance ticket that took 9 days, the fees they forgot to mention. All on video. All from real residents.
+          </p>
+          <div className="mt-5 flex flex-col sm:flex-row justify-center gap-3">
+            <Button variant="hero" size="lg" asChild className="w-full sm:w-auto">
+              <Link to={AUTH_RENTER}>Create free account</Link>
+            </Button>
+            <Button variant="outline" size="lg" asChild className="w-full sm:w-auto">
+              <Link to="/auth">I already have one</Link>
+            </Button>
           </div>
-          <div className="relative hidden md:block">
-            <div className="aspect-[4/5] rounded-3xl border border-border/60 bg-gradient-to-br from-primary/15 via-secondary/10 to-transparent p-8 shadow-elevated">
-              <div className="h-full rounded-2xl bg-card/60 backdrop-blur border border-border/40 flex flex-col justify-between p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Truth Score</div>
-                    <div className="text-5xl font-bold text-primary mt-1">82</div>
-                  </div>
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <Shield className="h-3 w-3" /> Verified residents
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  {['Maintenance response', 'Noise transmission', 'Deposit return'].map((label) => (
-                    <div key={label} className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">{label}</span>
-                      <div className="w-24 h-1.5 rounded-full bg-muted overflow-hidden">
-                        <div className="h-full bg-primary" style={{ width: `${60 + Math.random() * 30}%` }} />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <div className="flex items-center gap-2 text-xs text-primary">
-                  <PlayCircle className="h-4 w-4" /> 14 resident videos
-                </div>
-              </div>
-            </div>
-          </div>
+          <p className="mt-3 text-xs text-muted-foreground">
+            Free for renters. No credit card. Every video is behind a free account.
+          </p>
         </div>
-      </section>
 
-      {/* Join paths: Renters vs Property managers */}
-      <section className="container py-10 md:py-20">
-        <div className="text-center max-w-2xl mx-auto mb-6 md:mb-10">
-          <h2 className="text-2xl md:text-4xl font-bold tracking-tight">Join Periscope</h2>
-          <p className="text-sm md:text-base text-muted-foreground mt-2 md:mt-3">Two ways in — pick the one that fits you. Free either way.</p>
-        </div>
-        <div className="grid md:grid-cols-2 gap-4 md:gap-6">
-          <div className="rounded-2xl border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-background to-background p-6 md:p-8 flex flex-col">
-            <div className="w-12 h-12 rounded-xl bg-primary/15 text-primary flex items-center justify-center mb-4">
-              <Users className="h-6 w-6" />
+        {/* Featured strip — mixed teaser bar right beneath the headline */}
+        <div className="pt-2 pb-8 md:pb-12">
+          <div className="container flex items-center justify-between gap-4 mb-3">
+            <div className="inline-flex items-center gap-2 text-[11px] md:text-xs font-semibold uppercase tracking-wider text-primary">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
+              </span>
+              Trending on Periscope
             </div>
-            <h3 className="text-xl md:text-2xl font-bold mb-2">Renters — join free</h3>
-            <p className="text-sm md:text-base text-muted-foreground mb-5 md:mb-6 flex-1">
-              Watch real video reviews. Post your own. Compare buildings side by side. See the Truth Score before you tour.
-            </p>
-            <Button variant="hero" size="lg" asChild className="w-full">
-              <Link to={AUTH_RENTER}>Sign up as a renter</Link>
-            </Button>
+            <Link to={AUTH_RENTER} className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline whitespace-nowrap">
+              <Lock className="h-3 w-3" /> Watch all
+            </Link>
           </div>
-          <div className="rounded-2xl border-2 border-secondary/40 bg-gradient-to-br from-secondary/10 via-background to-background p-6 md:p-8 flex flex-col">
-            <div className="w-12 h-12 rounded-xl bg-secondary/15 text-secondary flex items-center justify-center mb-4">
-              <Building2 className="h-6 w-6" />
-            </div>
-            <h3 className="text-xl md:text-2xl font-bold mb-2">Property managers — join free</h3>
-            <p className="text-sm md:text-base text-muted-foreground mb-5 md:mb-6 flex-1">
-              Claim your building. Upload official tours. Respond to residents. Get alerts the moment a new review is posted.
-            </p>
-            <Button variant="outline" size="lg" asChild className="w-full">
-              <Link to={AUTH_MANAGER}>Sign up as a manager</Link>
-            </Button>
-          </div>
+          <MarqueeRail
+            title=""
+            hint=""
+            items={HERO_STRIP}
+            direction="left"
+            duration="55s"
+            hideHeader
+          />
         </div>
       </section>
 
@@ -267,6 +246,40 @@ const Landing = () => {
               <Lock className="inline h-3 w-3 mr-1 -mt-0.5" />
               Every video, every review, every Truth Score — free with an account.
             </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Join paths: Renters vs Property managers */}
+      <section className="container py-10 md:py-20">
+        <div className="text-center max-w-2xl mx-auto mb-6 md:mb-10">
+          <h2 className="text-2xl md:text-4xl font-bold tracking-tight">Join Periscope</h2>
+          <p className="text-sm md:text-base text-muted-foreground mt-2 md:mt-3">Two ways in — pick the one that fits you. Free either way.</p>
+        </div>
+        <div className="grid md:grid-cols-2 gap-4 md:gap-6">
+          <div className="rounded-2xl border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-background to-background p-6 md:p-8 flex flex-col">
+            <div className="w-12 h-12 rounded-xl bg-primary/15 text-primary flex items-center justify-center mb-4">
+              <Users className="h-6 w-6" />
+            </div>
+            <h3 className="text-xl md:text-2xl font-bold mb-2">Renters — join free</h3>
+            <p className="text-sm md:text-base text-muted-foreground mb-5 md:mb-6 flex-1">
+              Watch real video reviews. Post your own. Compare buildings side by side. See the Truth Score before you tour.
+            </p>
+            <Button variant="hero" size="lg" asChild className="w-full">
+              <Link to={AUTH_RENTER}>Sign up as a renter</Link>
+            </Button>
+          </div>
+          <div className="rounded-2xl border-2 border-secondary/40 bg-gradient-to-br from-secondary/10 via-background to-background p-6 md:p-8 flex flex-col">
+            <div className="w-12 h-12 rounded-xl bg-secondary/15 text-secondary flex items-center justify-center mb-4">
+              <Building2 className="h-6 w-6" />
+            </div>
+            <h3 className="text-xl md:text-2xl font-bold mb-2">Property managers — join free</h3>
+            <p className="text-sm md:text-base text-muted-foreground mb-5 md:mb-6 flex-1">
+              Claim your building. Upload official tours. Respond to residents. Get alerts the moment a new review is posted.
+            </p>
+            <Button variant="outline" size="lg" asChild className="w-full">
+              <Link to={AUTH_MANAGER}>Sign up as a manager</Link>
+            </Button>
           </div>
         </div>
       </section>
@@ -374,29 +387,33 @@ function MarqueeRail({
   items,
   direction,
   duration,
+  hideHeader,
 }: {
   title: string;
   hint: string;
   items: Teaser[];
   direction: 'left' | 'right';
   duration: string;
+  hideHeader?: boolean;
 }) {
   // Duplicate the list so the marquee loop is seamless.
   const loop = [...items, ...items];
   return (
     <div>
-      <div className="container flex items-baseline justify-between gap-4 mb-3">
-        <div>
-          <h3 className="text-lg md:text-xl font-bold tracking-tight">{title}</h3>
-          <p className="text-xs text-muted-foreground">{hint}</p>
+      {!hideHeader && (
+        <div className="container flex items-baseline justify-between gap-4 mb-3">
+          <div>
+            <h3 className="text-lg md:text-xl font-bold tracking-tight">{title}</h3>
+            <p className="text-xs text-muted-foreground">{hint}</p>
+          </div>
+          <Link
+            to={AUTH_RENTER}
+            className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline whitespace-nowrap"
+          >
+            <Lock className="h-3 w-3" /> Unlock all
+          </Link>
         </div>
-        <Link
-          to={AUTH_RENTER}
-          className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline whitespace-nowrap"
-        >
-          <Lock className="h-3 w-3" /> Unlock all
-        </Link>
-      </div>
+      )}
 
       <div
         className="marquee-pause relative overflow-hidden"
@@ -430,7 +447,7 @@ function TeaserCard({ teaser, kenBurnsDelay }: { teaser: Teaser; kenBurnsDelay: 
       aria-label={`${teaser.title} — sign up to watch`}
     >
       <img
-        src={u(teaser.photo)}
+        src={teaser.photo}
         alt=""
         loading="lazy"
         className="ken-burns absolute inset-0 h-full w-full object-cover"
