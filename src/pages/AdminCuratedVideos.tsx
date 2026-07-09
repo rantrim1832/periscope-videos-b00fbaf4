@@ -466,7 +466,7 @@ const AdminCuratedVideos = () => {
               </div>
             )}
           </CardContent>
-        </Card>
+        </Card>}
 
         <CategoryLibraryBrowser
           categories={categories}
