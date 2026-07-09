@@ -3,8 +3,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Loader2, ChevronDown, ChevronRight, Youtube, Search, Trash2, ExternalLink } from 'lucide-react';
+import { Loader2, ChevronDown, ChevronRight, Youtube, Search, Trash2, ExternalLink, Eye, CheckCircle2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Checkbox } from '@/components/ui/checkbox';
 
 export type BrowserCategory = {
   id: string;
@@ -14,6 +15,22 @@ export type BrowserCategory = {
   feed_category: string;
   suggested_queries: string[];
   is_active: boolean;
+};
+
+export type PreviewCandidate = {
+  videoId: string;
+  title: string;
+  channel: string;
+  description: string;
+  thumbnail: string;
+  watchUrl: string;
+  alreadyImported: boolean;
+};
+
+export type PreviewResult = {
+  totalFound: number;
+  alreadyImported: number;
+  candidates: PreviewCandidate[];
 };
 
 type VideoRow = {
@@ -37,12 +54,16 @@ export function CategoryLibraryBrowser({
   seedingKey,
   onDelete,
   refreshKey,
+  onPreviewQuery,
+  onImportSelected,
 }: {
   categories: BrowserCategory[];
   onSeedQuery: (slug: string, query: string) => Promise<{ imported: number; skipped: number; totalFound: number } | null>;
   seedingKey: string | null; // `${slug}::${query}` while running
   onDelete: (id: string) => Promise<void>;
   refreshKey: number;
+  onPreviewQuery: (slug: string, query: string) => Promise<PreviewResult | null>;
+  onImportSelected: (slug: string, query: string, videoIds: string[]) => Promise<{ imported: number; skipped: number; totalFound: number } | null>;
 }) {
   const { toast } = useToast();
   const [counts, setCounts] = useState<Record<string, number>>({});
@@ -50,6 +71,11 @@ export function CategoryLibraryBrowser({
   const [videosBySlug, setVideosBySlug] = useState<Record<string, VideoRow[]>>({});
   const [loadingSlug, setLoadingSlug] = useState<string | null>(null);
   const [lastRun, setLastRun] = useState<Record<string, { imported: number; skipped: number; totalFound: number; at: number }>>({});
+  const [previewKey, setPreviewKey] = useState<string | null>(null); // which query is being previewed
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [preview, setPreview] = useState<PreviewResult | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set<string>());
+  const [importing, setImporting] = useState(false);
 
   // Load per-category counts by inspecting every video's hashtags (small dataset).
   const loadCounts = async () => {
@@ -104,6 +130,51 @@ export function CategoryLibraryBrowser({
       setLastRun((r) => ({ ...r, [`${slug}::${q}`]: { ...res, at: Date.now() } }));
       await loadVideos(slug);
       await loadCounts();
+    }
+  };
+
+  const openPreview = async (slug: string, q: string) => {
+    const key = `${slug}::${q}`;
+    setPreviewKey(key);
+    setPreview(null);
+    setSelected(new Set());
+    setPreviewLoading(true);
+    const res = await onPreviewQuery(slug, q);
+    setPreview(res);
+    if (res) {
+      // Preselect all fresh (not-yet-imported) videos
+      const fresh = new Set(res.candidates.filter((c) => !c.alreadyImported).map((c) => c.videoId));
+      setSelected(fresh);
+    }
+    setPreviewLoading(false);
+  };
+
+  const closePreview = () => {
+    setPreviewKey(null);
+    setPreview(null);
+    setSelected(new Set());
+  };
+
+  const toggleSelected = (id: string) => {
+    setSelected((s) => {
+      const n = new Set<string>(s);
+      if (n.has(id)) n.delete(id);
+      else n.add(id);
+      return n;
+    });
+  };
+
+  const importSelected = async () => {
+    if (!previewKey || selected.size === 0) return;
+    const [slug, q] = previewKey.split('::');
+    setImporting(true);
+    const res = await onImportSelected(slug, q, Array.from(selected));
+    setImporting(false);
+    if (res) {
+      setLastRun((r) => ({ ...r, [previewKey]: { ...res, at: Date.now() } }));
+      await loadVideos(slug);
+      await loadCounts();
+      closePreview();
     }
   };
 
@@ -180,26 +251,149 @@ export function CategoryLibraryBrowser({
                           const key = `${c.slug}::${q}`;
                           const busy = seedingKey === key;
                           const run = lastRun[key];
+                          const isPreviewing = previewKey === key;
                           return (
-                            <div key={q} className="flex items-center gap-2 flex-wrap">
-                              <code className="text-xs px-2 py-1 rounded bg-background border border-border flex-1 min-w-[200px] truncate">
-                                {q}
-                              </code>
-                              {run && (
-                                <span className="text-[10px] text-muted-foreground">
-                                  +{run.imported} new · {run.skipped} dupe · {run.totalFound} found
-                                </span>
+                            <div key={q} className="space-y-2">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <code className="text-xs px-2 py-1 rounded bg-background border border-border flex-1 min-w-[200px] truncate">
+                                  {q}
+                                </code>
+                                {run && (
+                                  <span className="text-[10px] text-muted-foreground">
+                                    +{run.imported} new · {run.skipped} dupe · {run.totalFound} found
+                                  </span>
+                                )}
+                                <Button
+                                  size="sm"
+                                  variant={isPreviewing ? 'default' : 'outline'}
+                                  className="h-7 text-xs"
+                                  disabled={previewLoading && !isPreviewing}
+                                  onClick={() => (isPreviewing ? closePreview() : openPreview(c.slug, q))}
+                                >
+                                  {previewLoading && isPreviewing ? (
+                                    <Loader2 className="w-3 h-3 animate-spin mr-1" />
+                                  ) : (
+                                    <Eye className="w-3 h-3 mr-1" />
+                                  )}
+                                  {isPreviewing ? 'Close preview' : 'Preview'}
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-7 text-xs"
+                                  disabled={busy || seedingKey !== null}
+                                  onClick={() => runQuery(c.slug, q)}
+                                  title="Import all fresh results without previewing"
+                                >
+                                  {busy ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <Youtube className="w-3 h-3 mr-1 text-red-500" />}
+                                  Import all
+                                </Button>
+                              </div>
+
+                              {isPreviewing && (
+                                <div className="border border-primary/40 bg-background rounded-md p-3">
+                                  {previewLoading ? (
+                                    <div className="flex items-center gap-2 text-xs text-muted-foreground py-4 justify-center">
+                                      <Loader2 className="w-4 h-4 animate-spin" /> Fetching candidates from YouTube…
+                                    </div>
+                                  ) : !preview ? (
+                                    <p className="text-xs text-destructive">Preview failed. Try again.</p>
+                                  ) : preview.candidates.length === 0 ? (
+                                    <p className="text-xs text-muted-foreground italic">No videos returned by YouTube for this query.</p>
+                                  ) : (
+                                    <div className="space-y-3">
+                                      <div className="flex items-center justify-between flex-wrap gap-2">
+                                        <p className="text-xs text-muted-foreground">
+                                          <strong>{preview.totalFound}</strong> results ·{' '}
+                                          <strong>{preview.alreadyImported}</strong> already in library ·{' '}
+                                          <strong>{selected.size}</strong> selected
+                                        </p>
+                                        <div className="flex gap-2">
+                                          <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            className="h-7 text-[11px]"
+                                            onClick={() =>
+                                              setSelected(new Set(preview.candidates.filter((v) => !v.alreadyImported).map((v) => v.videoId)))
+                                            }
+                                          >
+                                            Select all fresh
+                                          </Button>
+                                          <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            className="h-7 text-[11px]"
+                                            onClick={() => setSelected(new Set())}
+                                          >
+                                            Clear
+                                          </Button>
+                                          <Button
+                                            size="sm"
+                                            className="h-7 text-xs"
+                                            disabled={importing || selected.size === 0}
+                                            onClick={importSelected}
+                                          >
+                                            {importing ? (
+                                              <Loader2 className="w-3 h-3 animate-spin mr-1" />
+                                            ) : (
+                                              <CheckCircle2 className="w-3 h-3 mr-1" />
+                                            )}
+                                            Import selected ({selected.size})
+                                          </Button>
+                                        </div>
+                                      </div>
+                                      <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3 max-h-[520px] overflow-y-auto pr-1">
+                                        {preview.candidates.map((v) => {
+                                          const checked = selected.has(v.videoId);
+                                          return (
+                                            <label
+                                              key={v.videoId}
+                                              className={`border rounded-md overflow-hidden text-xs cursor-pointer transition ${
+                                                v.alreadyImported
+                                                  ? 'opacity-60 border-border'
+                                                  : checked
+                                                  ? 'border-primary ring-1 ring-primary/40'
+                                                  : 'border-border hover:border-primary/60'
+                                              }`}
+                                            >
+                                              <div className="relative">
+                                                <img src={v.thumbnail} alt="" loading="lazy" className="w-full h-24 object-cover" />
+                                                <div className="absolute top-1 left-1 bg-background/90 rounded-sm p-0.5">
+                                                  <Checkbox
+                                                    checked={checked}
+                                                    onCheckedChange={() => !v.alreadyImported && toggleSelected(v.videoId)}
+                                                    disabled={v.alreadyImported}
+                                                  />
+                                                </div>
+                                                {v.alreadyImported && (
+                                                  <div className="absolute bottom-1 left-1">
+                                                    <Badge variant="muted" className="text-[9px]">already in library</Badge>
+                                                  </div>
+                                                )}
+                                              </div>
+                                              <div className="p-2 space-y-1">
+                                                <p className="font-medium line-clamp-2 leading-snug">{v.title}</p>
+                                                {v.channel && (
+                                                  <p className="text-[10px] text-muted-foreground truncate">{v.channel}</p>
+                                                )}
+                                                <a
+                                                  href={v.watchUrl}
+                                                  target="_blank"
+                                                  rel="noreferrer"
+                                                  onClick={(e) => e.stopPropagation()}
+                                                  className="text-[11px] text-primary hover:underline inline-flex items-center gap-0.5"
+                                                >
+                                                  <ExternalLink className="w-3 h-3" /> Watch on YouTube
+                                                </a>
+                                              </div>
+                                            </label>
+                                          );
+                                        })}
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
                               )}
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="h-7 text-xs"
-                                disabled={busy || seedingKey !== null}
-                                onClick={() => runQuery(c.slug, q)}
-                              >
-                                {busy ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <Youtube className="w-3 h-3 mr-1 text-red-500" />}
-                                Run this search
-                              </Button>
                             </div>
                           );
                         })}
