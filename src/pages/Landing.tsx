@@ -130,38 +130,66 @@ function mergeRailsWithReal(
   real: CuratedTeaser[],
 ): typeof RAILS {
   if (real.length === 0) return rails;
-  // Bucket real videos by their `cat:<slug>` category
+  // Interleave: keep the AI-cover editorial cards AND mix in real curated
+  // YouTube videos so each rail has both. We aim for ~50/50 per rail, with
+  // real videos picked from the matching category bucket first, then any
+  // leftover pool. Order alternates: [real, editorial, real, editorial, ...]
+  // so users see both kinds without one dominating.
   const byCat = new Map<string, CuratedTeaser[]>();
   for (const v of real) {
     if (!byCat.has(v.category)) byCat.set(v.category, []);
     byCat.get(v.category)!.push(v);
   }
-  const anyPool = [...real];
-  return rails.map((rail, railIdx) => {
-    // Pull up to 4 real videos: first from a matching category bucket,
-    // then top up from the general pool so rails stay dense.
-    const catKeys = Array.from(byCat.keys());
-    const preferred = byCat.get(catKeys[railIdx % catKeys.length] ?? '') ?? [];
-    const picked: CuratedTeaser[] = [...preferred];
-    while (picked.length < 4 && anyPool.length) {
-      const next = anyPool.shift()!;
-      if (!picked.some((p) => p.id === next.id)) picked.push(next);
+  const generalPool = [...real];
+  const used = new Set<string>();
+  const takeReal = (preferCat?: string): CuratedTeaser | undefined => {
+    if (preferCat) {
+      const bucket = byCat.get(preferCat) ?? [];
+      while (bucket.length) {
+        const v = bucket.shift()!;
+        if (!used.has(v.id)) { used.add(v.id); return v; }
+      }
     }
-    if (picked.length === 0) return rail;
-    const items = picked.slice(0, 4).map(teaserFromReal);
-    // Backfill with static teasers if we found fewer than 4 real ones
-    while (items.length < 4) items.push(rail.items[items.length]!);
-    return { ...rail, items };
+    while (generalPool.length) {
+      const v = generalPool.shift()!;
+      if (!used.has(v.id)) { used.add(v.id); return v; }
+    }
+    return undefined;
+  };
+
+  const catKeys = Array.from(byCat.keys());
+  return rails.map((rail, railIdx) => {
+    const preferCat = catKeys[railIdx % Math.max(catKeys.length, 1)];
+    const editorials = rail.items;
+    const target = editorials.length; // keep rail length the same (4)
+    const mixed: Teaser[] = [];
+    // Alternate real, editorial, real, editorial...
+    for (let i = 0; i < target; i++) {
+      if (i % 2 === 0) {
+        const r = takeReal(preferCat);
+        mixed.push(r ? teaserFromReal(r) : editorials[i]);
+      } else {
+        mixed.push(editorials[i]);
+      }
+    }
+    return { ...rail, items: mixed };
   });
 }
 
 function mergeHeroWithReal(strip: Teaser[], real: CuratedTeaser[]): Teaser[] {
   if (real.length === 0) return strip;
-  const realTeasers = real.slice(0, strip.length).map(teaserFromReal);
-  // Keep length ≥ strip.length so the marquee loop stays smooth
-  return realTeasers.length >= strip.length
-    ? realTeasers
-    : [...realTeasers, ...strip.slice(realTeasers.length)];
+  // Alternate real + editorial in the hero strip so the featured bar
+  // reads as a mix, not "all real" or "all AI".
+  const pool = [...real];
+  const out: Teaser[] = [];
+  for (let i = 0; i < strip.length; i++) {
+    if (i % 2 === 0 && pool.length) {
+      out.push(teaserFromReal(pool.shift()!));
+    } else {
+      out.push(strip[i]);
+    }
+  }
+  return out;
 }
 
 const TESTIMONIALS = [
