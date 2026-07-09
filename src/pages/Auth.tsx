@@ -190,6 +190,11 @@ const Auth = () => {
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? 'Processing...' : (isSignUp ? 'Sign Up' : 'Sign In')}
             </Button>
+            {!isSignUp && (
+              <div className="text-center">
+                <a href="/forgot-password" className="text-xs text-primary hover:underline">Forgot your password?</a>
+              </div>
+            )}
             {isCaptchaEnforced() ? (
               <div className="flex justify-center">
                 <Turnstile
