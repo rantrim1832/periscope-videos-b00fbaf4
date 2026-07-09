@@ -34,6 +34,105 @@ type Category = {
   is_active: boolean;
 };
 
+type YouTubePreviewCandidate = {
+  videoId: string;
+  title: string;
+  channel: string;
+  description: string;
+  thumbnail: string;
+  watchUrl: string;
+  alreadyImported: boolean;
+};
+
+type YouTubePreviewResult = {
+  totalFound: number;
+  alreadyImported: number;
+  candidates: YouTubePreviewCandidate[];
+};
+
+const YOUTUBE_FUNCTION_URL = 'https://eeivsursfgmponlonpmy.supabase.co/functions/v1/youtube-import';
+const YOUTUBE_FUNCTION_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJIUzI1NiIsInJlZiI6ImVlaXZzdXJzZmdtcG9ubG9ucG15Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE3NDQ5MTgsImV4cCI6MjA3NzMyMDkxOH0.yKHfU-XFmD682Jnh6o8ApGhC8hmJzx2AX5asgoLStgM';
+
+function extractErrorMessage(error: unknown) {
+  if (!error) return 'Unknown error';
+  if (error instanceof Error) return error.message;
+  if (typeof error === 'string') return error;
+  const maybe = error as { message?: string; error?: string; detail?: string };
+  return maybe.detail || maybe.message || maybe.error || String(error);
+}
+
+async function previewYouTubeVideos(query: string, category: string, maxResults = 25): Promise<YouTubePreviewResult> {
+  const { data: sessionData } = await supabase.auth.getSession();
+  const accessToken = sessionData.session?.access_token;
+  if (!accessToken) throw new Error('Please sign in again before previewing videos.');
+
+  const res = await fetch(YOUTUBE_FUNCTION_URL, {
+    method: 'POST',
+    headers: {
+      apikey: YOUTUBE_FUNCTION_KEY,
+      authorization: `Bearer ${accessToken}`,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({ query, category, maxResults, mode: 'preview' }),
+  });
+  const json = await res.json().catch(() => null);
+  if (!res.ok) throw new Error(extractErrorMessage(json) || `Video preview failed (${res.status})`);
+  return {
+    totalFound: Number(json?.totalFound ?? 0),
+    alreadyImported: Number(json?.alreadyImported ?? 0),
+    candidates: Array.isArray(json?.candidates) ? json.candidates : [],
+  };
+}
+
+async function insertPreviewCandidates(category: string, query: string, candidates: YouTubePreviewCandidate[], videoIds?: string[]) {
+  const selected = videoIds?.length ? new Set(videoIds) : null;
+  const ids = candidates.map((candidate) => candidate.videoId);
+  if (ids.length === 0) return { imported: 0, skipped: 0, totalFound: 0 };
+
+  const ytTags = ids.map((id) => `yt:${id}`);
+  const { data: existing, error: existingError } = await supabase
+    .from('seeded_videos')
+    .select('hashtags')
+    .overlaps('hashtags', ytTags);
+  if (existingError) throw existingError;
+
+  const existingIds = new Set<string>();
+  for (const row of existing ?? []) {
+    for (const tag of row.hashtags ?? []) {
+      if (typeof tag === 'string' && tag.startsWith('yt:')) existingIds.add(tag.slice(3));
+    }
+  }
+
+  const rows = candidates
+    .filter((candidate) => !existingIds.has(candidate.videoId))
+    .filter((candidate) => !selected || selected.has(candidate.videoId))
+    .map((candidate) => ({
+      title: candidate.title || 'Untitled apartment video',
+      embed_url: `https://www.youtube.com/embed/${candidate.videoId}`,
+      caption: candidate.channel
+        ? `${candidate.channel}${candidate.description ? ` · ${candidate.description.slice(0, 400)}` : ''}`
+        : candidate.description?.slice(0, 400) || null,
+      hashtags: [
+        `cat:${category}`,
+        `yt:${candidate.videoId}`,
+        `q:${query}`,
+        candidate.channel ? `ch:${candidate.channel}` : null,
+        `src:${candidate.watchUrl || `https://www.youtube.com/watch?v=${candidate.videoId}`}`,
+      ].filter(Boolean) as string[],
+      source: 'youtube',
+      moderation_status: 'approved',
+      is_positive: false,
+    }));
+
+  if (rows.length === 0) {
+    return { imported: 0, skipped: ids.length, totalFound: ids.length };
+  }
+
+  const { error } = await supabase.from('seeded_videos').insert(rows);
+  if (error) throw error;
+  return { imported: rows.length, skipped: ids.length - rows.length, totalFound: ids.length };
+}
+
 const FEED_CATEGORY_OPTIONS = [
   'Maintenance issues','Deposit disputes','Property tours','Renter tips',
   'Resident warnings','Property comparison',
@@ -127,6 +226,7 @@ const AdminCuratedVideos = () => {
   const [loading, setLoading] = useState(true);
   const [browserRefresh, setBrowserRefresh] = useState(0);
   const [seedingKey, setSeedingKey] = useState<string | null>(null);
+  const [previewCache, setPreviewCache] = useState<Record<string, YouTubePreviewCandidate[]>>({});
 
   // Topic editor state
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -339,10 +439,9 @@ const AdminCuratedVideos = () => {
     const key = `${catSlug}::${q}`;
     setSeedingKey(key);
     try {
-      const { data, error } = await supabase.functions.invoke('youtube-import', {
-        body: { query: q, category: catSlug, maxResults: 15 },
-      });
-      if (error) throw error;
+      const preview = await previewYouTubeVideos(q, catSlug, 15);
+      setPreviewCache((cache) => ({ ...cache, [key]: preview.candidates }));
+      const data = await insertPreviewCandidates(catSlug, q, preview.candidates);
       toast({
         title: `Seeded "${q}"`,
         description: `+${data.imported} new · ${data.skipped} dupes · ${data.totalFound} found`,
@@ -360,17 +459,11 @@ const AdminCuratedVideos = () => {
 
   const previewOneQuery = async (catSlug: string, q: string) => {
     try {
-      const { data, error } = await supabase.functions.invoke('youtube-import', {
-        body: { query: q, category: catSlug, maxResults: 25, mode: 'preview' },
-      });
-      if (error) throw error;
-      return {
-        totalFound: data.totalFound ?? 0,
-        alreadyImported: data.alreadyImported ?? 0,
-        candidates: data.candidates ?? [],
-      };
+      const data = await previewYouTubeVideos(q, catSlug, 25);
+      setPreviewCache((cache) => ({ ...cache, [`${catSlug}::${q}`]: data.candidates }));
+      return data;
     } catch (e: any) {
-      toast({ title: 'Preview failed', description: e.message ?? String(e), variant: 'destructive' });
+      toast({ title: 'Preview failed', description: extractErrorMessage(e), variant: 'destructive' });
       return null;
     }
   };
@@ -379,10 +472,8 @@ const AdminCuratedVideos = () => {
     const key = `${catSlug}::${q}`;
     setSeedingKey(key);
     try {
-      const { data, error } = await supabase.functions.invoke('youtube-import', {
-        body: { query: q, category: catSlug, maxResults: 25, videoIds },
-      });
-      if (error) throw error;
+      const candidates = previewCache[key] ?? (await previewYouTubeVideos(q, catSlug, 25)).candidates;
+      const data = await insertPreviewCandidates(catSlug, q, candidates, videoIds);
       toast({
         title: `Imported ${data.imported} selected videos`,
         description: `${data.skipped} skipped · ${data.totalFound} found for "${q}"`,
