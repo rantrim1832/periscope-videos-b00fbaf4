@@ -23,7 +23,7 @@ export default function AdminProperties() {
     queryFn: async () => {
       let query = supabase
         .from("properties")
-        .select("*")
+        .select("id,name,address,city,state,status,units_count,bedrooms,bathrooms,rent,verified,created_at")
         .order("created_at", { ascending: false });
 
       if (search) {
