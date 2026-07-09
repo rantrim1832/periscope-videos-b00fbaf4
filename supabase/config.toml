@@ -43,6 +43,11 @@ verify_jwt = true
 [functions.send-email]
 verify_jwt = true
 
+# Read-only YouTube previews accept the public publishable key. Any database
+# write mode still validates the caller and admin role inside the function.
+[functions.youtube-import]
+verify_jwt = false
+
 # Public OG image for link-unfurl previews.
 [functions.og-image]
 verify_jwt = false

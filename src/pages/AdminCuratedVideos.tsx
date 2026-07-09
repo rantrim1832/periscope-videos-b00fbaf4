@@ -70,7 +70,6 @@ async function previewYouTubeVideos(query: string, category: string, maxResults 
     method: 'POST',
     headers: {
       apikey: YOUTUBE_FUNCTION_KEY,
-      authorization: `Bearer ${YOUTUBE_FUNCTION_KEY}`,
       'content-type': 'application/json',
     },
     body: JSON.stringify({ query, category, maxResults, mode: 'preview' }),
