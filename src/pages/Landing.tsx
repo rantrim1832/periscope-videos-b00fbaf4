@@ -264,7 +264,10 @@ function FeedRail({
 }) {
   const loading = items.length === 0;
   // Pad short rails with skeletons so every shelf reads as "there's more".
-  const cards = loading
+  type Card =
+    | { skeleton: true; key: string }
+    | { skeleton: false; key: string; item: FeedItem };
+  const cards: Card[] = loading
     ? Array.from({ length: 6 }).map((_, i) => ({ skeleton: true, key: `s-${i}` }))
     : items.map((i) => ({ skeleton: false, key: i.id, item: i }));
 
