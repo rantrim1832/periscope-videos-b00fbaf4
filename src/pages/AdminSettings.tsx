@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { Shield, Crown, Users, Settings } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const AdminSettings = () => {
