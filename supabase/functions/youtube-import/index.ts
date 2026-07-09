@@ -13,6 +13,18 @@ import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 const YT_API = 'https://www.googleapis.com/youtube/v3';
 const GOOGLE_REFERRER = 'https://www.joinperiscope.com/';
 
+// Periscope covers large multifamily apartment BUILDINGS. Airbnb/short-term
+// rentals aren't apartments, and NYC listings often use "apartment" to mean a
+// house / brownstone / townhouse. Filter both at query time and in results.
+const NEGATIVE_QUERY_TERMS =
+  ' -airbnb -bnb -"air bnb" -brownstone -townhouse -"single family" -house';
+const BLOCKED_RE =
+  /\b(airbnb|air\s*bnb|brownstone|townhouse|single[-\s]?family|brooklyn|manhattan|new york city|\bnyc\b)\b/i;
+
+function isBlocked(...parts: (string | undefined | null)[]): boolean {
+  return parts.some((p) => (p ? BLOCKED_RE.test(p) : false));
+}
+
 interface ImportBody {
   query: string;
   category: string;        // slug, e.g. "maintenance"
@@ -67,7 +79,7 @@ Deno.serve(async (req) => {
     // 1) Search for video IDs.
     const searchUrl = new URL(`${YT_API}/search`);
     searchUrl.searchParams.set('part', 'snippet');
-    searchUrl.searchParams.set('q', query);
+    searchUrl.searchParams.set('q', query + NEGATIVE_QUERY_TERMS);
     searchUrl.searchParams.set('type', 'video');
     searchUrl.searchParams.set('maxResults', String(maxResults));
     searchUrl.searchParams.set('videoEmbeddable', 'true');
@@ -124,6 +136,8 @@ Deno.serve(async (req) => {
         const channel = String(snip.channelTitle ?? '').slice(0, 120);
         const description = String(snip.description ?? '').slice(0, 400);
         const already = existingIds.has(vid);
+        // Drop Airbnb / NYC-house content from BOTH preview and insert.
+        if (isBlocked(title, channel, description)) continue;
         candidates.push({
           videoId: vid,
           title: title || 'Untitled',
