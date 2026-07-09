@@ -7,6 +7,14 @@ import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 
 const YT_API = 'https://www.googleapis.com/youtube/v3';
 
+// Periscope covers large multifamily apartment BUILDINGS. Exclude Airbnb /
+// short-term rentals and NYC-style "houses called apartments" (brownstones,
+// townhouses, single-family) so seeded content stays on-brand.
+const NEGATIVE_QUERY_TERMS =
+  ' -airbnb -bnb -"air bnb" -brownstone -townhouse -"single family" -house';
+const BLOCKED_RE =
+  /\b(airbnb|air\s*bnb|brownstone|townhouse|single[-\s]?family|brooklyn|manhattan|new york city|\bnyc\b)\b/i;
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
   try {
@@ -76,7 +84,7 @@ Deno.serve(async (req) => {
 async function searchAndInsert(admin: any, ytKey: string, query: string, category: string, maxResults: number) {
   const searchUrl = new URL(`${YT_API}/search`);
   searchUrl.searchParams.set('part', 'snippet');
-  searchUrl.searchParams.set('q', query);
+  searchUrl.searchParams.set('q', query + NEGATIVE_QUERY_TERMS);
   searchUrl.searchParams.set('type', 'video');
   searchUrl.searchParams.set('maxResults', String(maxResults));
   searchUrl.searchParams.set('videoEmbeddable', 'true');
@@ -116,6 +124,8 @@ async function searchAndInsert(admin: any, ytKey: string, query: string, categor
     const title = String(snip.title ?? '').slice(0, 300);
     const channel = String(snip.channelTitle ?? '').slice(0, 120);
     const description = String(snip.description ?? '').slice(0, 400);
+    // Skip Airbnb / NYC-house content — not what Periscope is about.
+    if (BLOCKED_RE.test(title) || BLOCKED_RE.test(channel) || BLOCKED_RE.test(description)) continue;
     rows.push({
       title: title || 'Untitled',
       embed_url: `https://www.youtube.com/embed/${vid}`,
