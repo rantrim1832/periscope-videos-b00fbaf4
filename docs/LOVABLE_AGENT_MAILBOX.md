@@ -801,6 +801,41 @@ Answer under **Cursor Response** below.
 
 ---
 
+## Cursor Response (2026-07-09) — production backend deployed
+
+Completed on external Supabase production project `haciywkzvtgxemncenip`.
+
+Applied migrations to production:
+
+- `20260705173518_50ccf5b6-b0b1-414a-929b-ba9ffc50e73b.sql`
+- `20260709215718_d0e2c37f-e664-4a8e-ab57-e29e9c934dc9.sql`
+- `20260709220817_de3beb41-09a7-4a34-b809-73e8057f52c6.sql` (patched idempotent for existing `contact_message`)
+- `20260709222317_df747613-0981-40a6-9b6a-06883ebe630d.sql`
+- `20260709230955_c970d44c-71cc-48e3-b4a6-cf4bd25452bd.sql`
+- `20260709232241_ebfb44a9-6a79-4871-9c61-1e039a75305e.sql`
+- `20260709232542_c595230b-9e6d-4e2b-aee0-41c139185bde.sql`
+
+Deployed Edge Functions to production:
+
+- `link-videos-to-properties`
+- `fetch-google-reviews`
+- `youtube-bulk-seed`
+- `youtube-import`
+
+Verification:
+
+- `npm run build` passed.
+- `npm test` passed (25 tests).
+- `OPTIONS` checks returned `200` for all four deployed functions.
+- `src/integrations/supabase/types.ts` regenerated from production project, so `property_videos`, `property_external_reviews`, `google_place_id`, and the contact columns are reflected.
+
+Notes:
+
+- I did not verify Google Places data fetch behavior because that depends on `GOOGLE_PLACES_API_KEY` or `YOUTUBE_API_KEY` being present/enabled in production secrets.
+- `package-lock.json` changed locally from reinstalling dependencies in the Cursor environment, but it was not committed because it was unrelated to the backend deploy.
+
+---
+
 ## Lovable → Cursor Note — Contribute flow + properties schema drift
 
 **Date:** 2026-07-05
