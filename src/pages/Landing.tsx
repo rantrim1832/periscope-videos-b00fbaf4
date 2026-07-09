@@ -5,6 +5,7 @@ import {
   MapPin, Users, Play, Star, Quote,
 } from 'lucide-react';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { useCuratedTeasers, type CuratedTeaser } from '@/hooks/useCuratedTeasers';
 
 // Landing thumbnails — generated apartment scenes so every card reads as
 // a real multifamily interior/exterior/amenity/person, never a random
@@ -44,6 +45,8 @@ type Teaser = {
   duration: string;   // "2:14"
   views: string;      // "12K views"
   badge?: string;     // "Live", "New", "Verified"
+  watchTo?: string;   // if set, card links here instead of /auth
+  isReal?: boolean;   // real curated YouTube video (shows "YouTube" badge)
 };
 
 // 16 teasers — one per generated apartment scene. Each thumbnail appears
@@ -97,6 +100,70 @@ const HERO_STRIP: Teaser[] = [
   TEASERS[15], TEASERS[1], TEASERS[11], TEASERS[7],
 ];
 
+/**
+ * Convert a real curated video (from the DB) into the Teaser shape used
+ * by the marquee cards. Watch link goes to our own /watch/:id page so
+ * the viewer never leaves the Periscope domain.
+ */
+function teaserFromReal(v: CuratedTeaser): Teaser {
+  return {
+    id: `real:${v.id}`,
+    title: v.title,
+    property: v.channel,
+    location: v.location || 'YouTube',
+    photo: v.thumbnail,
+    duration: '',        // real duration would require another API round-trip
+    views: '',           // hidden for real videos
+    badge: 'YouTube',
+    watchTo: `/watch/${v.id}`,
+    isReal: true,
+  };
+}
+
+/**
+ * If we have real curated videos, fill each rail with them (round-robin
+ * through categories, falling back to any video). Otherwise return the
+ * static rails untouched so the landing page is never empty.
+ */
+function mergeRailsWithReal(
+  rails: typeof RAILS,
+  real: CuratedTeaser[],
+): typeof RAILS {
+  if (real.length === 0) return rails;
+  // Bucket real videos by their `cat:<slug>` category
+  const byCat = new Map<string, CuratedTeaser[]>();
+  for (const v of real) {
+    if (!byCat.has(v.category)) byCat.set(v.category, []);
+    byCat.get(v.category)!.push(v);
+  }
+  const anyPool = [...real];
+  return rails.map((rail, railIdx) => {
+    // Pull up to 4 real videos: first from a matching category bucket,
+    // then top up from the general pool so rails stay dense.
+    const catKeys = Array.from(byCat.keys());
+    const preferred = byCat.get(catKeys[railIdx % catKeys.length] ?? '') ?? [];
+    const picked: CuratedTeaser[] = [...preferred];
+    while (picked.length < 4 && anyPool.length) {
+      const next = anyPool.shift()!;
+      if (!picked.some((p) => p.id === next.id)) picked.push(next);
+    }
+    if (picked.length === 0) return rail;
+    const items = picked.slice(0, 4).map(teaserFromReal);
+    // Backfill with static teasers if we found fewer than 4 real ones
+    while (items.length < 4) items.push(rail.items[items.length]!);
+    return { ...rail, items };
+  });
+}
+
+function mergeHeroWithReal(strip: Teaser[], real: CuratedTeaser[]): Teaser[] {
+  if (real.length === 0) return strip;
+  const realTeasers = real.slice(0, strip.length).map(teaserFromReal);
+  // Keep length ≥ strip.length so the marquee loop stays smooth
+  return realTeasers.length >= strip.length
+    ? realTeasers
+    : [...realTeasers, ...strip.slice(realTeasers.length)];
+}
+
 const TESTIMONIALS = [
   {
     name: 'Andrea W.',
@@ -127,6 +194,15 @@ const Landing = () => {
     'Periscope — Real apartment reviews & resident video tours',
     'See what living in a large apartment building is really like. Real resident reviews, video tours, and honest ratings — before you sign the lease.'
   );
+
+  // Pull approved curated YouTube videos. When present, we swap real
+  // thumbnails + titles into the marquee rails and route each card to
+  // the in-app /watch/:id player (keeping viewers on the Periscope
+  // domain). When empty (fresh install / not seeded), the static
+  // teasers below remain as-is so the landing page never looks bare.
+  const { teasers: real } = useCuratedTeasers(60);
+  const rails = mergeRailsWithReal(RAILS, real);
+  const heroStrip = mergeHeroWithReal(HERO_STRIP, real);
 
   return (
     <div className="min-h-dvh bg-background">
@@ -199,7 +275,7 @@ const Landing = () => {
           <MarqueeRail
             title=""
             hint=""
-            items={HERO_STRIP}
+            items={heroStrip}
             direction="left"
             duration="55s"
             hideHeader
@@ -231,7 +307,7 @@ const Landing = () => {
           </div>
 
           <div className="space-y-6 md:space-y-12">
-            {RAILS.map((rail) => (
+            {rails.map((rail) => (
               <MarqueeRail key={rail.title} {...rail} />
             ))}
           </div>
@@ -440,11 +516,15 @@ function MarqueeRail({
  * thumbnails feel like ambient video. Clicking anywhere routes to auth.
  */
 function TeaserCard({ teaser, kenBurnsDelay }: { teaser: Teaser; kenBurnsDelay: number }) {
+  const href = teaser.watchTo ?? AUTH_RENTER;
+  const ariaLabel = teaser.watchTo
+    ? `Watch: ${teaser.title}`
+    : `${teaser.title} — sign up to watch`;
   return (
     <Link
-      to={AUTH_RENTER}
+      to={href}
       className="group relative block shrink-0 w-[46vw] max-w-[220px] md:w-[220px] aspect-[9/16] overflow-hidden rounded-xl border border-border/60 bg-card shadow-card hover:shadow-card-hover transition-shadow"
-      aria-label={`${teaser.title} — sign up to watch`}
+      aria-label={ariaLabel}
     >
       <img
         src={teaser.photo}
@@ -466,15 +546,18 @@ function TeaserCard({ teaser, kenBurnsDelay }: { teaser: Teaser; kenBurnsDelay: 
               <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-destructive" />
             </span>
           )}
-          {teaser.badge !== 'Live' && <Lock className="h-2.5 w-2.5" />}
+          {teaser.badge !== 'Live' && !teaser.isReal && <Lock className="h-2.5 w-2.5" />}
+          {teaser.isReal && <Play className="h-2.5 w-2.5 fill-current" />}
           {teaser.badge}
         </div>
       )}
 
       {/* Bottom-right duration pill */}
-      <div className="absolute right-2 top-2 rounded-md bg-foreground/70 px-1.5 py-0.5 text-[10px] font-semibold text-background backdrop-blur">
-        {teaser.duration}
-      </div>
+      {teaser.duration && (
+        <div className="absolute right-2 top-2 rounded-md bg-foreground/70 px-1.5 py-0.5 text-[10px] font-semibold text-background backdrop-blur">
+          {teaser.duration}
+        </div>
+      )}
 
       {/* Center play button */}
       <div className="absolute inset-0 flex items-center justify-center">
@@ -494,7 +577,7 @@ function TeaserCard({ teaser, kenBurnsDelay }: { teaser: Teaser; kenBurnsDelay: 
             <span className="truncate">{teaser.property} · {teaser.location}</span>
           </div>
         </div>
-        <div className="text-[10px] text-background/70">{teaser.views}</div>
+        {teaser.views && <div className="text-[10px] text-background/70">{teaser.views}</div>}
       </div>
     </Link>
   );

@@ -58,6 +58,7 @@ const ReportIssue = lazy(() => import("./pages/ReportIssue"));
 const Legal = lazy(() => import("./pages/Legal"));
 const ManagerStart = lazy(() => import("./pages/ManagerStart"));
 const Landing = lazy(() => import("./pages/Landing"));
+const Watch = lazy(() => import("./pages/Watch"));
 
 // Router-level home switch: signed-out visitors get the marketing landing page;
 // signed-in visitors get the authenticated Index (which internally routes
@@ -107,6 +108,7 @@ const App = () => (
                 <Route path="/help" element={<Help />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/watch/:id" element={<Watch />} />
 
                 {/* Gated routes — hard auth wall */}
                 <Route path="/browse" element={<ProtectedRoute><Browse /></ProtectedRoute>} />
