@@ -1,12 +1,13 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Video, Shield, Building2, PlayCircle, MessageSquare, Eye, Lock, MapPin, Users } from 'lucide-react';
+import { Video, Shield, Building2, PlayCircle, MessageSquare, Eye, Lock, MapPin, Users, ChevronRight, Play } from 'lucide-react';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { getPropertyProvider } from '@/data/propertyProvider';
 import { FEED_CATEGORIES } from '@/domain/property';
+import type { FeedItem } from '@/domain/property';
 
 const AUTH_RENTER = '/auth?returnTo=%2Ffeed';
 const AUTH_MANAGER = '/auth?returnTo=%2Fmanager';
@@ -27,11 +28,20 @@ const Landing = () => {
     staleTime: 5 * 60 * 1000,
   });
 
-  const [category, setCategory] = useState<string>('All');
-  const filtered = useMemo(() => {
-    const list = category === 'All' ? feedItems : feedItems.filter((i) => i.category === category);
-    return list.slice(0, 12);
-  }, [feedItems, category]);
+  // YouTube-style rails: one horizontally-scrolling row per real category.
+  // "All" is a synthetic filter, not a shelf — skip it.
+  const rails = useMemo(() => {
+    const realCategories = FEED_CATEGORIES.filter((c) => c !== 'All');
+    return realCategories
+      .map((cat) => {
+        const items = feedItems.filter((i) => i.category === cat).slice(0, 12);
+        return { category: cat, items };
+      })
+      .filter((r) => r.items.length > 0);
+  }, [feedItems]);
+
+  // Skeleton rails while feed loads so the section never renders empty.
+  const skeletonRails = FEED_CATEGORIES.filter((c) => c !== 'All').slice(0, 4);
 
   return (
     <div className="min-h-dvh bg-background">
@@ -150,90 +160,29 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Locked feed preview */}
+      {/* YouTube-style locked feed — one horizontal rail per category */}
       <section className="border-y border-border/40 bg-muted/20">
         <div className="container py-14 md:py-20">
-          <div className="flex items-end justify-between gap-4 mb-6">
+          <div className="flex items-end justify-between gap-4 mb-8">
             <div>
               <span className="text-xs font-semibold uppercase tracking-wider text-primary">The feed</span>
               <h2 className="text-2xl md:text-3xl font-bold tracking-tight mt-1">Real videos from real residents</h2>
-              <p className="text-muted-foreground mt-2 text-sm md:text-base">Browse the categories below. Create a free account to watch.</p>
+              <p className="text-muted-foreground mt-2 text-sm md:text-base">Scroll each row. Create a free account to watch any of it.</p>
             </div>
+            <Button variant="hero" size="sm" asChild className="hidden md:inline-flex">
+              <Link to={AUTH_RENTER}>
+                <PlayCircle className="h-4 w-4" /> Watch free
+              </Link>
+            </Button>
           </div>
 
-          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-3 mb-6 -mx-4 px-4">
-            {FEED_CATEGORIES.map((c) => (
-              <button
-                key={c}
-                onClick={() => setCategory(c)}
-                className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
-                  category === c
-                    ? 'bg-primary text-primary-foreground border-primary'
-                    : 'bg-background text-foreground border-border hover:border-primary/50'
-                }`}
-              >
-                {c}
-              </button>
+          <div className="space-y-10">
+            {(rails.length > 0 ? rails : skeletonRails.map((c) => ({ category: c, items: [] as FeedItem[] }))).map((rail) => (
+              <FeedRail key={rail.category} category={rail.category} items={rail.items} authHref={AUTH_RENTER} />
             ))}
           </div>
 
-          {filtered.length === 0 ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="aspect-[9/16] rounded-xl bg-muted animate-pulse" />
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {filtered.map((item) => (
-                <Link
-                  key={item.id}
-                  to={AUTH_RENTER}
-                  className="group relative aspect-[9/16] overflow-hidden rounded-xl border border-border/60 bg-card shadow-card hover:shadow-card-hover transition-all hover:-translate-y-0.5"
-                >
-                  {item.thumbnailUrl ? (
-                    <img
-                      src={item.thumbnailUrl}
-                      alt=""
-                      loading="lazy"
-                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-                  ) : (
-                    <div className="absolute inset-0 bg-gradient-to-br from-primary/25 to-secondary/25" />
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-foreground/95 via-foreground/40 to-transparent" />
-
-                  {/* Lock overlay */}
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <div className="flex items-center gap-2 rounded-full bg-background/95 px-3 py-1.5 text-xs font-semibold text-foreground backdrop-blur">
-                      <Lock className="h-3.5 w-3.5" /> Sign up to watch
-                    </div>
-                  </div>
-
-                  <div className="absolute left-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-background/90 text-primary backdrop-blur">
-                    <Lock className="h-3.5 w-3.5" />
-                  </div>
-                  {item.category && (
-                    <Badge variant="default" className="absolute right-2 top-2 bg-background/90 text-foreground text-[10px] backdrop-blur">
-                      {item.category}
-                    </Badge>
-                  )}
-
-                  <div className="absolute inset-x-0 bottom-0 p-3 space-y-1">
-                    <p className="line-clamp-2 text-sm font-semibold text-background leading-tight">
-                      {item.title}
-                    </p>
-                    <div className="flex items-center gap-1 text-[11px] text-background/85">
-                      <MapPin className="h-3 w-3 shrink-0" />
-                      <span className="truncate">{item.propertyName}</span>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          )}
-
-          <div className="text-center mt-8">
+          <div className="text-center mt-10">
             <Button variant="hero" size="lg" asChild>
               <Link to={AUTH_RENTER}>
                 <PlayCircle className="h-4 w-4" /> Create free account to watch
@@ -299,3 +248,116 @@ const Landing = () => {
 };
 
 export default Landing;
+
+/**
+ * A YouTube-style horizontal shelf of locked video cards for one category.
+ * All cards link to the auth flow — this is a tease, not a player.
+ */
+function FeedRail({
+  category,
+  items,
+  authHref,
+}: {
+  category: string;
+  items: FeedItem[];
+  authHref: string;
+}) {
+  const loading = items.length === 0;
+  // Pad short rails with skeletons so every shelf reads as "there's more".
+  type Card =
+    | { skeleton: true; key: string }
+    | { skeleton: false; key: string; item: FeedItem };
+  const cards: Card[] = loading
+    ? Array.from({ length: 6 }).map((_, i) => ({ skeleton: true, key: `s-${i}` }))
+    : items.map((i) => ({ skeleton: false, key: i.id, item: i }));
+
+  return (
+    <div>
+      <div className="flex items-baseline justify-between gap-4 mb-3 px-1">
+        <h3 className="text-lg md:text-xl font-bold tracking-tight">{category}</h3>
+        <Link
+          to={authHref}
+          className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+        >
+          Watch all <ChevronRight className="h-3.5 w-3.5" />
+        </Link>
+      </div>
+
+      <div className="relative -mx-4 md:-mx-6">
+        {/* Right-edge fade hint — signals horizontal scroll */}
+        <div className="pointer-events-none absolute right-0 top-0 bottom-3 w-16 bg-gradient-to-l from-muted/40 to-transparent z-10 hidden md:block" />
+
+        <div className="flex gap-3 md:gap-4 overflow-x-auto no-scrollbar snap-x snap-mandatory scroll-px-4 md:scroll-px-6 px-4 md:px-6 pb-3">
+          {cards.map((c) => {
+            if (!('item' in c)) {
+              return (
+                <div
+                  key={c.key}
+                  className="shrink-0 w-[46vw] max-w-[220px] md:w-[220px] aspect-[9/16] rounded-xl bg-muted animate-pulse snap-start"
+                />
+              );
+            }
+            const item = c.item;
+            return (
+              <Link
+                key={c.key}
+                to={authHref}
+                className="group relative shrink-0 w-[46vw] max-w-[220px] md:w-[220px] aspect-[9/16] overflow-hidden rounded-xl border border-border/60 bg-card shadow-card hover:shadow-card-hover transition-all hover:-translate-y-0.5 snap-start"
+              >
+                {item.thumbnailUrl ? (
+                  <img
+                    src={item.thumbnailUrl}
+                    alt=""
+                    loading="lazy"
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                ) : (
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/25 to-secondary/25" />
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-foreground/95 via-foreground/40 to-transparent" />
+
+                {/* Center play button, YouTube-shorts style */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-full bg-background/90 text-primary shadow-lg backdrop-blur transition-transform group-hover:scale-110">
+                    <Play className="h-5 w-5 translate-x-[1px] fill-current" />
+                  </div>
+                </div>
+
+                {/* Lock chip — reveals gate on hover */}
+                <div className="absolute left-2 top-2 flex items-center gap-1 rounded-full bg-background/90 px-2 py-1 text-[10px] font-semibold text-foreground backdrop-blur">
+                  <Lock className="h-3 w-3" /> Sign up
+                </div>
+
+                <div className="absolute inset-x-0 bottom-0 p-3 space-y-1">
+                  <p className="line-clamp-2 text-sm font-semibold text-background leading-tight">
+                    {item.title}
+                  </p>
+                  <div className="flex items-center gap-1 text-[11px] text-background/85">
+                    <MapPin className="h-3 w-3 shrink-0" />
+                    <span className="truncate">{item.propertyName}</span>
+                  </div>
+                </div>
+              </Link>
+            );
+          })}
+
+          {/* Trailing "see all" card */}
+          {!loading && (
+            <Link
+              to={authHref}
+              className="shrink-0 w-[46vw] max-w-[220px] md:w-[220px] aspect-[9/16] rounded-xl border-2 border-dashed border-primary/40 bg-primary/5 flex flex-col items-center justify-center gap-3 text-primary hover:bg-primary/10 transition-colors snap-start"
+            >
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/15">
+                <Lock className="h-5 w-5" />
+              </div>
+              <div className="text-center px-4">
+                <div className="font-semibold text-sm">Sign up free</div>
+                <div className="text-[11px] text-muted-foreground mt-1">Unlock every video</div>
+              </div>
+            </Link>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
