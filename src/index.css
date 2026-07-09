@@ -156,6 +156,13 @@ All colors MUST be HSL.
   }
   .marquee-track-reverse { animation-name: marquee-right; }
   .marquee-pause:hover .marquee-track { animation-play-state: paused; }
+  /* Mobile: track scrolls a bit faster because fewer cards are visible,
+     so the same duration feels dead. Roughly 55% of the desktop duration. */
+  @media (max-width: 767px) {
+    .marquee-track {
+      animation-duration: calc(var(--marquee-duration, 60s) * 0.55);
+    }
+  }
   @media (prefers-reduced-motion: reduce) {
     .marquee-track { animation: none; }
   }
