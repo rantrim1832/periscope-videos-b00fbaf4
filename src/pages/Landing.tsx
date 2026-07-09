@@ -6,6 +6,26 @@ import {
 } from 'lucide-react';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
+// Landing thumbnails — generated apartment scenes so every card reads as
+// a real multifamily interior/exterior/amenity/person, never a random
+// stock photo of a house or theatre.
+import imgLiving      from '@/assets/landing/apt-living.jpg';
+import imgKitchen     from '@/assets/landing/apt-kitchen.jpg';
+import imgBedroom     from '@/assets/landing/apt-bedroom.jpg';
+import imgBathLeak    from '@/assets/landing/apt-bath-leak.jpg';
+import imgHighrise    from '@/assets/landing/apt-exterior-highrise.jpg';
+import imgMidrise     from '@/assets/landing/apt-exterior-midrise.jpg';
+import imgGym         from '@/assets/landing/apt-gym.jpg';
+import imgPool        from '@/assets/landing/apt-pool.jpg';
+import imgLobby       from '@/assets/landing/apt-lobby.jpg';
+import imgPackages    from '@/assets/landing/apt-packages.jpg';
+import imgTourWoman   from '@/assets/landing/apt-tour-woman.jpg';
+import imgLease       from '@/assets/landing/apt-lease.jpg';
+import imgNeighborhood from '@/assets/landing/apt-neighborhood.jpg';
+import imgCoworking   from '@/assets/landing/apt-coworking.jpg';
+import imgLaundry     from '@/assets/landing/apt-laundry.jpg';
+import imgHallway     from '@/assets/landing/apt-hallway.jpg';
+
 const AUTH_RENTER = '/auth?returnTo=%2Ffeed';
 const AUTH_MANAGER = '/auth?returnTo=%2Fmanager';
 
@@ -20,64 +40,61 @@ type Teaser = {
   title: string;
   property: string;
   location: string;
-  photo: string;      // unsplash photo id
+  photo: string;      // imported image URL
   duration: string;   // "2:14"
   views: string;      // "12K views"
   badge?: string;     // "Live", "New", "Verified"
 };
 
-// Build a full Unsplash URL for a vertical poster.
-const u = (id: string) =>
-  `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=520&h=780&q=70`;
-
-// Every photo id below is a real apartment interior, multifamily exterior,
-// amenity space, or person-in-apartment shot. No houses, no theatres, no
-// unrelated scenes. Ids appear exactly once across the whole landing page.
+// 16 teasers — one per generated apartment scene. Each thumbnail appears
+// exactly once. Categories are the ones renters care about, not "resident
+// tours". 4 rails × 4 cards each.
 const TEASERS: Teaser[] = [
-  // ---------- Maintenance nightmares ----------
-  { id: 'm1', title: 'Leak from the unit above — day 9, still nothing',  property: 'Parkline 12',    location: 'Boston, MA',       photo: '1600566753190-17f0baa2a6c3', duration: '3:41', views: '42K views', badge: 'Verified' },
-  { id: 'm2', title: 'Mold behind the vanity they painted over',         property: 'The Kingsley',   location: 'Dallas, TX',       photo: '1600566753086-00f18fb6b3ea', duration: '2:18', views: '31K views' },
-  { id: 'm3', title: 'Elevator out for 6 weeks — 22nd floor walk-up',    property: 'Nine Ten',       location: 'Philadelphia, PA', photo: '1449844908441-8829872d2607', duration: '2:57', views: '18K views' },
-  { id: 'm4', title: 'Kitchen sink flood — the maintenance recording',   property: 'Grove & Vine',   location: 'Raleigh, NC',      photo: '1600607687920-4e2a09cf159d', duration: '4:12', views: '9.6K views', badge: 'New' },
-  { id: 'm5', title: 'AC broke in July — full timeline on camera',       property: 'The Ellison',    location: 'Austin, TX',       photo: '1502672260266-1c1ef2d93688', duration: '5:04', views: '22K views' },
+  // ---------- Maintenance nightmares (4) ----------
+  { id: 'm1', title: 'Leak from the unit above — day 9, still nothing',  property: 'Parkline 12',    location: 'Boston, MA',       photo: imgBathLeak,    duration: '3:41', views: '42K views', badge: 'Verified' },
+  { id: 'm2', title: 'Kitchen sink flood — the maintenance recording',   property: 'Grove & Vine',   location: 'Raleigh, NC',      photo: imgKitchen,     duration: '4:12', views: '9.6K views', badge: 'New' },
+  { id: 'm3', title: 'Elevator out for 6 weeks — 22nd floor walk-up',    property: 'Nine Ten',       location: 'Philadelphia, PA', photo: imgHallway,     duration: '2:57', views: '18K views' },
+  { id: 'm4', title: 'AC broke in July — full 3-week timeline',          property: 'The Ellison',    location: 'Austin, TX',       photo: imgLiving,      duration: '5:04', views: '22K views' },
 
-  // ---------- Application & lease drama ----------
-  { id: 'a1', title: 'The $475 in fees they never told me about',        property: 'The Meridian',   location: 'Los Angeles, CA',  photo: '1521791136064-7986c2920216', duration: '3:26', views: '54K views', badge: 'Verified' },
-  { id: 'a2', title: 'Reading my lease line by line — the traps',        property: 'Marlowe Lofts',  location: 'Chicago, IL',      photo: '1568605114967-8130f3a36994', duration: '6:11', views: '27K views' },
-  { id: 'a3', title: 'Denied over a background typo — full story',       property: 'Coastal 60',     location: 'San Diego, CA',    photo: '1600880292203-757bb62b4baf', duration: '4:38', views: '11K views' },
-  { id: 'a4', title: 'Co-signer nightmare — what to ask first',          property: 'The Ivy',        location: 'Washington, DC',   photo: '1502005229762-cf1b2da7c5d6', duration: '3:52', views: '8.9K views', badge: 'New' },
-  { id: 'a5', title: 'Deposit came back in 87 days — my paper trail',    property: 'The Rowan',      location: 'Orlando, FL',      photo: '1560184611-ff3e53f00e8f', duration: '2:44', views: '15K views' },
+  // ---------- Application & lease drama (4) ----------
+  { id: 'a1', title: 'The $475 in fees they never mentioned',            property: 'The Meridian',   location: 'Los Angeles, CA',  photo: imgLease,       duration: '3:26', views: '54K views', badge: 'Verified' },
+  { id: 'a2', title: 'Touring 6 units in one day — what I noticed',      property: 'The Hudson',     location: 'New York, NY',     photo: imgTourWoman,   duration: '4:38', views: '27K views' },
+  { id: 'a3', title: 'Denied over a background typo — full story',       property: 'Coastal 60',     location: 'San Diego, CA',    photo: imgBedroom,     duration: '3:52', views: '11K views', badge: 'New' },
+  { id: 'a4', title: 'Deposit came back in 87 days — my paper trail',    property: 'The Rowan',      location: 'Orlando, FL',      photo: imgLobby,       duration: '2:44', views: '15K views' },
 
-  // ---------- Local area vibe ----------
-  { id: 'v1', title: 'Walk to the train at 7am — full route',            property: 'The Hudson',     location: 'New York, NY',     photo: '1493809842364-78817add7ffb', duration: '4:22', views: '38K views' },
-  { id: 'v2', title: 'Friday night noise from the block',                property: 'Highline 27',    location: 'Brooklyn, NY',     photo: '1560448076-b1e2bf6b7ee1', duration: '1:58', views: '19K views', badge: 'Live' },
-  { id: 'v3', title: 'Grocery run — 3 options within a mile',            property: 'Beacon West',    location: 'Seattle, WA',      photo: '1560185007-cde436f6a4d0', duration: '3:07', views: '12K views' },
-  { id: 'v4', title: 'Coffee shops within 4 blocks — ranked',            property: 'Union & Pine',   location: 'Nashville, TN',    photo: '1554995207-c18c203602cb', duration: '5:41', views: '24K views' },
-  { id: 'v5', title: 'Parking on the street here — the real deal',       property: 'Ashford Park',   location: 'Atlanta, GA',      photo: '1600585154340-be6161a56a0c', duration: '2:33', views: '7.4K views' },
+  // ---------- Local area vibe (4) ----------
+  { id: 'v1', title: 'The block at night — walking safety honest take',  property: 'Highline 27',    location: 'Brooklyn, NY',     photo: imgNeighborhood,duration: '4:22', views: '38K views', badge: 'Live' },
+  { id: 'v2', title: 'Coffee shops within 4 blocks — ranked',            property: 'Union & Pine',   location: 'Nashville, TN',    photo: imgMidrise,     duration: '5:41', views: '24K views' },
+  { id: 'v3', title: 'Rush-hour traffic outside the building',           property: 'Beacon West',    location: 'Seattle, WA',      photo: imgHighrise,    duration: '2:33', views: '12K views' },
+  { id: 'v4', title: 'Grocery, gym, coffee — the real 15-min walk',      property: 'Ashford Park',   location: 'Atlanta, GA',      photo: imgHighrise,    duration: '3:07', views: '7.4K views' },
 
-  // ---------- Amenities — the real story ----------
-  { id: 'e1', title: 'The gym at 6pm on a Tuesday — packed',             property: 'Ridgeview',      location: 'Portland, OR',     photo: '1600607687939-ce8a6c25118c', duration: '1:47', views: '33K views', badge: 'Verified' },
-  { id: 'e2', title: 'Package room reality check',                       property: 'Cedar & 5th',    location: 'Minneapolis, MN',  photo: '1484154218962-a197022b5858', duration: '2:15', views: '14K views' },
-  { id: 'e3', title: 'Rooftop pool at 4pm — is it worth it?',            property: 'Skyline 88',     location: 'Miami, FL',        photo: '1560448204-e02f11c3d0e2', duration: '2:41', views: '48K views', badge: 'New' },
-  { id: 'e4', title: 'Coworking lounge — wifi speeds tested live',       property: 'Northline Flats',location: 'Salt Lake City, UT',photo: '1522708323590-d24dbb6b0267', duration: '3:16', views: '9.8K views' },
-  { id: 'e5', title: 'Laundry room at 9pm — every machine free?',        property: 'The Selby',      location: 'Charlotte, NC',    photo: '1600585154526-990dced4db0d', duration: '1:32', views: '6.1K views' },
+  // ---------- Amenities — the real story (4) ----------
+  { id: 'e1', title: 'The gym at 6pm on a Tuesday — packed',             property: 'Ridgeview',      location: 'Portland, OR',     photo: imgGym,         duration: '1:47', views: '33K views', badge: 'Verified' },
+  { id: 'e2', title: 'Rooftop pool at 4pm — is it worth it?',            property: 'Skyline 88',     location: 'Miami, FL',        photo: imgPool,        duration: '2:41', views: '48K views', badge: 'New' },
+  { id: 'e3', title: 'Coworking lounge — wifi speeds tested live',       property: 'Northline Flats',location: 'Salt Lake City, UT',photo: imgCoworking,   duration: '3:16', views: '9.8K views' },
+  { id: 'e4', title: 'Package room + laundry — real hours',              property: 'Cedar & 5th',    location: 'Minneapolis, MN',  photo: imgPackages,    duration: '2:15', views: '14K views' },
 ];
+
+// Second image for the "grocery walk" so we don't repeat the highrise
+// twice within Local area vibe. Swap the 4th card to laundry — reads as a
+// building service anyway.
+TEASERS[11].photo = imgLaundry;
 
 // Rails renamed to the categories renters actually search for. Each rail
 // scrolls a different direction/speed so shelves feel alive but not chaotic.
 const RAILS: Array<{ title: string; hint: string; items: Teaser[]; direction: 'left' | 'right'; duration: string }> = [
-  { title: 'Maintenance nightmares',       hint: 'What actually got fixed — and what didn\'t', items: TEASERS.slice(0, 5),   direction: 'left',  duration: '70s' },
-  { title: 'Application & lease drama',    hint: 'Fees, denials, and the fine print',          items: TEASERS.slice(5, 10),  direction: 'right', duration: '85s' },
-  { title: 'Local area vibe',              hint: 'The block, the walk, the noise',             items: TEASERS.slice(10, 15), direction: 'left',  duration: '80s' },
-  { title: 'Amenities — the real story',   hint: 'Pool, gym, package room — at the worst hour', items: TEASERS.slice(15, 20), direction: 'right', duration: '75s' },
+  { title: 'Maintenance nightmares',       hint: 'What actually got fixed — and what didn\'t',   items: TEASERS.slice(0, 4),   direction: 'left',  duration: '65s' },
+  { title: 'Application & lease drama',    hint: 'Fees, denials, and the fine print',            items: TEASERS.slice(4, 8),   direction: 'right', duration: '75s' },
+  { title: 'Local area vibe',              hint: 'The block, the walk, the noise',               items: TEASERS.slice(8, 12),  direction: 'left',  duration: '80s' },
+  { title: 'Amenities — the real story',   hint: 'Pool, gym, package room — at the worst hour',  items: TEASERS.slice(12, 16), direction: 'right', duration: '70s' },
 ];
 
 // Featured strip for the hero preview — a single fast-moving rail mixed
 // from every category so visitors see the range immediately.
 const HERO_STRIP: Teaser[] = [
-  TEASERS[15], TEASERS[0], TEASERS[10], TEASERS[5],
-  TEASERS[17], TEASERS[2], TEASERS[12], TEASERS[7],
-  TEASERS[19], TEASERS[4], TEASERS[14], TEASERS[9],
+  TEASERS[12], TEASERS[0], TEASERS[8],  TEASERS[4],
+  TEASERS[13], TEASERS[2], TEASERS[10], TEASERS[6],
+  TEASERS[15], TEASERS[1], TEASERS[11], TEASERS[7],
 ];
 
 const TESTIMONIALS = [
