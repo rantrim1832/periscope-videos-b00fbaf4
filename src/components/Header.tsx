@@ -32,6 +32,9 @@ const PRIMARY_LINKS = [
 ];
 
 const ADMIN_LINKS = [
+  { to: "/admin", label: "Dashboard" },
+  { to: "/admin/contact", label: "Contact inbox" },
+  { to: "/admin/curated", label: "Curated videos" },
   { to: "/admin/settings", label: "Settings" },
   { to: "/admin/safety", label: "Safety inbox" },
   { to: "/admin/moderate", label: "Moderation" },
@@ -126,6 +129,11 @@ export const Header = () => {
         </nav>
 
         <div className="flex items-center gap-0.5">
+          {isAdmin && (
+            <Button variant="outline" size="sm" asChild className="hidden md:inline-flex mr-1 border-primary/60 text-primary hover:text-primary">
+              <Link to="/admin"><Shield className="h-4 w-4" /> Admin</Link>
+            </Button>
+          )}
           <Button variant="ghost" size="icon" className="hidden md:flex" asChild>
             <Link to="/search" aria-label="Search">
               <Search className="h-5 w-5" />
