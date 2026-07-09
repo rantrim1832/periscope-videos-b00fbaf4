@@ -14,6 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
+      contact_message: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          id: string
+          message: string
+          resolved_at: string | null
+          resolved_by: string | null
+          sender_email: string | null
+          sender_user_id: string | null
+          source_url: string | null
+          status: string
+          subject: string
+          topic: string
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          id?: string
+          message: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          sender_email?: string | null
+          sender_user_id?: string | null
+          source_url?: string | null
+          status?: string
+          subject: string
+          topic?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          id?: string
+          message?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          sender_email?: string | null
+          sender_user_id?: string | null
+          source_url?: string | null
+          status?: string
+          subject?: string
+          topic?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       curated_categories: {
         Row: {
           created_at: string
