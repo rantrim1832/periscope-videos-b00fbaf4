@@ -46,10 +46,10 @@ const Landing = () => {
               <Eye className="h-3 w-3" /> See it before you sign
             </span>
             <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-balance leading-[1.05]">
-              The trust layer for <span className="text-primary">apartment living</span>.
+              Apartment <span className="text-primary">video reviews</span>.
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground max-w-xl">
-              Real resident reviews and video tours of large apartment buildings. Not the brochure — the 6&nbsp;PM gym, the deposit fight, the walls you can hear through.
+              See real video reviews from real residents before you sign the lease. The 6&nbsp;PM gym, the deposit fight, the walls you can hear through — not the brochure.
             </p>
             <div className="flex flex-wrap gap-3 pt-2">
               <Button variant="hero" size="lg" asChild>
