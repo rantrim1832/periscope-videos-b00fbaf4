@@ -81,6 +81,8 @@ export interface TruthScoreResult {
   verifiedResidentCount: number;
   videoCount: number;
   effectiveWeight: number; // total trust×recency weight (sample strength)
+  linkedVideoBonus: number;      // 0..5 pts, from resident-linked videos
+  externalReviewBonus: number;   // -5..+5 pts, from Google/Yelp cache
 }
 
 function recencyWeight(createdAt: string, now: number): number {
@@ -91,9 +93,16 @@ function recencyWeight(createdAt: string, now: number): number {
 const CONFIDENCE_MIN_EARLY = 2; // effective weight below this → insufficient
 const CONFIDENCE_MIN_ESTABLISHED = 8;
 
+/** Optional supplementary signals folded into the final 0..100 score. */
+export interface ExternalSignals {
+  linkedVideoCount?: number;        // approved property_videos rows for this property
+  externalReviews?: Array<{ rating: number | null; source: string }>;
+}
+
 export function computeTruthScore(
   reviews: ReviewSignal[],
   now: number = Date.now(),
+  external: ExternalSignals = {},
 ): TruthScoreResult {
   const categories = {} as Record<CategoryKey, CategoryScore>;
   const acc: Record<CategoryKey, { wSum: number; wScore: number; count: number }> = {} as never;
@@ -140,10 +149,21 @@ export function computeTruthScore(
         : 'established';
 
   const composite5 = compositeWSum > 0 ? compositeWScore / compositeWSum : null;
-  const score =
+  let score =
     confidence === 'insufficient' || composite5 == null
       ? null
       : Math.round(composite5 * 20); // 1..5 → 0..100
+
+  // Video/external bonuses only apply once we have a real score. They can
+  // nudge but never dominate (capped ±5 each, and final score clamped 0..100).
+  const linkedVideoBonus = clamp(
+    Math.round(Math.log2(1 + (external.linkedVideoCount ?? 0)) * 1.5),
+    0, 5,
+  );
+  const externalReviewBonus = computeExternalReviewBonus(external.externalReviews);
+  if (score != null) {
+    score = Math.max(0, Math.min(100, score + linkedVideoBonus + externalReviewBonus));
+  }
 
   return {
     score,
@@ -153,7 +173,33 @@ export function computeTruthScore(
     verifiedResidentCount,
     videoCount,
     effectiveWeight: round1(effectiveWeight),
+    linkedVideoBonus,
+    externalReviewBonus,
   };
+}
+
+function clamp(n: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, n));
+}
+
+/**
+ * Third-party reviews (Google Places, Yelp) contribute a small signed nudge:
+ * strongly-positive external ratings (avg >= 4) add up to +5, strongly-negative
+ * (<=2) subtract up to -5, mid-band contributes nothing. Requires at least 3
+ * ratings to move at all, to protect against a single hostile or paid review.
+ */
+function computeExternalReviewBonus(
+  reviews: ExternalSignals['externalReviews'],
+): number {
+  if (!reviews || reviews.length < 3) return 0;
+  const rated = reviews.filter((r): r is { rating: number; source: string } => typeof r.rating === 'number');
+  if (rated.length < 3) return 0;
+  const avg = rated.reduce((s, r) => s + r.rating, 0) / rated.length;
+  if (avg >= 4.5) return 5;
+  if (avg >= 4.0) return 3;
+  if (avg <= 1.5) return -5;
+  if (avg <= 2.0) return -3;
+  return 0;
 }
 
 function round1(n: number): number {
