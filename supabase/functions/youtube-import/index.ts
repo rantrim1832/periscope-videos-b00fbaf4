@@ -122,6 +122,7 @@ Deno.serve(async (req) => {
           hashtags: [
             `cat:${category}`,
             `yt:${vid}`,
+            `q:${query}`,
             channel ? `ch:${channel}` : null,
             `src:https://www.youtube.com/watch?v=${vid}`,
           ].filter(Boolean),
