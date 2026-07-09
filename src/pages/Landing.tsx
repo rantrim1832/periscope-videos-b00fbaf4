@@ -5,6 +5,7 @@ import {
   MapPin, Users, Play, Star, Quote,
 } from 'lucide-react';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { useCuratedTeasers, type CuratedTeaser } from '@/hooks/useCuratedTeasers';
 
 // Landing thumbnails — generated apartment scenes so every card reads as
 // a real multifamily interior/exterior/amenity/person, never a random
@@ -44,6 +45,8 @@ type Teaser = {
   duration: string;   // "2:14"
   views: string;      // "12K views"
   badge?: string;     // "Live", "New", "Verified"
+  watchTo?: string;   // if set, card links here instead of /auth
+  isReal?: boolean;   // real curated YouTube video (shows "YouTube" badge)
 };
 
 // 16 teasers — one per generated apartment scene. Each thumbnail appears
