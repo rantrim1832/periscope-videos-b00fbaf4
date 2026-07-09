@@ -11,6 +11,17 @@ import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile';
 
 const TURNSTILE_SITE_KEY = '0x4AAAAAADyx4N9eVSdP9fV4';
 
+// Cloudflare Turnstile is scoped to production domains. On preview / localhost
+// the widget gets stuck on "Verifying…", so we bypass it there. Production
+// (joinperiscope.com + periscope-videos.lovable.app) still enforces it.
+const CAPTCHA_ENFORCED_HOSTS = new Set([
+  'joinperiscope.com',
+  'www.joinperiscope.com',
+  'periscope-videos.lovable.app',
+]);
+const isCaptchaEnforced = () =>
+  typeof window !== 'undefined' && CAPTCHA_ENFORCED_HOSTS.has(window.location.hostname);
+
 const Auth = () => {
   const [searchParams] = useSearchParams();
   const returnTo = searchParams.get('returnTo');
@@ -63,7 +74,8 @@ const Auth = () => {
     setLoading(true);
 
     try {
-      if (!captchaToken) {
+      const enforced = isCaptchaEnforced();
+      if (enforced && !captchaToken) {
         toast({
           title: 'Verification required',
           description: 'Please complete the captcha challenge.',
@@ -73,14 +85,16 @@ const Auth = () => {
         return;
       }
 
-      const { data: verifyData, error: verifyError } = await supabase.functions.invoke(
-        'verify-turnstile',
-        { body: { token: captchaToken } }
-      );
-      if (verifyError || !verifyData?.success) {
-        turnstileRef.current?.reset();
-        setCaptchaToken(null);
-        throw new Error('Captcha verification failed. Please try again.');
+      if (enforced) {
+        const { data: verifyData, error: verifyError } = await supabase.functions.invoke(
+          'verify-turnstile',
+          { body: { token: captchaToken } }
+        );
+        if (verifyError || !verifyData?.success) {
+          turnstileRef.current?.reset();
+          setCaptchaToken(null);
+          throw new Error('Captcha verification failed. Please try again.');
+        }
       }
 
       if (isSignUp) {
@@ -176,16 +190,22 @@ const Auth = () => {
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? 'Processing...' : (isSignUp ? 'Sign Up' : 'Sign In')}
             </Button>
-            <div className="flex justify-center">
-              <Turnstile
-                ref={turnstileRef}
-                siteKey={TURNSTILE_SITE_KEY}
-                onSuccess={(token) => setCaptchaToken(token)}
-                onExpire={() => setCaptchaToken(null)}
-                onError={() => setCaptchaToken(null)}
-                options={{ theme: 'auto' }}
-              />
-            </div>
+            {isCaptchaEnforced() ? (
+              <div className="flex justify-center">
+                <Turnstile
+                  ref={turnstileRef}
+                  siteKey={TURNSTILE_SITE_KEY}
+                  onSuccess={(token) => setCaptchaToken(token)}
+                  onExpire={() => setCaptchaToken(null)}
+                  onError={() => setCaptchaToken(null)}
+                  options={{ theme: 'auto' }}
+                />
+              </div>
+            ) : (
+              <p className="text-[11px] text-center text-muted-foreground">
+                Captcha disabled on preview · enforced on joinperiscope.com
+              </p>
+            )}
           </form>
           <div className="mt-4 text-center">
             <button
