@@ -27,6 +27,8 @@ const AdminCuratedVideos = () => {
   const [query, setQuery] = useState(CURATED_CATEGORIES[0].suggestedQueries[0]);
   const [count, setCount] = useState(25);
   const [importing, setImporting] = useState(false);
+  const [bulkSeeding, setBulkSeeding] = useState(false);
+  const [perQuery, setPerQuery] = useState(15);
 
   const [pasteUrl, setPasteUrl] = useState('');
   const [pasteSlug, setPasteSlug] = useState(CURATED_CATEGORIES[0].slug);
@@ -71,6 +73,30 @@ const AdminCuratedVideos = () => {
       toast({ title: 'Import failed', description: e.message ?? String(e), variant: 'destructive' });
     } finally {
       setImporting(false);
+    }
+  };
+
+  const runBulkSeed = async (categoryOnly?: string) => {
+    if (!confirm(
+      categoryOnly
+        ? `Seed every suggested query for "${categoryOnly}"? This may take ~30s.`
+        : `Seed EVERY category with ~${perQuery} videos per query? This runs 40+ YouTube searches (~1–2 min) and uses meaningful daily quota.`
+    )) return;
+    setBulkSeeding(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('youtube-bulk-seed', {
+        body: { perQuery, category: categoryOnly },
+      });
+      if (error) throw error;
+      toast({
+        title: 'Bulk seed complete',
+        description: `Imported ${data.totalImported} · skipped ${data.totalSkipped} dupes · found ${data.totalFound}.`,
+      });
+      load();
+    } catch (e: any) {
+      toast({ title: 'Bulk seed failed', description: e.message ?? String(e), variant: 'destructive' });
+    } finally {
+      setBulkSeeding(false);
     }
   };
 
@@ -129,6 +155,34 @@ const AdminCuratedVideos = () => {
             Only the official embed is stored — the creator keeps full credit.
           </p>
         </div>
+
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><Sparkles className="w-5 h-5 text-primary" /> One-click bulk seed</CardTitle>
+            <CardDescription>
+              Runs every suggested query across every category — the fastest way to fill an empty feed with hundreds of real apartment videos.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex flex-wrap items-end gap-3">
+              <div>
+                <label className="text-xs text-muted-foreground block mb-1">Videos per query (1–50)</label>
+                <Input type="number" min={1} max={50} value={perQuery}
+                  onChange={(e) => setPerQuery(Number(e.target.value))} className="w-28" />
+              </div>
+              <Button onClick={() => runBulkSeed()} disabled={bulkSeeding}>
+                {bulkSeeding ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Sparkles className="w-4 h-4 mr-2" />}
+                Seed every category
+              </Button>
+              <Button variant="outline" onClick={() => runBulkSeed(slug)} disabled={bulkSeeding}>
+                Seed only "{currentCat.label}"
+              </Button>
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              Duplicates are auto-skipped, so it's safe to re-run whenever you want fresh content.
+            </p>
+          </CardContent>
+        </Card>
 
         <Card className="mb-6">
           <CardHeader>
