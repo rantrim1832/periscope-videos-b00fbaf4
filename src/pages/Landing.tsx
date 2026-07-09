@@ -447,7 +447,7 @@ function TeaserCard({ teaser, kenBurnsDelay }: { teaser: Teaser; kenBurnsDelay: 
       aria-label={`${teaser.title} — sign up to watch`}
     >
       <img
-        src={u(teaser.photo)}
+        src={teaser.photo}
         alt=""
         loading="lazy"
         className="ken-burns absolute inset-0 h-full w-full object-cover"
