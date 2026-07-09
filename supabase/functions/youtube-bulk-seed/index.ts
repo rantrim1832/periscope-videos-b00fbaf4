@@ -7,44 +7,6 @@ import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 
 const YT_API = 'https://www.googleapis.com/youtube/v3';
 
-// Kept in sync with src/lib/curatedCategories.ts. Duplicated here because
-// edge functions can't import from the frontend bundle.
-const CATEGORIES: { slug: string; queries: string[] }[] = [
-  { slug: 'maintenance', queries: [
-    'apartment maintenance nightmare','apartment mold problem','apartment ceiling leak story',
-    'bad landlord maintenance','apartment pest infestation','apartment ac broken summer',
-  ]},
-  { slug: 'application', queries: [
-    'apartment application fees hidden','apartment security deposit scam',
-    'apartment lease surprise fees','apartment denied application story','apartment lease breaking fees',
-  ]},
-  { slug: 'local-vibe', queries: [
-    'brooklyn apartment neighborhood walk','best apartment neighborhoods nyc',
-    'apartment neighborhood safety review','downtown la apartment area vibe',
-    'chicago apartment neighborhood tour','austin apartment neighborhood guide',
-  ]},
-  { slug: 'amenities', queries: [
-    'luxury apartment amenities tour','apartment gym pool tour',
-    'apartment rooftop amenity','apartment coworking lounge tour','apartment building amenities review',
-  ]},
-  { slug: 'tours', queries: [
-    'nyc apartment tour','la luxury apartment tour','chicago high rise apartment tour',
-    'apartment tour before signing','miami luxury apartment tour','seattle apartment tour',
-  ]},
-  { slug: 'design-tips', queries: [
-    'small apartment design tips','rental apartment decor ideas','ikea apartment hacks',
-    'studio apartment makeover','apartment organization tips','rental friendly apartment upgrades',
-  ]},
-  { slug: 'leasing-gurus', queries: [
-    'apartment leasing agent tips','how to negotiate rent',
-    'apartment red flags before signing','renters rights explained','first time apartment renter tips',
-  ]},
-  { slug: 'reviews', queries: [
-    'honest apartment review','moving out apartment review',
-    'worst apartment i lived in','apartment complex review','luxury apartment honest review',
-  ]},
-];
-
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
   try {
@@ -71,7 +33,21 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const perQuery = Math.min(Math.max(Number(body.perQuery) || 15, 1), 50);
     const onlyCategory: string | undefined = body.category;
-    const cats = onlyCategory ? CATEGORIES.filter((c) => c.slug === onlyCategory) : CATEGORIES;
+
+    // Load categories from DB (editable via /admin/curated).
+    let catQ = admin
+      .from('curated_categories')
+      .select('slug, suggested_queries')
+      .eq('is_active', true)
+      .order('sort_order', { ascending: true });
+    if (onlyCategory) catQ = catQ.eq('slug', onlyCategory);
+    const { data: catRows, error: catErr } = await catQ;
+    if (catErr) return json({ error: 'Failed to load categories', detail: catErr.message }, 500);
+    const cats = (catRows ?? []).map((r: any) => ({
+      slug: r.slug as string,
+      queries: (Array.isArray(r.suggested_queries) ? r.suggested_queries : []) as string[],
+    }));
+    if (cats.length === 0) return json({ error: 'No categories found' }, 400);
 
     const perCat: Record<string, { imported: number; skipped: number; found: number }> = {};
     let totalImported = 0, totalSkipped = 0, totalFound = 0;
