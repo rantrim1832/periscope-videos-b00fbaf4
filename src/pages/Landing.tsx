@@ -112,22 +112,25 @@ const Landing = () => {
     <div className="min-h-dvh bg-background">
       {/* Nav */}
       <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur">
-        <div className="container flex h-16 items-center justify-between">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="bg-gradient-to-br from-primary to-secondary p-2 rounded-lg">
-              <Video className="h-5 w-5 text-primary-foreground" aria-hidden="true" />
+        <div className="container flex h-14 md:h-16 items-center justify-between gap-2">
+          <Link to="/" className="flex items-center gap-2 min-w-0">
+            <div className="bg-gradient-to-br from-primary to-secondary p-1.5 md:p-2 rounded-lg shrink-0">
+              <Video className="h-4 w-4 md:h-5 md:w-5 text-primary-foreground" aria-hidden="true" />
             </div>
-            <div>
-              <div className="font-bold text-lg leading-none text-primary">Periscope</div>
-              <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Apartment reviews</div>
+            <div className="min-w-0">
+              <div className="font-bold text-base md:text-lg leading-none text-primary truncate">Periscope</div>
+              <div className="hidden sm:block text-[10px] uppercase tracking-widest text-muted-foreground">Apartment reviews</div>
             </div>
           </Link>
-          <nav className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" asChild>
+          <nav className="flex items-center gap-1 md:gap-2 shrink-0">
+            <Button variant="ghost" size="sm" asChild className="px-2 md:px-3">
               <Link to="/auth">Sign in</Link>
             </Button>
-            <Button variant="hero" size="sm" asChild>
-              <Link to="/auth?returnTo=%2Fbrowse">Create free account</Link>
+            <Button variant="hero" size="sm" asChild className="px-3 md:px-4">
+              <Link to="/auth?returnTo=%2Fbrowse">
+                <span className="sm:hidden">Sign up</span>
+                <span className="hidden sm:inline">Create free account</span>
+              </Link>
             </Button>
           </nav>
         </div>
@@ -135,22 +138,22 @@ const Landing = () => {
 
       {/* Hero */}
       <section className="relative overflow-hidden border-b border-border/40 bg-gradient-to-b from-primary/[0.08] via-background to-background">
-        <div className="container py-16 md:py-28 grid md:grid-cols-2 gap-10 md:gap-16 items-center">
-          <div className="space-y-6">
-            <span className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-primary">
+        <div className="container py-10 md:py-28 grid md:grid-cols-2 gap-8 md:gap-16 items-center">
+          <div className="space-y-5 md:space-y-6">
+            <span className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[11px] md:text-xs font-semibold uppercase tracking-wider text-primary">
               <Eye className="h-3 w-3" /> See it before you sign
             </span>
-            <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-balance leading-[1.05]">
+            <h1 className="text-[2.25rem] leading-[1.05] md:text-6xl font-bold tracking-tight text-balance">
               Apartment <span className="text-primary">video reviews</span>.
             </h1>
-            <p className="text-lg md:text-xl text-muted-foreground max-w-xl">
+            <p className="text-base md:text-xl text-muted-foreground max-w-xl">
               See real video reviews from real residents before you sign the lease. The 6&nbsp;PM gym, the deposit fight, the walls you can hear through — not the brochure.
             </p>
-            <div className="flex flex-wrap gap-3 pt-2">
-              <Button variant="hero" size="lg" asChild>
+            <div className="flex flex-col sm:flex-row flex-wrap gap-3 pt-1 md:pt-2">
+              <Button variant="hero" size="lg" asChild className="w-full sm:w-auto">
                 <Link to={AUTH_RENTER}>Create free account</Link>
               </Button>
-              <Button variant="outline" size="lg" asChild>
+              <Button variant="outline" size="lg" asChild className="w-full sm:w-auto">
                 <Link to="/auth">I already have one</Link>
               </Button>
             </div>
@@ -160,7 +163,7 @@ const Landing = () => {
               <Link to="/privacy" className="underline">Privacy Policy</Link>.
             </p>
           </div>
-          <div className="relative">
+          <div className="relative hidden md:block">
             <div className="aspect-[4/5] rounded-3xl border border-border/60 bg-gradient-to-br from-primary/15 via-secondary/10 to-transparent p-8 shadow-elevated">
               <div className="h-full rounded-2xl bg-card/60 backdrop-blur border border-border/40 flex flex-col justify-between p-6">
                 <div className="flex items-center justify-between">
@@ -192,30 +195,30 @@ const Landing = () => {
       </section>
 
       {/* Join paths: Renters vs Property managers */}
-      <section className="container py-14 md:py-20">
-        <div className="text-center max-w-2xl mx-auto mb-10">
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Join Periscope</h2>
-          <p className="text-muted-foreground mt-3">Two ways in — pick the one that fits you. Free either way.</p>
+      <section className="container py-10 md:py-20">
+        <div className="text-center max-w-2xl mx-auto mb-6 md:mb-10">
+          <h2 className="text-2xl md:text-4xl font-bold tracking-tight">Join Periscope</h2>
+          <p className="text-sm md:text-base text-muted-foreground mt-2 md:mt-3">Two ways in — pick the one that fits you. Free either way.</p>
         </div>
-        <div className="grid md:grid-cols-2 gap-6">
-          <div className="rounded-2xl border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-background to-background p-8 flex flex-col">
+        <div className="grid md:grid-cols-2 gap-4 md:gap-6">
+          <div className="rounded-2xl border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-background to-background p-6 md:p-8 flex flex-col">
             <div className="w-12 h-12 rounded-xl bg-primary/15 text-primary flex items-center justify-center mb-4">
               <Users className="h-6 w-6" />
             </div>
-            <h3 className="text-2xl font-bold mb-2">Renters — join free</h3>
-            <p className="text-muted-foreground mb-6 flex-1">
+            <h3 className="text-xl md:text-2xl font-bold mb-2">Renters — join free</h3>
+            <p className="text-sm md:text-base text-muted-foreground mb-5 md:mb-6 flex-1">
               Watch real video reviews. Post your own. Compare buildings side by side. See the Truth Score before you tour.
             </p>
             <Button variant="hero" size="lg" asChild className="w-full">
               <Link to={AUTH_RENTER}>Sign up as a renter</Link>
             </Button>
           </div>
-          <div className="rounded-2xl border-2 border-secondary/40 bg-gradient-to-br from-secondary/10 via-background to-background p-8 flex flex-col">
+          <div className="rounded-2xl border-2 border-secondary/40 bg-gradient-to-br from-secondary/10 via-background to-background p-6 md:p-8 flex flex-col">
             <div className="w-12 h-12 rounded-xl bg-secondary/15 text-secondary flex items-center justify-center mb-4">
               <Building2 className="h-6 w-6" />
             </div>
-            <h3 className="text-2xl font-bold mb-2">Property managers — join free</h3>
-            <p className="text-muted-foreground mb-6 flex-1">
+            <h3 className="text-xl md:text-2xl font-bold mb-2">Property managers — join free</h3>
+            <p className="text-sm md:text-base text-muted-foreground mb-5 md:mb-6 flex-1">
               Claim your building. Upload official tours. Respond to residents. Get alerts the moment a new review is posted.
             </p>
             <Button variant="outline" size="lg" asChild className="w-full">
@@ -228,18 +231,18 @@ const Landing = () => {
       {/* Streaming-style auto-scrolling rails. Each rail scrolls a different
           direction at a different speed. Everything routes to /auth. */}
       <section className="border-y border-border/40 bg-muted/20">
-        <div className="py-14 md:py-20">
-          <div className="container flex items-end justify-between gap-4 mb-8">
-            <div>
-              <span className="text-xs font-semibold uppercase tracking-wider text-primary inline-flex items-center gap-1.5">
+        <div className="py-10 md:py-20">
+          <div className="container flex items-end justify-between gap-4 mb-6 md:mb-8">
+            <div className="min-w-0">
+              <span className="text-[11px] md:text-xs font-semibold uppercase tracking-wider text-primary inline-flex items-center gap-1.5">
                 <span className="relative flex h-2 w-2">
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
                   <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
                 </span>
                 Now streaming
               </span>
-              <h2 className="text-2xl md:text-3xl font-bold tracking-tight mt-1">Real videos from real residents</h2>
-              <p className="text-muted-foreground mt-2 text-sm md:text-base">Every clip is behind a free account. Create one to press play.</p>
+              <h2 className="text-xl md:text-3xl font-bold tracking-tight mt-1">Real videos from real residents</h2>
+              <p className="text-muted-foreground mt-1 md:mt-2 text-sm md:text-base">Every clip is behind a free account. Create one to press play.</p>
             </div>
             <Button variant="hero" size="sm" asChild className="hidden md:inline-flex">
               <Link to={AUTH_RENTER}>
@@ -248,13 +251,13 @@ const Landing = () => {
             </Button>
           </div>
 
-          <div className="space-y-8 md:space-y-12">
+          <div className="space-y-6 md:space-y-12">
             {RAILS.map((rail) => (
               <MarqueeRail key={rail.title} {...rail} />
             ))}
           </div>
 
-          <div className="container text-center mt-12">
+          <div className="container text-center mt-8 md:mt-12">
             <Button variant="hero" size="lg" asChild>
               <Link to={AUTH_RENTER}>
                 <PlayCircle className="h-4 w-4" /> Create free account to watch
@@ -269,27 +272,27 @@ const Landing = () => {
       </section>
 
       {/* Testimonials */}
-      <section className="container py-16 md:py-24">
-        <div className="text-center max-w-2xl mx-auto mb-12">
-          <span className="text-xs font-semibold uppercase tracking-wider text-primary">Loved by both sides</span>
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight mt-2">Renters and managers agree</h2>
+      <section className="container py-10 md:py-24">
+        <div className="text-center max-w-2xl mx-auto mb-6 md:mb-12">
+          <span className="text-[11px] md:text-xs font-semibold uppercase tracking-wider text-primary">Loved by both sides</span>
+          <h2 className="text-2xl md:text-4xl font-bold tracking-tight mt-2">Renters and managers agree</h2>
         </div>
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-3 gap-4 md:gap-6">
           {TESTIMONIALS.map((t) => (
             <figure
               key={t.name}
-              className="relative rounded-2xl border border-border/60 bg-card p-6 md:p-7 shadow-card hover:shadow-card-hover transition-shadow"
+              className="relative rounded-2xl border border-border/60 bg-card p-5 md:p-7 shadow-card hover:shadow-card-hover transition-shadow"
             >
-              <Quote className="absolute right-5 top-5 h-8 w-8 text-primary/15" aria-hidden />
-              <div className="flex items-center gap-1 text-primary mb-4">
+              <Quote className="absolute right-4 top-4 md:right-5 md:top-5 h-7 w-7 md:h-8 md:w-8 text-primary/15" aria-hidden />
+              <div className="flex items-center gap-1 text-primary mb-3 md:mb-4">
                 {Array.from({ length: 5 }).map((_, i) => (
-                  <Star key={i} className="h-4 w-4 fill-current" />
+                  <Star key={i} className="h-3.5 w-3.5 md:h-4 md:w-4 fill-current" />
                 ))}
               </div>
-              <blockquote className="text-base md:text-lg text-foreground leading-relaxed">
+              <blockquote className="text-[15px] md:text-lg text-foreground leading-relaxed">
                 &ldquo;{t.quote}&rdquo;
               </blockquote>
-              <figcaption className="mt-5 flex items-center gap-3">
+              <figcaption className="mt-4 md:mt-5 flex items-center gap-3">
                 <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary to-secondary text-primary-foreground grid place-items-center font-bold">
                   {t.initial}
                 </div>
@@ -304,18 +307,18 @@ const Landing = () => {
       </section>
 
       {/* Value props */}
-      <section className="container pb-16 md:pb-24">
-        <div className="text-center max-w-2xl mx-auto mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight">What you get with a free account</h2>
-          <p className="text-muted-foreground mt-3">Real reviews, resident video tours, honest ratings, and side-by-side comparisons — all in one place.</p>
+      <section className="container pb-10 md:pb-24">
+        <div className="text-center max-w-2xl mx-auto mb-6 md:mb-12">
+          <h2 className="text-2xl md:text-4xl font-bold tracking-tight">What you get with a free account</h2>
+          <p className="text-sm md:text-base text-muted-foreground mt-2 md:mt-3">Real reviews, resident video tours, honest ratings, and side-by-side comparisons — all in one place.</p>
         </div>
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-3 gap-4 md:gap-6">
           {[
             { icon: PlayCircle, title: 'Resident video tours', body: 'The real unit at 3 pm on a Tuesday. Not staged, not staged-lit.' },
             { icon: Shield, title: 'Truth Score', body: 'Trust-weighted, recency-decayed ratings across 11 categories that matter.' },
             { icon: MessageSquare, title: 'Honest reviews', body: 'From verified residents who lived there. Managers can respond, never delete.' },
           ].map(({ icon: Icon, title, body }) => (
-            <div key={title} className="rounded-2xl border border-border/60 bg-card p-6 hover:border-primary/40 transition-colors">
+            <div key={title} className="rounded-2xl border border-border/60 bg-card p-5 md:p-6 hover:border-primary/40 transition-colors">
               <div className="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center mb-4">
                 <Icon className="h-5 w-5" />
               </div>
@@ -328,13 +331,13 @@ const Landing = () => {
 
       {/* Manager CTA */}
       <section className="border-y border-border/40 bg-muted/30">
-        <div className="container py-14 md:py-20 flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="container py-10 md:py-20 flex flex-col md:flex-row items-start md:items-center justify-between gap-5 md:gap-6">
           <div className="max-w-xl">
-            <span className="text-xs font-semibold uppercase tracking-wider text-secondary">For property managers</span>
-            <h2 className="text-2xl md:text-3xl font-bold mt-1">Claim your building. Respond to residents. Get alerts.</h2>
-            <p className="text-muted-foreground mt-2">Managers claim pages for free, add official photos and videos, and get notified the moment a new review is posted.</p>
+            <span className="text-[11px] md:text-xs font-semibold uppercase tracking-wider text-secondary">For property managers</span>
+            <h2 className="text-xl md:text-3xl font-bold mt-1">Claim your building. Respond to residents. Get alerts.</h2>
+            <p className="text-sm md:text-base text-muted-foreground mt-2">Managers claim pages for free, add official photos and videos, and get notified the moment a new review is posted.</p>
           </div>
-          <Button variant="outline" size="lg" asChild>
+          <Button variant="outline" size="lg" asChild className="w-full md:w-auto">
             <Link to="/auth?returnTo=%2Fmanager">
               <Building2 className="h-4 w-4" /> Manager tools
             </Link>
@@ -343,7 +346,7 @@ const Landing = () => {
       </section>
 
       {/* Footer */}
-      <footer className="container py-10 text-sm text-muted-foreground">
+      <footer className="container py-8 md:py-10 text-xs md:text-sm text-muted-foreground">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>© {new Date().getFullYear()} Periscope Reviews</div>
           <nav className="flex flex-wrap gap-4">
