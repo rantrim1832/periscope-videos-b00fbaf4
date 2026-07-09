@@ -50,8 +50,8 @@ type YouTubePreviewResult = {
   candidates: YouTubePreviewCandidate[];
 };
 
-const YOUTUBE_FUNCTION_URL = 'https://eeivsursfgmponlonpmy.supabase.co/functions/v1/youtube-import';
-const YOUTUBE_FUNCTION_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJIUzI1NiIsInJlZiI6ImVlaXZzdXJzZmdtcG9ubG9ucG15Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE3NDQ5MTgsImV4cCI6MjA3NzMyMDkxOH0.yKHfU-XFmD682Jnh6o8ApGhC8hmJzx2AX5asgoLStgM';
+const YOUTUBE_FUNCTION_URL = `${String(import.meta.env.VITE_SUPABASE_URL ?? '').replace(/\/$/, '')}/functions/v1/youtube-import`;
+const YOUTUBE_FUNCTION_KEY = String(import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? '');
 
 function extractErrorMessage(error: unknown) {
   if (!error) return 'Unknown error';
@@ -62,25 +62,43 @@ function extractErrorMessage(error: unknown) {
 }
 
 async function previewYouTubeVideos(query: string, category: string, maxResults = 25): Promise<YouTubePreviewResult> {
-  const { data: sessionData } = await supabase.auth.getSession();
-  const accessToken = sessionData.session?.access_token;
-  if (!accessToken) throw new Error('Please sign in again before previewing videos.');
+  if (!YOUTUBE_FUNCTION_URL.startsWith('https://') || !YOUTUBE_FUNCTION_KEY) {
+    throw new Error('Video preview service is not configured.');
+  }
 
   const res = await fetch(YOUTUBE_FUNCTION_URL, {
     method: 'POST',
     headers: {
       apikey: YOUTUBE_FUNCTION_KEY,
-      authorization: `Bearer ${accessToken}`,
+      authorization: `Bearer ${YOUTUBE_FUNCTION_KEY}`,
       'content-type': 'application/json',
     },
     body: JSON.stringify({ query, category, maxResults, mode: 'preview' }),
   });
   const json = await res.json().catch(() => null);
   if (!res.ok) throw new Error(extractErrorMessage(json) || `Video preview failed (${res.status})`);
+  const candidates = (Array.isArray(json?.candidates) ? json.candidates : []) as YouTubePreviewCandidate[];
+  const ytTags = candidates.map((candidate) => `yt:${candidate.videoId}`);
+  const alreadyImported = new Set<string>();
+  if (ytTags.length > 0) {
+    const { data: existing } = await supabase
+      .from('seeded_videos')
+      .select('hashtags')
+      .overlaps('hashtags', ytTags);
+    for (const row of existing ?? []) {
+      for (const tag of row.hashtags ?? []) {
+        if (typeof tag === 'string' && tag.startsWith('yt:')) alreadyImported.add(tag.slice(3));
+      }
+    }
+  }
+  const markedCandidates = candidates.map((candidate) => ({
+    ...candidate,
+    alreadyImported: alreadyImported.has(candidate.videoId),
+  }));
   return {
     totalFound: Number(json?.totalFound ?? 0),
-    alreadyImported: Number(json?.alreadyImported ?? 0),
-    candidates: Array.isArray(json?.candidates) ? json.candidates : [],
+    alreadyImported: markedCandidates.filter((candidate) => candidate.alreadyImported).length,
+    candidates: markedCandidates,
   };
 }
 
@@ -351,10 +369,8 @@ const AdminCuratedVideos = () => {
     if (!query.trim()) return;
     setImporting(true);
     try {
-      const { data, error } = await supabase.functions.invoke('youtube-import', {
-        body: { query: query.trim(), category: slug, maxResults: count },
-      });
-      if (error) throw error;
+      const preview = await previewYouTubeVideos(query.trim(), slug, count);
+      const data = await insertPreviewCandidates(slug, query.trim(), preview.candidates);
       toast({
         title: 'Import complete',
         description: `Imported ${data.imported} new · skipped ${data.skipped} duplicates · found ${data.totalFound}.`,
@@ -362,7 +378,7 @@ const AdminCuratedVideos = () => {
       load();
       setBrowserRefresh((n) => n + 1);
     } catch (e: any) {
-      toast({ title: 'Import failed', description: e.message ?? String(e), variant: 'destructive' });
+      toast({ title: 'Import failed', description: extractErrorMessage(e), variant: 'destructive' });
     } finally {
       setImporting(false);
     }
@@ -376,18 +392,28 @@ const AdminCuratedVideos = () => {
     )) return;
     setBulkSeeding(true);
     try {
-      const { data, error } = await supabase.functions.invoke('youtube-bulk-seed', {
-        body: { perQuery, category: categoryOnly },
-      });
-      if (error) throw error;
+      const targetCategories = (categoryOnly ? categories.filter((c) => c.slug === categoryOnly) : categories)
+        .filter((c) => c.is_active !== false);
+      let totalImported = 0;
+      let totalSkipped = 0;
+      let totalFound = 0;
+      for (const category of targetCategories) {
+        for (const suggestedQuery of category.suggested_queries) {
+          const preview = await previewYouTubeVideos(suggestedQuery, category.slug, perQuery);
+          const result = await insertPreviewCandidates(category.slug, suggestedQuery, preview.candidates);
+          totalImported += result.imported;
+          totalSkipped += result.skipped;
+          totalFound += result.totalFound;
+        }
+      }
       toast({
         title: 'Bulk seed complete',
-        description: `Imported ${data.totalImported} · skipped ${data.totalSkipped} dupes · found ${data.totalFound}.`,
+        description: `Imported ${totalImported} · skipped ${totalSkipped} dupes · found ${totalFound}.`,
       });
       load();
       setBrowserRefresh((n) => n + 1);
     } catch (e: any) {
-      toast({ title: 'Bulk seed failed', description: e.message ?? String(e), variant: 'destructive' });
+      toast({ title: 'Bulk seed failed', description: extractErrorMessage(e), variant: 'destructive' });
     } finally {
       setBulkSeeding(false);
     }
@@ -450,7 +476,7 @@ const AdminCuratedVideos = () => {
       load();
       return { imported: data.imported ?? 0, skipped: data.skipped ?? 0, totalFound: data.totalFound ?? 0 };
     } catch (e: any) {
-      toast({ title: 'Query failed', description: e.message ?? String(e), variant: 'destructive' });
+      toast({ title: 'Query failed', description: extractErrorMessage(e), variant: 'destructive' });
       return null;
     } finally {
       setSeedingKey(null);
@@ -482,7 +508,7 @@ const AdminCuratedVideos = () => {
       load();
       return { imported: data.imported ?? 0, skipped: data.skipped ?? 0, totalFound: data.totalFound ?? 0 };
     } catch (e: any) {
-      toast({ title: 'Import failed', description: e.message ?? String(e), variant: 'destructive' });
+      toast({ title: 'Import failed', description: extractErrorMessage(e), variant: 'destructive' });
       return null;
     } finally {
       setSeedingKey(null);
