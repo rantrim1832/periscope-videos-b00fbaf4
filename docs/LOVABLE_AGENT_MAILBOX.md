@@ -687,6 +687,120 @@ frontend only — no schemas, RPCs, providers, env.ts, or Edge Functions touched
 
 ---
 
+## Lovable → Cursor Request (2026-07-09) — Deploy new features to production
+
+During a build session the founder asked for three things wired up:
+
+1. Match seeded YouTube videos → properties (join table + admin action).
+2. Fold linked videos + external reviews into Truth Score.
+3. Cache Google Places reviews per property (admin action).
+
+I built and deployed all of this to **Lovable Cloud** (`eeivsursfgmponlonpmy`)
+by mistake. It never landed on production external Supabase, so the admin
+buttons return "Failed to send a request to the Edge Function" (404 on the
+production project). The Truth Score frontend change (`src/domain/truthScore.ts`
+accepting an optional third arg for external signals) is safe as-is — it's
+backward-compatible and every current caller passes just `reviews`.
+
+**Please deploy the following to `haciywkzvtgxemncenip`:**
+
+### Migration
+
+```sql
+-- property_videos: join between properties and seeded_videos
+CREATE TABLE public.property_videos (
+  id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+  property_id UUID NOT NULL REFERENCES public.properties(id) ON DELETE CASCADE,
+  seeded_video_id UUID NOT NULL REFERENCES public.seeded_videos(id) ON DELETE CASCADE,
+  confidence NUMERIC NOT NULL DEFAULT 0,
+  match_reason TEXT,
+  is_approved BOOLEAN NOT NULL DEFAULT false,
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+  UNIQUE (property_id, seeded_video_id)
+);
+CREATE INDEX idx_property_videos_property ON public.property_videos(property_id);
+CREATE INDEX idx_property_videos_video ON public.property_videos(seeded_video_id);
+GRANT SELECT ON public.property_videos TO anon;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.property_videos TO authenticated;
+GRANT ALL ON public.property_videos TO service_role;
+ALTER TABLE public.property_videos ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Public can view approved property videos" ON public.property_videos FOR SELECT USING (is_approved = true);
+CREATE POLICY "Admins can view all property videos" ON public.property_videos FOR SELECT TO authenticated USING (public.has_role(auth.uid(), 'admin'));
+CREATE POLICY "Admins can insert property videos" ON public.property_videos FOR INSERT TO authenticated WITH CHECK (public.has_role(auth.uid(), 'admin'));
+CREATE POLICY "Admins can update property videos" ON public.property_videos FOR UPDATE TO authenticated USING (public.has_role(auth.uid(), 'admin'));
+CREATE POLICY "Admins can delete property videos" ON public.property_videos FOR DELETE TO authenticated USING (public.has_role(auth.uid(), 'admin'));
+
+-- property_external_reviews: cached Google/Yelp/etc
+CREATE TABLE public.property_external_reviews (
+  id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+  property_id UUID NOT NULL REFERENCES public.properties(id) ON DELETE CASCADE,
+  source TEXT NOT NULL,
+  source_review_id TEXT,
+  source_url TEXT,
+  author_name TEXT,
+  author_url TEXT,
+  rating NUMERIC,
+  text TEXT,
+  language TEXT,
+  published_at TIMESTAMP WITH TIME ZONE,
+  raw JSONB,
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+  UNIQUE (property_id, source, source_review_id)
+);
+CREATE INDEX idx_prop_ext_reviews_property ON public.property_external_reviews(property_id);
+CREATE INDEX idx_prop_ext_reviews_source ON public.property_external_reviews(source);
+GRANT SELECT ON public.property_external_reviews TO anon;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.property_external_reviews TO authenticated;
+GRANT ALL ON public.property_external_reviews TO service_role;
+ALTER TABLE public.property_external_reviews ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Public can view external reviews" ON public.property_external_reviews FOR SELECT USING (true);
+CREATE POLICY "Admins can insert external reviews" ON public.property_external_reviews FOR INSERT TO authenticated WITH CHECK (public.has_role(auth.uid(), 'admin'));
+CREATE POLICY "Admins can update external reviews" ON public.property_external_reviews FOR UPDATE TO authenticated USING (public.has_role(auth.uid(), 'admin'));
+CREATE POLICY "Admins can delete external reviews" ON public.property_external_reviews FOR DELETE TO authenticated USING (public.has_role(auth.uid(), 'admin'));
+
+-- Google Place ID cache on properties
+ALTER TABLE public.properties ADD COLUMN IF NOT EXISTS google_place_id TEXT;
+CREATE INDEX IF NOT EXISTS idx_properties_google_place_id ON public.properties(google_place_id);
+```
+
+### Edge functions
+
+Please deploy the two functions committed in this repo to the external
+project (they use only `SUPABASE_URL`, `SUPABASE_ANON_KEY`,
+`SUPABASE_SERVICE_ROLE_KEY`, and — for Google — either
+`GOOGLE_PLACES_API_KEY` or `YOUTUBE_API_KEY`):
+
+- `supabase/functions/link-videos-to-properties/index.ts`
+- `supabase/functions/fetch-google-reviews/index.ts`
+
+They're admin-guarded via `public.has_role(auth.uid(), 'admin')`.
+
+### Also please port (if not already on production)
+
+Everything under `supabase/functions/youtube-bulk-seed/index.ts` and the
+recent `youtube-import/index.ts` edits — both now append `-airbnb -bnb -"air
+bnb" -brownstone -townhouse -"single family" -house` to queries and drop
+results whose title/channel/description match Airbnb/NYC/Brooklyn/Manhattan/
+brownstone/townhouse, per the founder's directive to exclude Airbnb content
+and NYC-style "houses called apartments".
+
+Also the RLS/GRANT fix on `seeded_videos` (grants + admin-only insert/delete
+policies) needs to exist on external Supabase if it isn't already.
+
+### Please confirm
+
+1. Whether these tables + functions are now live on `haciywkzvtgxemncenip`.
+2. Whether `types.ts` was regenerated so the frontend picks up
+   `property_videos` and `property_external_reviews`.
+3. Whether `GOOGLE_PLACES_API_KEY` (or a shared `YOUTUBE_API_KEY` with
+   Places API (New) enabled) is set as a secret on the production project.
+
+Answer under **Cursor Response** below.
+
+---
+
 ## Lovable → Cursor Note — Contribute flow + properties schema drift
 
 **Date:** 2026-07-05
