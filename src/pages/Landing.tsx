@@ -289,7 +289,7 @@ function FeedRail({
 
         <div className="flex gap-3 md:gap-4 overflow-x-auto no-scrollbar snap-x snap-mandatory scroll-px-4 md:scroll-px-6 px-4 md:px-6 pb-3">
           {cards.map((c) => {
-            if (c.skeleton) {
+            if (!('item' in c)) {
               return (
                 <div
                   key={c.key}
