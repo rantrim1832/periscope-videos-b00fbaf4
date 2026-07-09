@@ -238,6 +238,7 @@ export type Database = {
           created_by_user_id: string | null
           email: string | null
           features: Json | null
+          google_place_id: string | null
           history: Json | null
           hoa_fee: number | null
           id: string
@@ -289,6 +290,7 @@ export type Database = {
           created_by_user_id?: string | null
           email?: string | null
           features?: Json | null
+          google_place_id?: string | null
           history?: Json | null
           hoa_fee?: number | null
           id?: string
@@ -340,6 +342,7 @@ export type Database = {
           created_by_user_id?: string | null
           email?: string | null
           features?: Json | null
+          google_place_id?: string | null
           history?: Json | null
           hoa_fee?: number | null
           id?: string
@@ -376,6 +379,113 @@ export type Database = {
           zoning?: string | null
         }
         Relationships: []
+      }
+      property_external_reviews: {
+        Row: {
+          author_name: string | null
+          author_url: string | null
+          created_at: string
+          id: string
+          language: string | null
+          property_id: string
+          published_at: string | null
+          rating: number | null
+          raw: Json | null
+          source: string
+          source_review_id: string | null
+          source_url: string | null
+          text: string | null
+          updated_at: string
+        }
+        Insert: {
+          author_name?: string | null
+          author_url?: string | null
+          created_at?: string
+          id?: string
+          language?: string | null
+          property_id: string
+          published_at?: string | null
+          rating?: number | null
+          raw?: Json | null
+          source: string
+          source_review_id?: string | null
+          source_url?: string | null
+          text?: string | null
+          updated_at?: string
+        }
+        Update: {
+          author_name?: string | null
+          author_url?: string | null
+          created_at?: string
+          id?: string
+          language?: string | null
+          property_id?: string
+          published_at?: string | null
+          rating?: number | null
+          raw?: Json | null
+          source?: string
+          source_review_id?: string | null
+          source_url?: string | null
+          text?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_external_reviews_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_videos: {
+        Row: {
+          confidence: number
+          created_at: string
+          id: string
+          is_approved: boolean
+          match_reason: string | null
+          property_id: string
+          seeded_video_id: string
+          updated_at: string
+        }
+        Insert: {
+          confidence?: number
+          created_at?: string
+          id?: string
+          is_approved?: boolean
+          match_reason?: string | null
+          property_id: string
+          seeded_video_id: string
+          updated_at?: string
+        }
+        Update: {
+          confidence?: number
+          created_at?: string
+          id?: string
+          is_approved?: boolean
+          match_reason?: string | null
+          property_id?: string
+          seeded_video_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_videos_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_videos_seeded_video_id_fkey"
+            columns: ["seeded_video_id"]
+            isOneToOne: false
+            referencedRelation: "seeded_videos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       reviews: {
         Row: {

@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { CURATED_CATEGORIES } from '@/lib/curatedCategories';
 import { parseEmbed } from '@/services/providers/embed';
 import { Loader2, Youtube, Link2, Trash2, Sparkles, Plus, Save, Pencil } from 'lucide-react';
+import { Building2, Star } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { CategoryLibraryBrowser } from '@/components/admin/CategoryLibraryBrowser';
 
@@ -230,6 +231,8 @@ const AdminCuratedVideos = () => {
   const [count, setCount] = useState(25);
   const [importing, setImporting] = useState(false);
   const [bulkSeeding, setBulkSeeding] = useState(false);
+  const [linking, setLinking] = useState(false);
+  const [fetchingGoogle, setFetchingGoogle] = useState(false);
   const [perQuery, setPerQuery] = useState(15);
 
   const [pasteUrl, setPasteUrl] = useState('');
@@ -415,6 +418,38 @@ const AdminCuratedVideos = () => {
       toast({ title: 'Bulk seed failed', description: extractErrorMessage(e), variant: 'destructive' });
     } finally {
       setBulkSeeding(false);
+    }
+  };
+
+  const runLinkVideosToProperties = async () => {
+    setLinking(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('link-videos-to-properties', { body: {} });
+      if (error) throw error;
+      toast({
+        title: 'Linking complete',
+        description: `Matched ${data?.matched ?? 0} · auto-approved ${data?.autoApproved ?? 0} · needs review ${data?.needsReview ?? 0}.`,
+      });
+    } catch (e: any) {
+      toast({ title: 'Linking failed', description: extractErrorMessage(e), variant: 'destructive' });
+    } finally {
+      setLinking(false);
+    }
+  };
+
+  const runFetchGoogleReviews = async () => {
+    setFetchingGoogle(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('fetch-google-reviews', { body: { limit: 25 } });
+      if (error) throw error;
+      toast({
+        title: 'Google reviews pulled',
+        description: `Processed ${data?.propertiesProcessed ?? 0} properties · ${data?.totalReviews ?? 0} reviews cached.`,
+      });
+    } catch (e: any) {
+      toast({ title: 'Google fetch failed', description: extractErrorMessage(e), variant: 'destructive' });
+    } finally {
+      setFetchingGoogle(false);
     }
   };
 
@@ -618,6 +653,30 @@ const AdminCuratedVideos = () => {
             </div>
             <p className="text-[11px] text-muted-foreground">
               Duplicates are auto-skipped, so it's safe to re-run whenever you want fresh content.
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><Building2 className="w-5 h-5 text-primary" /> Enrich properties</CardTitle>
+            <CardDescription>
+              Link seeded YouTube videos to matching properties, and pull cached Google reviews. Both feed into the Truth Score.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex flex-wrap items-center gap-3">
+              <Button onClick={runLinkVideosToProperties} disabled={linking} variant="outline">
+                {linking ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Link2 className="w-4 h-4 mr-2" />}
+                Link videos to properties
+              </Button>
+              <Button onClick={runFetchGoogleReviews} disabled={fetchingGoogle} variant="outline">
+                {fetchingGoogle ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Star className="w-4 h-4 mr-2" />}
+                Fetch Google reviews (25)
+              </Button>
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              High-confidence video matches auto-approve; medium go to moderation. Google reviews cache up to 5 per property (Google's limit).
             </p>
           </CardContent>
         </Card>
