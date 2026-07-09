@@ -30,51 +30,54 @@ type Teaser = {
 const u = (id: string) =>
   `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=520&h=780&q=70`;
 
+// Every photo id below is a real apartment interior, multifamily exterior,
+// amenity space, or person-in-apartment shot. No houses, no theatres, no
+// unrelated scenes. Ids appear exactly once across the whole landing page.
 const TEASERS: Teaser[] = [
-  // Row 1 — Property tours
-  { id: 't1',  title: 'Inside the corner unit at Hudson Yards',       property: 'The Hudson',        location: 'New York, NY',    photo: '1560448204-e02f11c3d0e2', duration: '3:42', views: '18K views', badge: 'Verified' },
-  { id: 't2',  title: 'Full 2BR walkthrough — nothing staged',        property: 'Marlowe Lofts',     location: 'Chicago, IL',     photo: '1502672260266-1c1ef2d93688', duration: '4:11', views: '9.2K views' },
-  { id: 't3',  title: 'The rooftop pool on a Sunday at 4pm',          property: 'Skyline 88',        location: 'Miami, FL',       photo: '1519643381401-22c77e60520e', duration: '1:58', views: '24K views', badge: 'New' },
-  { id: 't4',  title: 'What the model unit hides',                    property: 'Ashford Park',      location: 'Atlanta, GA',     photo: '1512918728675-ed5a9ecdebfd', duration: '2:33', views: '6.4K views' },
-  { id: 't5',  title: 'Studio at 850 sq ft — real footage',           property: 'The Ellison',       location: 'Austin, TX',      photo: '1493809842364-78817add7ffb', duration: '2:07', views: '11K views' },
-  { id: 't6',  title: 'Golden hour on the 22nd floor',                property: 'Beacon West',       location: 'Seattle, WA',     photo: '1600585154340-be6161a56a0c', duration: '1:42', views: '15K views', badge: 'Live' },
-  { id: 't7',  title: 'The lobby you saw vs. the lobby at 11pm',      property: 'Vermilion',         location: 'Denver, CO',      photo: '1600607687939-ce8a6c25118c', duration: '3:05', views: '7.8K views' },
+  // ---------- Maintenance nightmares ----------
+  { id: 'm1', title: 'Leak from the unit above — day 9, still nothing',  property: 'Parkline 12',    location: 'Boston, MA',       photo: '1600566753190-17f0baa2a6c3', duration: '3:41', views: '42K views', badge: 'Verified' },
+  { id: 'm2', title: 'Mold behind the vanity they painted over',         property: 'The Kingsley',   location: 'Dallas, TX',       photo: '1600566753086-00f18fb6b3ea', duration: '2:18', views: '31K views' },
+  { id: 'm3', title: 'Elevator out for 6 weeks — 22nd floor walk-up',    property: 'Nine Ten',       location: 'Philadelphia, PA', photo: '1449844908441-8829872d2607', duration: '2:57', views: '18K views' },
+  { id: 'm4', title: 'Kitchen sink flood — the maintenance recording',   property: 'Grove & Vine',   location: 'Raleigh, NC',      photo: '1600607687920-4e2a09cf159d', duration: '4:12', views: '9.6K views', badge: 'New' },
+  { id: 'm5', title: 'AC broke in July — full timeline on camera',       property: 'The Ellison',    location: 'Austin, TX',       photo: '1502672260266-1c1ef2d93688', duration: '5:04', views: '22K views' },
 
-  // Row 2 — Resident warnings + maintenance
-  { id: 't8',  title: 'What they don\'t tell you about the walls',    property: 'Parkline 12',       location: 'Boston, MA',      photo: '1600566753190-17f0baa2a6c3', duration: '2:44', views: '31K views', badge: 'Verified' },
-  { id: 't9',  title: 'Maintenance took 14 days — here\'s why',       property: 'The Kingsley',      location: 'Dallas, TX',      photo: '1560185007-cde436f6a4d0', duration: '4:22', views: '5.1K views' },
-  { id: 't10', title: 'Do not sign until you see this closet',        property: 'Coastal 60',        location: 'San Diego, CA',   photo: '1600585154526-990dced4db0d', duration: '1:29', views: '19K views' },
-  { id: 't11', title: 'Elevator status: honest tour',                 property: 'Nine Ten',          location: 'Philadelphia, PA',photo: '1449844908441-8829872d2607', duration: '2:18', views: '4.7K views' },
-  { id: 't12', title: 'The gym at 6pm on a Tuesday',                  property: 'Ridgeview',         location: 'Portland, OR',    photo: '1554995207-c18c203602cb', duration: '1:11', views: '22K views', badge: 'New' },
-  { id: 't13', title: 'Package room reality check',                   property: 'Union & Pine',      location: 'Nashville, TN',   photo: '1484154218962-a197022b5858', duration: '2:56', views: '8.3K views' },
-  { id: 't14', title: 'Trash chute floor — you\'ve been warned',      property: 'Halcyon Grove',    location: 'Phoenix, AZ',     photo: '1522156373667-4c7234bbd804', duration: '1:47', views: '13K views' },
+  // ---------- Application & lease drama ----------
+  { id: 'a1', title: 'The $475 in fees they never told me about',        property: 'The Meridian',   location: 'Los Angeles, CA',  photo: '1521791136064-7986c2920216', duration: '3:26', views: '54K views', badge: 'Verified' },
+  { id: 'a2', title: 'Reading my lease line by line — the traps',        property: 'Marlowe Lofts',  location: 'Chicago, IL',      photo: '1568605114967-8130f3a36994', duration: '6:11', views: '27K views' },
+  { id: 'a3', title: 'Denied over a background typo — full story',       property: 'Coastal 60',     location: 'San Diego, CA',    photo: '1600880292203-757bb62b4baf', duration: '4:38', views: '11K views' },
+  { id: 'a4', title: 'Co-signer nightmare — what to ask first',          property: 'The Ivy',        location: 'Washington, DC',   photo: '1502005229762-cf1b2da7c5d6', duration: '3:52', views: '8.9K views', badge: 'New' },
+  { id: 'a5', title: 'Deposit came back in 87 days — my paper trail',    property: 'The Rowan',      location: 'Orlando, FL',      photo: '1560184611-ff3e53f00e8f', duration: '2:44', views: '15K views' },
 
-  // Row 3 — Manager official / amenities
-  { id: 't15', title: 'Official tour: pool, gym, coworking',          property: 'The Meridian',      location: 'Los Angeles, CA', photo: '1568605114967-8130f3a36994', duration: '5:12', views: '27K views', badge: 'Official' },
-  { id: 't16', title: 'Meet the resident concierge team',             property: 'Bayfront 33',       location: 'San Francisco, CA', photo: '1600880292203-757bb62b4baf', duration: '3:34', views: '10K views' },
-  { id: 't17', title: 'Model 1BR walkthrough with staging notes',     property: 'The Ivy',           location: 'Washington, DC',  photo: '1521791136064-7986c2920216', duration: '4:48', views: '6.9K views' },
-  { id: 't18', title: 'Pet spa, dog run, and puppy hours',            property: 'Cedar & 5th',       location: 'Minneapolis, MN', photo: '1502005229762-cf1b2da7c5d6', duration: '2:21', views: '12K views', badge: 'Official' },
-  { id: 't19', title: 'Rooftop cinema every Friday night',            property: 'Alto Twelve',       location: 'Las Vegas, NV',   photo: '1560448076-b1e2bf6b7ee1', duration: '1:38', views: '17K views' },
-  { id: 't20', title: 'Sunset lounge — first-look preview',           property: 'The Selby',         location: 'Charlotte, NC',   photo: '1560184611-ff3e53f00e8f', duration: '2:02', views: '9.6K views' },
-  { id: 't21', title: 'Coworking on 4 — real speeds tested',          property: 'Northline Flats',   location: 'Salt Lake City, UT', photo: '1512917774080-9991f1c4c750', duration: '3:16', views: '5.5K views' },
+  // ---------- Local area vibe ----------
+  { id: 'v1', title: 'Walk to the train at 7am — full route',            property: 'The Hudson',     location: 'New York, NY',     photo: '1493809842364-78817add7ffb', duration: '4:22', views: '38K views' },
+  { id: 'v2', title: 'Friday night noise from the block',                property: 'Highline 27',    location: 'Brooklyn, NY',     photo: '1560448076-b1e2bf6b7ee1', duration: '1:58', views: '19K views', badge: 'Live' },
+  { id: 'v3', title: 'Grocery run — 3 options within a mile',            property: 'Beacon West',    location: 'Seattle, WA',      photo: '1560185007-cde436f6a4d0', duration: '3:07', views: '12K views' },
+  { id: 'v4', title: 'Coffee shops within 4 blocks — ranked',            property: 'Union & Pine',   location: 'Nashville, TN',    photo: '1554995207-c18c203602cb', duration: '5:41', views: '24K views' },
+  { id: 'v5', title: 'Parking on the street here — the real deal',       property: 'Ashford Park',   location: 'Atlanta, GA',      photo: '1600585154340-be6161a56a0c', duration: '2:33', views: '7.4K views' },
 
-  // Row 4 — Deposit + move-out stories
-  { id: 't22', title: 'The $1,400 deposit fight — full timeline',     property: 'Grove & Vine',      location: 'Raleigh, NC',     photo: '1600566753086-00f18fb6b3ea', duration: '6:04', views: '41K views', badge: 'Verified' },
-  { id: 't23', title: 'Move-out inspection — what they mark',         property: 'The Rowan',         location: 'Orlando, FL',     photo: '1600607687920-4e2a09cf159d', duration: '3:29', views: '14K views' },
-  { id: 't24', title: 'Rent renewal — negotiation on camera',         property: 'Astoria Point',     location: 'Queens, NY',      photo: '1600585154340-be6161a56a0c', duration: '4:57', views: '8.8K views' },
-  { id: 't25', title: 'First 24 hours — moving in unboxed',           property: 'The Cascade',       location: 'Sacramento, CA',  photo: '1560448204-603b3fc33ddc', duration: '2:41', views: '11K views', badge: 'New' },
-  { id: 't26', title: 'Why I broke my lease — full story',            property: 'Sable Court',       location: 'Kansas City, MO', photo: '1493809842364-78817add7ffb', duration: '7:18', views: '33K views' },
-  { id: 't27', title: 'Roommate walk-through, no filter',             property: 'Highline 27',       location: 'Brooklyn, NY',    photo: '1522708323590-d24dbb6b0267', duration: '3:52', views: '6.2K views' },
-  { id: 't28', title: 'Parking garage tour — spot #147',              property: 'The Fenwick',       location: 'Cleveland, OH',   photo: '1600607687644-c7171b4249f3', duration: '1:24', views: '4.1K views' },
+  // ---------- Amenities — the real story ----------
+  { id: 'e1', title: 'The gym at 6pm on a Tuesday — packed',             property: 'Ridgeview',      location: 'Portland, OR',     photo: '1600607687939-ce8a6c25118c', duration: '1:47', views: '33K views', badge: 'Verified' },
+  { id: 'e2', title: 'Package room reality check',                       property: 'Cedar & 5th',    location: 'Minneapolis, MN',  photo: '1484154218962-a197022b5858', duration: '2:15', views: '14K views' },
+  { id: 'e3', title: 'Rooftop pool at 4pm — is it worth it?',            property: 'Skyline 88',     location: 'Miami, FL',        photo: '1560448204-e02f11c3d0e2', duration: '2:41', views: '48K views', badge: 'New' },
+  { id: 'e4', title: 'Coworking lounge — wifi speeds tested live',       property: 'Northline Flats',location: 'Salt Lake City, UT',photo: '1522708323590-d24dbb6b0267', duration: '3:16', views: '9.8K views' },
+  { id: 'e5', title: 'Laundry room at 9pm — every machine free?',        property: 'The Selby',      location: 'Charlotte, NC',    photo: '1600585154526-990dced4db0d', duration: '1:32', views: '6.1K views' },
 ];
 
-// Slice teasers into four rails of different lengths so each shelf feels
-// distinct. Each rail also gets its own direction + speed downstream.
+// Rails renamed to the categories renters actually search for. Each rail
+// scrolls a different direction/speed so shelves feel alive but not chaotic.
 const RAILS: Array<{ title: string; hint: string; items: Teaser[]; direction: 'left' | 'right'; duration: string }> = [
-  { title: 'Featured resident tours',    hint: 'Verified walkthroughs',     items: TEASERS.slice(0, 7),   direction: 'left',  duration: '65s' },
-  { title: 'Warnings & maintenance',     hint: 'What managers won\'t say',  items: TEASERS.slice(7, 14),  direction: 'right', duration: '80s' },
-  { title: 'Official from managers',     hint: 'Amenities & first looks',   items: TEASERS.slice(14, 21), direction: 'left',  duration: '95s' },
-  { title: 'Deposits, move-outs, real talk', hint: 'The stuff nobody films', items: TEASERS.slice(21, 28), direction: 'right', duration: '75s' },
+  { title: 'Maintenance nightmares',       hint: 'What actually got fixed — and what didn\'t', items: TEASERS.slice(0, 5),   direction: 'left',  duration: '70s' },
+  { title: 'Application & lease drama',    hint: 'Fees, denials, and the fine print',          items: TEASERS.slice(5, 10),  direction: 'right', duration: '85s' },
+  { title: 'Local area vibe',              hint: 'The block, the walk, the noise',             items: TEASERS.slice(10, 15), direction: 'left',  duration: '80s' },
+  { title: 'Amenities — the real story',   hint: 'Pool, gym, package room — at the worst hour', items: TEASERS.slice(15, 20), direction: 'right', duration: '75s' },
+];
+
+// Featured strip for the hero preview — a single fast-moving rail mixed
+// from every category so visitors see the range immediately.
+const HERO_STRIP: Teaser[] = [
+  TEASERS[15], TEASERS[0], TEASERS[10], TEASERS[5],
+  TEASERS[17], TEASERS[2], TEASERS[12], TEASERS[7],
+  TEASERS[19], TEASERS[4], TEASERS[14], TEASERS[9],
 ];
 
 const TESTIMONIALS = [
