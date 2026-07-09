@@ -132,6 +132,10 @@ const AdminCuratedVideos = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState<Partial<Category>>({});
   const [savingCat, setSavingCat] = useState(false);
+  // True when the `curated_categories` table isn't provisioned in this
+  // environment. We fall back to the built-in list and hide the topic
+  // editor so admins don't hit write errors on a table that doesn't exist.
+  const [topicsEditable, setTopicsEditable] = useState(true);
 
   const loadCategories = async () => {
     const { data, error } = await supabase
@@ -139,7 +143,19 @@ const AdminCuratedVideos = () => {
       .select('*')
       .order('sort_order', { ascending: true });
     if (error) {
-      toast({ title: 'Load topics failed — using built-in list', description: error.message, variant: 'destructive' });
+      // PGRST205 = table not in schema cache (table simply doesn't exist in
+      // this project). That's an expected fallback path — no toast, just
+      // switch to the built-in list and disable editor controls. Any other
+      // error is worth surfacing.
+      const missingTable =
+        (error as any).code === 'PGRST205' ||
+        /schema cache|does not exist/i.test(error.message ?? '');
+      if (missingTable) {
+        setTopicsEditable(false);
+        console.info('[curated] curated_categories table not found — using built-in topic list');
+      } else {
+        toast({ title: 'Load topics failed — using built-in list', description: error.message, variant: 'destructive' });
+      }
     }
     const list = (data ?? []).map((r: any) => ({
       ...r,
