@@ -272,27 +272,27 @@ const Landing = () => {
       </section>
 
       {/* Testimonials */}
-      <section className="container py-16 md:py-24">
-        <div className="text-center max-w-2xl mx-auto mb-12">
-          <span className="text-xs font-semibold uppercase tracking-wider text-primary">Loved by both sides</span>
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight mt-2">Renters and managers agree</h2>
+      <section className="container py-10 md:py-24">
+        <div className="text-center max-w-2xl mx-auto mb-6 md:mb-12">
+          <span className="text-[11px] md:text-xs font-semibold uppercase tracking-wider text-primary">Loved by both sides</span>
+          <h2 className="text-2xl md:text-4xl font-bold tracking-tight mt-2">Renters and managers agree</h2>
         </div>
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-3 gap-4 md:gap-6">
           {TESTIMONIALS.map((t) => (
             <figure
               key={t.name}
-              className="relative rounded-2xl border border-border/60 bg-card p-6 md:p-7 shadow-card hover:shadow-card-hover transition-shadow"
+              className="relative rounded-2xl border border-border/60 bg-card p-5 md:p-7 shadow-card hover:shadow-card-hover transition-shadow"
             >
-              <Quote className="absolute right-5 top-5 h-8 w-8 text-primary/15" aria-hidden />
-              <div className="flex items-center gap-1 text-primary mb-4">
+              <Quote className="absolute right-4 top-4 md:right-5 md:top-5 h-7 w-7 md:h-8 md:w-8 text-primary/15" aria-hidden />
+              <div className="flex items-center gap-1 text-primary mb-3 md:mb-4">
                 {Array.from({ length: 5 }).map((_, i) => (
-                  <Star key={i} className="h-4 w-4 fill-current" />
+                  <Star key={i} className="h-3.5 w-3.5 md:h-4 md:w-4 fill-current" />
                 ))}
               </div>
-              <blockquote className="text-base md:text-lg text-foreground leading-relaxed">
+              <blockquote className="text-[15px] md:text-lg text-foreground leading-relaxed">
                 &ldquo;{t.quote}&rdquo;
               </blockquote>
-              <figcaption className="mt-5 flex items-center gap-3">
+              <figcaption className="mt-4 md:mt-5 flex items-center gap-3">
                 <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary to-secondary text-primary-foreground grid place-items-center font-bold">
                   {t.initial}
                 </div>
@@ -307,18 +307,18 @@ const Landing = () => {
       </section>
 
       {/* Value props */}
-      <section className="container pb-16 md:pb-24">
-        <div className="text-center max-w-2xl mx-auto mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight">What you get with a free account</h2>
-          <p className="text-muted-foreground mt-3">Real reviews, resident video tours, honest ratings, and side-by-side comparisons — all in one place.</p>
+      <section className="container pb-10 md:pb-24">
+        <div className="text-center max-w-2xl mx-auto mb-6 md:mb-12">
+          <h2 className="text-2xl md:text-4xl font-bold tracking-tight">What you get with a free account</h2>
+          <p className="text-sm md:text-base text-muted-foreground mt-2 md:mt-3">Real reviews, resident video tours, honest ratings, and side-by-side comparisons — all in one place.</p>
         </div>
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-3 gap-4 md:gap-6">
           {[
             { icon: PlayCircle, title: 'Resident video tours', body: 'The real unit at 3 pm on a Tuesday. Not staged, not staged-lit.' },
             { icon: Shield, title: 'Truth Score', body: 'Trust-weighted, recency-decayed ratings across 11 categories that matter.' },
             { icon: MessageSquare, title: 'Honest reviews', body: 'From verified residents who lived there. Managers can respond, never delete.' },
           ].map(({ icon: Icon, title, body }) => (
-            <div key={title} className="rounded-2xl border border-border/60 bg-card p-6 hover:border-primary/40 transition-colors">
+            <div key={title} className="rounded-2xl border border-border/60 bg-card p-5 md:p-6 hover:border-primary/40 transition-colors">
               <div className="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center mb-4">
                 <Icon className="h-5 w-5" />
               </div>
@@ -331,13 +331,13 @@ const Landing = () => {
 
       {/* Manager CTA */}
       <section className="border-y border-border/40 bg-muted/30">
-        <div className="container py-14 md:py-20 flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="container py-10 md:py-20 flex flex-col md:flex-row items-start md:items-center justify-between gap-5 md:gap-6">
           <div className="max-w-xl">
-            <span className="text-xs font-semibold uppercase tracking-wider text-secondary">For property managers</span>
-            <h2 className="text-2xl md:text-3xl font-bold mt-1">Claim your building. Respond to residents. Get alerts.</h2>
-            <p className="text-muted-foreground mt-2">Managers claim pages for free, add official photos and videos, and get notified the moment a new review is posted.</p>
+            <span className="text-[11px] md:text-xs font-semibold uppercase tracking-wider text-secondary">For property managers</span>
+            <h2 className="text-xl md:text-3xl font-bold mt-1">Claim your building. Respond to residents. Get alerts.</h2>
+            <p className="text-sm md:text-base text-muted-foreground mt-2">Managers claim pages for free, add official photos and videos, and get notified the moment a new review is posted.</p>
           </div>
-          <Button variant="outline" size="lg" asChild>
+          <Button variant="outline" size="lg" asChild className="w-full md:w-auto">
             <Link to="/auth?returnTo=%2Fmanager">
               <Building2 className="h-4 w-4" /> Manager tools
             </Link>
@@ -346,7 +346,7 @@ const Landing = () => {
       </section>
 
       {/* Footer */}
-      <footer className="container py-10 text-sm text-muted-foreground">
+      <footer className="container py-8 md:py-10 text-xs md:text-sm text-muted-foreground">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>© {new Date().getFullYear()} Periscope Reviews</div>
           <nav className="flex flex-wrap gap-4">
