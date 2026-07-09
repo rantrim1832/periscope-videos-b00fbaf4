@@ -421,6 +421,38 @@ const AdminCuratedVideos = () => {
     }
   };
 
+  const runLinkVideosToProperties = async () => {
+    setLinking(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('link-videos-to-properties', { body: {} });
+      if (error) throw error;
+      toast({
+        title: 'Linking complete',
+        description: `Matched ${data?.matched ?? 0} · auto-approved ${data?.autoApproved ?? 0} · needs review ${data?.needsReview ?? 0}.`,
+      });
+    } catch (e: any) {
+      toast({ title: 'Linking failed', description: extractErrorMessage(e), variant: 'destructive' });
+    } finally {
+      setLinking(false);
+    }
+  };
+
+  const runFetchGoogleReviews = async () => {
+    setFetchingGoogle(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('fetch-google-reviews', { body: { limit: 25 } });
+      if (error) throw error;
+      toast({
+        title: 'Google reviews pulled',
+        description: `Processed ${data?.propertiesProcessed ?? 0} properties · ${data?.totalReviews ?? 0} reviews cached.`,
+      });
+    } catch (e: any) {
+      toast({ title: 'Google fetch failed', description: extractErrorMessage(e), variant: 'destructive' });
+    } finally {
+      setFetchingGoogle(false);
+    }
+  };
+
   const runPaste = async () => {
     const parsed = parseEmbed(pasteUrl);
     if (!parsed) {
