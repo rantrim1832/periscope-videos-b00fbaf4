@@ -288,21 +288,25 @@ function FeedRail({
         <div className="pointer-events-none absolute right-0 top-0 bottom-3 w-16 bg-gradient-to-l from-muted/40 to-transparent z-10 hidden md:block" />
 
         <div className="flex gap-3 md:gap-4 overflow-x-auto no-scrollbar snap-x snap-mandatory scroll-px-4 md:scroll-px-6 px-4 md:px-6 pb-3">
-          {cards.map((c) =>
-            c.skeleton ? (
-              <div
-                key={c.key}
-                className="shrink-0 w-[46vw] max-w-[220px] md:w-[220px] aspect-[9/16] rounded-xl bg-muted animate-pulse snap-start"
-              />
-            ) : (
+          {cards.map((c) => {
+            if (c.skeleton) {
+              return (
+                <div
+                  key={c.key}
+                  className="shrink-0 w-[46vw] max-w-[220px] md:w-[220px] aspect-[9/16] rounded-xl bg-muted animate-pulse snap-start"
+                />
+              );
+            }
+            const item = c.item;
+            return (
               <Link
                 key={c.key}
                 to={authHref}
                 className="group relative shrink-0 w-[46vw] max-w-[220px] md:w-[220px] aspect-[9/16] overflow-hidden rounded-xl border border-border/60 bg-card shadow-card hover:shadow-card-hover transition-all hover:-translate-y-0.5 snap-start"
               >
-                {c.item!.thumbnailUrl ? (
+                {item.thumbnailUrl ? (
                   <img
-                    src={c.item!.thumbnailUrl}
+                    src={item.thumbnailUrl}
                     alt=""
                     loading="lazy"
                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
@@ -326,16 +330,16 @@ function FeedRail({
 
                 <div className="absolute inset-x-0 bottom-0 p-3 space-y-1">
                   <p className="line-clamp-2 text-sm font-semibold text-background leading-tight">
-                    {c.item!.title}
+                    {item.title}
                   </p>
                   <div className="flex items-center gap-1 text-[11px] text-background/85">
                     <MapPin className="h-3 w-3 shrink-0" />
-                    <span className="truncate">{c.item!.propertyName}</span>
+                    <span className="truncate">{item.propertyName}</span>
                   </div>
                 </div>
               </Link>
-            )
-          )}
+            );
+          })}
 
           {/* Trailing "see all" card */}
           {!loading && (
