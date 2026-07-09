@@ -23,8 +23,12 @@ Deno.serve(async (req) => {
     const supaUrl = Deno.env.get('SUPABASE_URL')!;
     const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const googleKey = Deno.env.get('GOOGLE_PLACES_API_KEY');
-    if (!googleKey) return json({ error: 'GOOGLE_PLACES_API_KEY not configured' }, 500);
+    // Accept either a dedicated Places key OR the same Google Cloud key we
+    // already use for YouTube (many users enable Places API on that same key).
+    const googleKey =
+      Deno.env.get('GOOGLE_PLACES_API_KEY') ||
+      Deno.env.get('YOUTUBE_API_KEY');
+    if (!googleKey) return json({ error: 'No Google API key configured (GOOGLE_PLACES_API_KEY or YOUTUBE_API_KEY)' }, 500);
 
     const authed = createClient(supaUrl, anonKey, { global: { headers: { Authorization: authHeader } } });
     const token = authHeader.replace('Bearer ', '');
