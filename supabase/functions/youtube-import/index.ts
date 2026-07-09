@@ -11,6 +11,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 
 const YT_API = 'https://www.googleapis.com/youtube/v3';
+const GOOGLE_REFERRER = 'https://joinperiscope.com/';
 
 interface ImportBody {
   query: string;
@@ -77,7 +78,7 @@ Deno.serve(async (req) => {
     if (videoDuration !== 'any') searchUrl.searchParams.set('videoDuration', videoDuration);
     searchUrl.searchParams.set('key', ytKey);
 
-    const searchRes = await fetch(searchUrl);
+    const searchRes = await fetch(searchUrl, { headers: { Referer: GOOGLE_REFERRER } });
     if (!searchRes.ok) {
       const t = await searchRes.text();
       return json({ error: 'YouTube search failed', detail: t }, searchRes.status);
@@ -112,7 +113,7 @@ Deno.serve(async (req) => {
       detailsUrl.searchParams.set('part', 'snippet');
       detailsUrl.searchParams.set('id', idsToDetail.join(','));
       detailsUrl.searchParams.set('key', ytKey);
-      const detailsRes = await fetch(detailsUrl);
+      const detailsRes = await fetch(detailsUrl, { headers: { Referer: GOOGLE_REFERRER } });
       if (!detailsRes.ok) {
         const t = await detailsRes.text();
         return json({ error: 'YouTube details failed', detail: t }, detailsRes.status);
