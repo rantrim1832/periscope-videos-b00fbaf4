@@ -122,6 +122,7 @@ async function searchAndInsert(admin: any, ytKey: string, query: string, categor
       caption: channel ? `${channel} · ${description}` : description,
       hashtags: [
         `cat:${category}`, `yt:${vid}`,
+        `q:${query}`,
         channel ? `ch:${channel}` : null,
         `src:https://www.youtube.com/watch?v=${vid}`,
       ].filter(Boolean),

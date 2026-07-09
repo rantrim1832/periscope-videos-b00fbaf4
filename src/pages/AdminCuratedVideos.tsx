@@ -10,6 +10,7 @@ import { CURATED_CATEGORIES } from '@/lib/curatedCategories';
 import { parseEmbed } from '@/services/providers/embed';
 import { Loader2, Youtube, Link2, Trash2, Sparkles, Plus, Save, Pencil } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
+import { CategoryLibraryBrowser } from '@/components/admin/CategoryLibraryBrowser';
 
 type Row = {
   id: string;
@@ -124,6 +125,8 @@ const AdminCuratedVideos = () => {
   const [rows, setRows] = useState<Row[]>([]);
   const [filter, setFilter] = useState<string>('all');
   const [loading, setLoading] = useState(true);
+  const [browserRefresh, setBrowserRefresh] = useState(0);
+  const [seedingKey, setSeedingKey] = useState<string | null>(null);
 
   // Topic editor state
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -239,6 +242,7 @@ const AdminCuratedVideos = () => {
         description: `Imported ${data.imported} new · skipped ${data.skipped} duplicates · found ${data.totalFound}.`,
       });
       load();
+      setBrowserRefresh((n) => n + 1);
     } catch (e: any) {
       toast({ title: 'Import failed', description: e.message ?? String(e), variant: 'destructive' });
     } finally {
@@ -263,6 +267,7 @@ const AdminCuratedVideos = () => {
         description: `Imported ${data.totalImported} · skipped ${data.totalSkipped} dupes · found ${data.totalFound}.`,
       });
       load();
+      setBrowserRefresh((n) => n + 1);
     } catch (e: any) {
       toast({ title: 'Bulk seed failed', description: e.message ?? String(e), variant: 'destructive' });
     } finally {
@@ -297,6 +302,7 @@ const AdminCuratedVideos = () => {
       toast({ title: 'Added', description: 'Video added to the feed.' });
       setPasteUrl(''); setPasteTitle(''); setPasteCreator('');
       load();
+      setBrowserRefresh((n) => n + 1);
     } catch (e: any) {
       toast({ title: 'Add failed', description: e.message ?? String(e), variant: 'destructive' });
     } finally {
@@ -308,6 +314,34 @@ const AdminCuratedVideos = () => {
     const { error } = await supabase.from('seeded_videos').update({ moderation_status: 'rejected' }).eq('id', id);
     if (error) return toast({ title: 'Remove failed', description: error.message, variant: 'destructive' });
     setRows((r) => r.filter((x) => x.id !== id));
+    setBrowserRefresh((n) => n + 1);
+  };
+
+  const seedOneQuery = async (catSlug: string, q: string) => {
+    const key = `${catSlug}::${q}`;
+    setSeedingKey(key);
+    try {
+      const { data, error } = await supabase.functions.invoke('youtube-import', {
+        body: { query: q, category: catSlug, maxResults: 15 },
+      });
+      if (error) throw error;
+      toast({
+        title: `Seeded "${q}"`,
+        description: `+${data.imported} new · ${data.skipped} dupes · ${data.totalFound} found`,
+      });
+      setBrowserRefresh((n) => n + 1);
+      load();
+      return { imported: data.imported ?? 0, skipped: data.skipped ?? 0, totalFound: data.totalFound ?? 0 };
+    } catch (e: any) {
+      toast({ title: 'Query failed', description: e.message ?? String(e), variant: 'destructive' });
+      return null;
+    } finally {
+      setSeedingKey(null);
+    }
+  };
+
+  const removeAsync = async (id: string) => {
+    await remove(id);
   };
 
   const currentCat = categories.find((c) => c.slug === slug) ?? categories[0] ?? null;
@@ -375,6 +409,14 @@ const AdminCuratedVideos = () => {
             )}
           </CardContent>
         </Card>
+
+        <CategoryLibraryBrowser
+          categories={categories}
+          onSeedQuery={seedOneQuery}
+          seedingKey={seedingKey}
+          onDelete={removeAsync}
+          refreshKey={browserRefresh}
+        />
 
         <Card className="mb-6">
           <CardHeader>
