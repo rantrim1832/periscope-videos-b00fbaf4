@@ -55,7 +55,10 @@ const Legal = () => {
         <div className="space-y-2">
           <h1 className="text-4xl font-bold">{page.title}</h1>
           <p className="text-muted-foreground">{page.description}</p>
-          <p className="text-xs text-muted-foreground">Launch draft. This is operational policy text, not legal advice.</p>
+          <p className="text-xs text-muted-foreground">
+            Last updated: July 9, 2026 · Questions? <Link to="/contact" className="underline">Contact us</Link> or email{' '}
+            <a href="mailto:legal@joinperiscope.com" className="underline">legal@joinperiscope.com</a>.
+          </p>
         </div>
 
         <Card>

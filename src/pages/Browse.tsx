@@ -3,10 +3,27 @@ import { Header } from "@/components/Header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MapPin, ChevronRight, Search, Building2 } from "lucide-react";
+import { ChevronRight, Search, Building2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getPropertyProvider, type LocationCount } from "@/data/propertyProvider";
 import { getStoredLocalState } from "@/lib/localDiscovery";
+import { StateTile } from "@/components/StateTile";
+
+const STATE_CACHE_KEY = 'periscope:browse-states:v1';
+const STATE_CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
+
+function readCachedStates(): LocationCount[] | null {
+  try {
+    const raw = sessionStorage.getItem(STATE_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { ts: number; data: LocationCount[] };
+    if (Date.now() - parsed.ts > STATE_CACHE_TTL_MS) return null;
+    return parsed.data;
+  } catch { return null; }
+}
+function writeCachedStates(data: LocationCount[]) {
+  try { sessionStorage.setItem(STATE_CACHE_KEY, JSON.stringify({ ts: Date.now(), data })); } catch { /* ignore */ }
+}
 
 // Full state names for a professional directory feel — abbreviations look
 // like a spreadsheet dump.
@@ -30,15 +47,20 @@ const Browse = () => {
   const navigate = useNavigate();
   const [view, setView] = useState<"states" | "cities">("states");
   const [selectedState, setSelectedState] = useState<string>("");
-  const [states, setStates] = useState<LocationCount[]>([]);
+  const [states, setStates] = useState<LocationCount[]>(() => readCachedStates() ?? []);
   const [cities, setCities] = useState<LocationCount[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const localState = getStoredLocalState();
 
   useEffect(() => {
-    setIsLoading(true);
-    getPropertyProvider().listStates().then((s) => setStates(s)).finally(() => setIsLoading(false));
+    // Hit the cache first for instant paint; refresh in background.
+    const cached = readCachedStates();
+    if (!cached) setIsLoading(true);
+    getPropertyProvider().listStates().then((s) => {
+      setStates(s);
+      writeCachedStates(s);
+    }).finally(() => setIsLoading(false));
   }, []);
 
   const handleStateClick = async (state: string) => {
@@ -71,7 +93,6 @@ const Browse = () => {
     const rest = filteredStates.filter((s) => s.state !== localState);
     return [...local, ...rest];
   }, [filteredStates, localState]);
-  const localStateRow = states.find((s) => s.state === localState);
 
   return (
     <div className="min-h-screen bg-background">
@@ -106,51 +127,27 @@ const Browse = () => {
           </div>
 
           {view === "states" && (
-            <>
-              {localState && localStateRow && !searchQuery && (
-                <button
-                  onClick={() => handleStateClick(localState)}
-                  className="w-full text-left group relative overflow-hidden rounded-xl border border-primary/30 bg-primary/5 hover:bg-primary/10 hover:border-primary/50 transition-colors"
-                >
-                  <div className="p-5 md:p-6 flex items-center justify-between gap-4">
-                    <div className="min-w-0">
-                      <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-primary mb-2">
-                        <MapPin className="h-3 w-3" /> Your state
-                      </span>
-                      <h2 className="text-2xl md:text-3xl font-bold tracking-tight leading-tight text-foreground">
-                        {stateName(localStateRow.state!)}
-                      </h2>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {localStateRow.count.toLocaleString()} propert{localStateRow.count === 1 ? 'y' : 'ies'}
-                      </p>
-                    </div>
-                    <ChevronRight className="h-5 w-5 shrink-0 text-primary group-hover:translate-x-0.5 transition-transform" />
-                  </div>
-                </button>
-              )}
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                {orderedStates.map((s) => {
-                  const isLocal = s.state === localState;
-                  return (
-                    <button
-                      key={s.state}
-                      onClick={() => handleStateClick(s.state!)}
-                      className={`group text-left rounded-lg border bg-card hover:border-primary/50 hover:shadow-card transition-all p-4 ${isLocal ? 'border-primary/40' : 'border-border/60'}`}
-                    >
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="min-w-0">
-                          <h3 className="font-semibold text-base leading-tight truncate">{stateName(s.state!)}</h3>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {s.count.toLocaleString()} propert{s.count === 1 ? 'y' : 'ies'}
-                          </p>
-                        </div>
-                        <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 auto-rows-[minmax(9rem,auto)] gap-3 md:gap-4">
+              {orderedStates.map((s, idx) => {
+                const isLocal = s.state === localState;
+                // Bento: local state gets lg, top-3 by count get md, rest sm.
+                const span: 'sm' | 'md' | 'lg' = isLocal ? 'lg' : idx < 3 ? 'md' : 'sm';
+                return (
+                  <StateTile
+                    key={s.state}
+                    code={s.state!}
+                    name={stateName(s.state!)}
+                    count={s.count}
+                    span={span}
+                    highlighted={isLocal}
+                    onClick={() => handleStateClick(s.state!)}
+                  />
+                );
+              })}
+              {isLoading && orderedStates.length === 0 && Array.from({ length: 12 }).map((_, i) => (
+                <div key={i} className="rounded-2xl border border-border/40 bg-muted/30 animate-pulse min-h-[9rem]" />
+              ))}
+            </div>
           )}
 
           {view === "cities" && (

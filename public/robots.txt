@@ -1,10 +1,35 @@
 User-agent: *
-Allow: /
-
-# High-value crawlable surfaces: property pages, city hubs, discovery, feed.
-Disallow: /admin/
+Allow: /$
+Allow: /auth
+Allow: /welcome
+Allow: /terms
+Allow: /privacy
+Allow: /dmca
+Allow: /contact
+Allow: /help
+# Auth-gated. Do not index — every crawler hits a login redirect and Google
+# will penalize soft-404 / thin-content signals.
+Disallow: /browse
+Disallow: /property/
+Disallow: /city/
+Disallow: /feed
+Disallow: /discover
+Disallow: /search
+Disallow: /shorts
+Disallow: /reviews
+Disallow: /leaderboard
+Disallow: /saved
+Disallow: /following
+Disallow: /community
+Disallow: /creator/
+Disallow: /compare
+Disallow: /contribute
+Disallow: /claim/
+Disallow: /verify/
+Disallow: /manager
 Disallow: /manage/
 Disallow: /notifications
 Disallow: /profile
+Disallow: /admin/
 
 Sitemap: /sitemap.xml
