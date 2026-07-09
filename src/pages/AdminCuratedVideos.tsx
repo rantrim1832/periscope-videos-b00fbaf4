@@ -138,7 +138,9 @@ const AdminCuratedVideos = () => {
       .from('curated_categories')
       .select('*')
       .order('sort_order', { ascending: true });
-    if (error) return toast({ title: 'Load topics failed', description: error.message, variant: 'destructive' });
+    if (error) {
+      toast({ title: 'Load topics failed — using built-in list', description: error.message, variant: 'destructive' });
+    }
     const list = (data ?? []).map((r: any) => ({
       ...r,
       suggested_queries: Array.isArray(r.suggested_queries) ? r.suggested_queries : [],
