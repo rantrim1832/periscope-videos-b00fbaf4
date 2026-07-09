@@ -52,6 +52,23 @@ const Contact = lazy(() => import("./pages/Contact"));
 const ReportIssue = lazy(() => import("./pages/ReportIssue"));
 const Legal = lazy(() => import("./pages/Legal"));
 const ManagerStart = lazy(() => import("./pages/ManagerStart"));
+const Landing = lazy(() => import("./pages/Landing"));
+
+// Router-level home switch: signed-out visitors get the marketing landing page;
+// signed-in visitors get the authenticated Index (which internally routes
+// renters to /feed, managers to /manager, etc.).
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+const HomeRoute = () => {
+  const [authed, setAuthed] = useState<boolean | null>(null);
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setAuthed(!!data.session));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => setAuthed(!!s));
+    return () => subscription.unsubscribe();
+  }, []);
+  if (authed === null) return <PageFallback />;
+  return authed ? <Index /> : <Landing />;
+};
 
 const queryClient = new QueryClient();
 
@@ -73,35 +90,38 @@ const App = () => (
             <ScrollToTop />
             <Suspense fallback={<PageFallback />}>
               <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/browse" element={<Browse />} />
-                <Route path="/property/:id" element={<Property />} />
-                <Route path="/compare" element={<Compare />} />
-                <Route path="/contribute" element={<ProtectedRoute><Contribute /></ProtectedRoute>} />
-                <Route path="/contribute/:propertyId" element={<ProtectedRoute><Contribute /></ProtectedRoute>} />
-                <Route path="/search" element={<Search />} />
-                <Route path="/feed" element={<Feed />} />
-                <Route path="/discover" element={<Discover />} />
-                <Route path="/leaderboard" element={<Leaderboard />} />
-                <Route path="/saved" element={<Saved />} />
-                <Route path="/following" element={<ProtectedRoute><Following /></ProtectedRoute>} />
-                <Route path="/city/:state/:city" element={<City />} />
-                <Route path="/claim/:propertyId" element={<ClaimProperty />} />
-                <Route path="/creator/:id" element={<Creator />} />
-                <Route path="/welcome" element={<Welcome />} />
-                <Route path="/manager" element={<ManagerStart />} />
-                <Route path="/verify/:propertyId" element={<ProtectedRoute><Verify /></ProtectedRoute>} />
+                {/* Public routes — no auth gate */}
+                <Route path="/" element={<HomeRoute />} />
                 <Route path="/auth" element={<Auth />} />
-                <Route path="/reviews" element={<Reviews />} />
-                <Route path="/shorts" element={<Shorts />} />
-                <Route path="/post" element={<Navigate to="/contribute" replace />} />
-                <Route path="/community" element={<Community />} />
-                <Route path="/help" element={<Help />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="/report" element={<ReportIssue />} />
+                <Route path="/welcome" element={<Welcome />} />
                 <Route path="/terms" element={<Legal />} />
                 <Route path="/privacy" element={<Legal />} />
                 <Route path="/dmca" element={<Legal />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/report" element={<ReportIssue />} />
+                <Route path="/help" element={<Help />} />
+
+                {/* Gated routes — hard auth wall */}
+                <Route path="/browse" element={<ProtectedRoute><Browse /></ProtectedRoute>} />
+                <Route path="/property/:id" element={<ProtectedRoute><Property /></ProtectedRoute>} />
+                <Route path="/compare" element={<ProtectedRoute><Compare /></ProtectedRoute>} />
+                <Route path="/contribute" element={<ProtectedRoute><Contribute /></ProtectedRoute>} />
+                <Route path="/contribute/:propertyId" element={<ProtectedRoute><Contribute /></ProtectedRoute>} />
+                <Route path="/search" element={<ProtectedRoute><Search /></ProtectedRoute>} />
+                <Route path="/feed" element={<ProtectedRoute><Feed /></ProtectedRoute>} />
+                <Route path="/discover" element={<ProtectedRoute><Discover /></ProtectedRoute>} />
+                <Route path="/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />
+                <Route path="/saved" element={<ProtectedRoute><Saved /></ProtectedRoute>} />
+                <Route path="/following" element={<ProtectedRoute><Following /></ProtectedRoute>} />
+                <Route path="/city/:state/:city" element={<ProtectedRoute><City /></ProtectedRoute>} />
+                <Route path="/claim/:propertyId" element={<ProtectedRoute><ClaimProperty /></ProtectedRoute>} />
+                <Route path="/creator/:id" element={<ProtectedRoute><Creator /></ProtectedRoute>} />
+                <Route path="/manager" element={<ProtectedRoute><ManagerStart /></ProtectedRoute>} />
+                <Route path="/verify/:propertyId" element={<ProtectedRoute><Verify /></ProtectedRoute>} />
+                <Route path="/reviews" element={<ProtectedRoute><Reviews /></ProtectedRoute>} />
+                <Route path="/shorts" element={<ProtectedRoute><Shorts /></ProtectedRoute>} />
+                <Route path="/post" element={<Navigate to="/contribute" replace />} />
+                <Route path="/community" element={<ProtectedRoute><Community /></ProtectedRoute>} />
                 <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
                 <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
                 <Route path="/manage/:propertyId" element={<ProtectedRoute><ManageProperty /></ProtectedRoute>} />
