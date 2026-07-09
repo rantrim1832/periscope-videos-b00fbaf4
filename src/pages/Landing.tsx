@@ -233,6 +233,40 @@ const Landing = () => {
         </div>
       </section>
 
+      {/* Join paths: Renters vs Property managers */}
+      <section className="container py-10 md:py-20">
+        <div className="text-center max-w-2xl mx-auto mb-6 md:mb-10">
+          <h2 className="text-2xl md:text-4xl font-bold tracking-tight">Join Periscope</h2>
+          <p className="text-sm md:text-base text-muted-foreground mt-2 md:mt-3">Two ways in — pick the one that fits you. Free either way.</p>
+        </div>
+        <div className="grid md:grid-cols-2 gap-4 md:gap-6">
+          <div className="rounded-2xl border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-background to-background p-6 md:p-8 flex flex-col">
+            <div className="w-12 h-12 rounded-xl bg-primary/15 text-primary flex items-center justify-center mb-4">
+              <Users className="h-6 w-6" />
+            </div>
+            <h3 className="text-xl md:text-2xl font-bold mb-2">Renters — join free</h3>
+            <p className="text-sm md:text-base text-muted-foreground mb-5 md:mb-6 flex-1">
+              Watch real video reviews. Post your own. Compare buildings side by side. See the Truth Score before you tour.
+            </p>
+            <Button variant="hero" size="lg" asChild className="w-full">
+              <Link to={AUTH_RENTER}>Sign up as a renter</Link>
+            </Button>
+          </div>
+          <div className="rounded-2xl border-2 border-secondary/40 bg-gradient-to-br from-secondary/10 via-background to-background p-6 md:p-8 flex flex-col">
+            <div className="w-12 h-12 rounded-xl bg-secondary/15 text-secondary flex items-center justify-center mb-4">
+              <Building2 className="h-6 w-6" />
+            </div>
+            <h3 className="text-xl md:text-2xl font-bold mb-2">Property managers — join free</h3>
+            <p className="text-sm md:text-base text-muted-foreground mb-5 md:mb-6 flex-1">
+              Claim your building. Upload official tours. Respond to residents. Get alerts the moment a new review is posted.
+            </p>
+            <Button variant="outline" size="lg" asChild className="w-full">
+              <Link to={AUTH_MANAGER}>Sign up as a manager</Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+
       {/* Testimonials */}
       <section className="container py-10 md:py-24">
         <div className="text-center max-w-2xl mx-auto mb-6 md:mb-12">
