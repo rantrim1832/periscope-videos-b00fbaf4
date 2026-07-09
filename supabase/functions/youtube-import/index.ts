@@ -11,7 +11,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 
 const YT_API = 'https://www.googleapis.com/youtube/v3';
-const GOOGLE_REFERRER = 'https://joinperiscope.com/';
+const GOOGLE_REFERRER = 'https://www.joinperiscope.com/';
 
 interface ImportBody {
   query: string;
