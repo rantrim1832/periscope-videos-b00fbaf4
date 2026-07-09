@@ -516,11 +516,15 @@ function MarqueeRail({
  * thumbnails feel like ambient video. Clicking anywhere routes to auth.
  */
 function TeaserCard({ teaser, kenBurnsDelay }: { teaser: Teaser; kenBurnsDelay: number }) {
+  const href = teaser.watchTo ?? AUTH_RENTER;
+  const ariaLabel = teaser.watchTo
+    ? `Watch: ${teaser.title}`
+    : `${teaser.title} — sign up to watch`;
   return (
     <Link
-      to={AUTH_RENTER}
+      to={href}
       className="group relative block shrink-0 w-[46vw] max-w-[220px] md:w-[220px] aspect-[9/16] overflow-hidden rounded-xl border border-border/60 bg-card shadow-card hover:shadow-card-hover transition-shadow"
-      aria-label={`${teaser.title} — sign up to watch`}
+      aria-label={ariaLabel}
     >
       <img
         src={teaser.photo}
@@ -542,15 +546,18 @@ function TeaserCard({ teaser, kenBurnsDelay }: { teaser: Teaser; kenBurnsDelay: 
               <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-destructive" />
             </span>
           )}
-          {teaser.badge !== 'Live' && <Lock className="h-2.5 w-2.5" />}
+          {teaser.badge !== 'Live' && !teaser.isReal && <Lock className="h-2.5 w-2.5" />}
+          {teaser.isReal && <Play className="h-2.5 w-2.5 fill-current" />}
           {teaser.badge}
         </div>
       )}
 
       {/* Bottom-right duration pill */}
-      <div className="absolute right-2 top-2 rounded-md bg-foreground/70 px-1.5 py-0.5 text-[10px] font-semibold text-background backdrop-blur">
-        {teaser.duration}
-      </div>
+      {teaser.duration && (
+        <div className="absolute right-2 top-2 rounded-md bg-foreground/70 px-1.5 py-0.5 text-[10px] font-semibold text-background backdrop-blur">
+          {teaser.duration}
+        </div>
+      )}
 
       {/* Center play button */}
       <div className="absolute inset-0 flex items-center justify-center">
@@ -570,7 +577,7 @@ function TeaserCard({ teaser, kenBurnsDelay }: { teaser: Teaser; kenBurnsDelay: 
             <span className="truncate">{teaser.property} · {teaser.location}</span>
           </div>
         </div>
-        <div className="text-[10px] text-background/70">{teaser.views}</div>
+        {teaser.views && <div className="text-[10px] text-background/70">{teaser.views}</div>}
       </div>
     </Link>
   );
