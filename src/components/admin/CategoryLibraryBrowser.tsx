@@ -57,6 +57,7 @@ export function CategoryLibraryBrowser({
   onPreviewQuery,
   onImportSelected,
   openSlug,
+  openTick,
 }: {
   categories: BrowserCategory[];
   onSeedQuery: (slug: string, query: string) => Promise<{ imported: number; skipped: number; totalFound: number } | null>;
