@@ -310,7 +310,7 @@ const AdminCuratedVideos = () => {
     setRows((r) => r.filter((x) => x.id !== id));
   };
 
-  const currentCat = categories.find((c) => c.slug === slug) ?? categories[0];
+  const currentCat = categories.find((c) => c.slug === slug) ?? categories[0] ?? null;
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -394,8 +394,8 @@ const AdminCuratedVideos = () => {
                 {bulkSeeding ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Sparkles className="w-4 h-4 mr-2" />}
                 Seed every category
               </Button>
-              <Button variant="outline" onClick={() => runBulkSeed(slug)} disabled={bulkSeeding}>
-                Seed only "{currentCat.label}"
+              <Button variant="outline" onClick={() => runBulkSeed(slug)} disabled={bulkSeeding || !currentCat}>
+                Seed only "{currentCat?.label ?? '—'}"
               </Button>
             </div>
             <p className="text-[11px] text-muted-foreground">
