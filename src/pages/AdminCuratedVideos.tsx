@@ -38,6 +38,73 @@ const FEED_CATEGORY_OPTIONS = [
   'Resident warnings','Property comparison',
 ];
 
+function TopicEditor({
+  draft, setDraft, onSave, onCancel, saving,
+}: {
+  draft: Partial<Category>;
+  setDraft: (d: Partial<Category>) => void;
+  onSave: () => void;
+  onCancel: () => void;
+  saving: boolean;
+}) {
+  const queriesText = (draft.suggested_queries ?? []).join('\n');
+  return (
+    <div className="p-3 space-y-3">
+      <div className="grid gap-2 md:grid-cols-2">
+        <div>
+          <label className="text-xs text-muted-foreground block mb-1">Label</label>
+          <Input value={draft.label ?? ''} onChange={(e) => setDraft({ ...draft, label: e.target.value })} placeholder="e.g. Move-in day mishaps" />
+        </div>
+        <div>
+          <label className="text-xs text-muted-foreground block mb-1">Slug (URL-safe, lowercase)</label>
+          <Input value={draft.slug ?? ''} onChange={(e) => setDraft({ ...draft, slug: e.target.value })} placeholder="e.g. move-in-mishaps" />
+        </div>
+        <div className="md:col-span-2">
+          <label className="text-xs text-muted-foreground block mb-1">Hint (short description)</label>
+          <Input value={draft.hint ?? ''} onChange={(e) => setDraft({ ...draft, hint: e.target.value })} placeholder="What kind of videos live here?" />
+        </div>
+        <div>
+          <label className="text-xs text-muted-foreground block mb-1">Feed rail</label>
+          <select
+            className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+            value={draft.feed_category ?? 'Renter tips'}
+            onChange={(e) => setDraft({ ...draft, feed_category: e.target.value })}
+          >
+            {FEED_CATEGORY_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="text-xs text-muted-foreground block mb-1">Sort order</label>
+          <Input type="number" value={draft.sort_order ?? 0} onChange={(e) => setDraft({ ...draft, sort_order: Number(e.target.value) })} />
+        </div>
+      </div>
+      <div>
+        <label className="text-xs text-muted-foreground block mb-1">
+          Suggested YouTube search queries (one per line — bulk seed runs every line)
+        </label>
+        <Textarea
+          rows={6}
+          value={queriesText}
+          onChange={(e) => setDraft({ ...draft, suggested_queries: e.target.value.split('\n') })}
+          placeholder={'apartment tour before signing\napartment red flags\n...'}
+        />
+      </div>
+      <div className="flex items-center gap-3">
+        <label className="text-xs text-muted-foreground flex items-center gap-2">
+          <input type="checkbox" checked={draft.is_active ?? true} onChange={(e) => setDraft({ ...draft, is_active: e.target.checked })} />
+          Active
+        </label>
+        <div className="ml-auto flex gap-2">
+          <Button size="sm" variant="ghost" onClick={onCancel} disabled={saving}>Cancel</Button>
+          <Button size="sm" onClick={onSave} disabled={saving}>
+            {saving ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Save className="w-4 h-4 mr-1" />} Save
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const AdminCuratedVideos = () => {
   const { toast } = useToast();
   const [categories, setCategories] = useState<Category[]>([]);
