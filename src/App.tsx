@@ -105,6 +105,8 @@ const App = () => (
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/report" element={<ReportIssue />} />
                 <Route path="/help" element={<Help />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
 
                 {/* Gated routes — hard auth wall */}
                 <Route path="/browse" element={<ProtectedRoute><Browse /></ProtectedRoute>} />
@@ -141,6 +143,8 @@ const App = () => (
                 <Route path="/admin/csv-upload" element={<AdminRoute><AdminCSVUpload /></AdminRoute>} />
                 <Route path="/admin/safety" element={<AdminRoute><AdminSafety /></AdminRoute>} />
                 <Route path="/admin/curated" element={<AdminRoute><AdminCuratedVideos /></AdminRoute>} />
+                <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+                <Route path="/admin/contact" element={<AdminRoute><AdminContact /></AdminRoute>} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

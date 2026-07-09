@@ -32,6 +32,9 @@ const PRIMARY_LINKS = [
 ];
 
 const ADMIN_LINKS = [
+  { to: "/admin", label: "Dashboard" },
+  { to: "/admin/contact", label: "Contact inbox" },
+  { to: "/admin/curated", label: "Curated videos" },
   { to: "/admin/settings", label: "Settings" },
   { to: "/admin/safety", label: "Safety inbox" },
   { to: "/admin/moderate", label: "Moderation" },
