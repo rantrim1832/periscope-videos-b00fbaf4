@@ -642,7 +642,8 @@ const AdminCuratedVideos = () => {
           refreshKey={browserRefresh}
           onPreviewQuery={previewOneQuery}
           onImportSelected={importSelectedIds}
-          openSlug={openBrowserSlug ? `${openBrowserSlug}#${openBrowserTick}`.split('#')[0] : null}
+          openSlug={openBrowserSlug}
+          openTick={openBrowserTick}
         />
 
         <Card className="mb-6">
