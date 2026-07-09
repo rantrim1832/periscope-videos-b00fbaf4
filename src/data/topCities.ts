@@ -1,78 +1,104 @@
-// Curated top ~50 US metros with a themed stock photo, for the Browse rail
+// Curated top ~50 US metros with a real, on-theme photo for the Browse rail
 // and Search autofill. State codes are used for /city/:state/:city routing.
+//
+// Two image sources are used:
+//  - Per-city Unsplash URLs for iconic metros where the exact photo is
+//    visually verified to depict that city (skyline, landmark, etc.).
+//  - Regional archetype images bundled under /src/assets/cities/ for smaller
+//    metros — each depicts the correct visual region (mountain-west,
+//    desert-southwest, PNW volcano skyline, Gulf coast palms, etc.).
+//
+// The prior version reused a small "themed" Unsplash pool that resolved to
+// unrelated stock (a camera for LA, a basketball for the Sunbelt, a tree for
+// Chicago). Never reintroduce that pool.
 
-import { photoUrl } from './stateArt';
+import northeastMetro from '@/assets/cities/northeast-metro.jpg';
+import midwestMetro from '@/assets/cities/midwest-metro.jpg';
+import southernMetro from '@/assets/cities/southern-metro.jpg';
+import floridaMetro from '@/assets/cities/florida-metro.jpg';
+import texasMetro from '@/assets/cities/texas-metro.jpg';
+import southwestMetro from '@/assets/cities/southwest-metro.jpg';
+import mountainWest from '@/assets/cities/mountain-west.jpg';
+import pacificNorthwest from '@/assets/cities/pacific-northwest.jpg';
+import socalMetro from '@/assets/cities/socal-metro.jpg';
+import nashvilleImg from '@/assets/cities/nashville.jpg';
+import phoenixImg from '@/assets/cities/phoenix.jpg';
+import portlandImg from '@/assets/cities/portland.jpg';
 
 export interface TopCity {
   city: string;
   state: string;   // 2-letter code
-  image: string;   // full Unsplash CDN URL
+  image: string;
 }
 
-// A small pool of city-flavored photos, reused. Same stability principle as
-// stateArt — swap an ID here to update every city that uses it.
-const P = {
-  skyline:   photoUrl('photo-1496442226666-8d4d0e62e6e9'),   // NYC skyline
-  westCoast: photoUrl('photo-1502920917128-1aa500764cbd'),   // LA / west coast
-  sunbelt:   photoUrl('photo-1519861531473-9200262188bf'),   // palms
-  desertCity:photoUrl('photo-1509316785289-025f5b846b35'),   // desert
-  mountain:  photoUrl('photo-1519681393784-d120267933ba'),   // mountain
-  neCity:    photoUrl('photo-1507371341162-763b5e419408'),   // NE fall
-  midwest:   photoUrl('photo-1502082553048-f009c37129b9'),   // lake city
-  south:     photoUrl('photo-1518623489648-a173ef7824f3'),   // south
-  pnw:       photoUrl('photo-1500043357865-c6b8827edf10'),   // PNW coast
-  bridge:    photoUrl('photo-1449034446853-66c86144b0ad'),   // bridge city
+// Verified Unsplash photo IDs — each URL below has been visually confirmed to
+// depict the named city. Do not swap without visually re-checking the thumbnail.
+const u = (id: string) =>
+  `https://images.unsplash.com/${id}?w=1000&auto=format&fit=crop&q=75`;
+
+const IMG = {
+  nyc:      u('photo-1496442226666-8d4d0e62e6e9'), // Times Square
+  chicago:  u('photo-1477959858617-67f85cf4f1df'), // Chicago skyline aerial
+  la:       u('photo-1444723121867-7a241cacace9'), // LA at night
+  sf:       u('photo-1449034446853-66c86144b0ad'), // Golden Gate Bridge
+  seattle:  u('photo-1438401171849-74ac270044ee'), // Space Needle + Rainier
+  miami:    u('photo-1514214246283-d427a95c5d2f'), // Miami palms + beach
+  vegas:    u('photo-1605833556294-ea5c7a74f57d'), // Welcome to Las Vegas sign
+  dc:       u('photo-1501466044931-62695aada8e9'), // US Capitol
+  austin:   u('photo-1531218150217-54595bc2b934'), // Austin skyline at dusk
+  atlanta:  u('photo-1575917649705-5b59aaa12e6b'), // Atlanta skyline sunset
+  nola:     u('photo-1571893544028-06b07af6dade'), // New Orleans French Quarter
 };
 
 export const TOP_CITIES: TopCity[] = [
-  { city: 'New York',        state: 'NY', image: P.skyline },
-  { city: 'Los Angeles',     state: 'CA', image: P.westCoast },
-  { city: 'Chicago',         state: 'IL', image: P.midwest },
-  { city: 'Houston',         state: 'TX', image: P.desertCity },
-  { city: 'Phoenix',         state: 'AZ', image: P.desertCity },
-  { city: 'Philadelphia',    state: 'PA', image: P.neCity },
-  { city: 'San Antonio',     state: 'TX', image: P.sunbelt },
-  { city: 'San Diego',       state: 'CA', image: P.westCoast },
-  { city: 'Dallas',          state: 'TX', image: P.skyline },
-  { city: 'Austin',          state: 'TX', image: P.sunbelt },
-  { city: 'Jacksonville',    state: 'FL', image: P.sunbelt },
-  { city: 'Fort Worth',      state: 'TX', image: P.desertCity },
-  { city: 'Columbus',        state: 'OH', image: P.midwest },
-  { city: 'Charlotte',       state: 'NC', image: P.south },
-  { city: 'Indianapolis',    state: 'IN', image: P.midwest },
-  { city: 'San Francisco',   state: 'CA', image: P.bridge },
-  { city: 'Seattle',         state: 'WA', image: P.pnw },
-  { city: 'Denver',          state: 'CO', image: P.mountain },
-  { city: 'Boston',          state: 'MA', image: P.neCity },
-  { city: 'Nashville',       state: 'TN', image: P.south },
-  { city: 'Portland',        state: 'OR', image: P.pnw },
-  { city: 'Las Vegas',       state: 'NV', image: P.desertCity },
-  { city: 'Atlanta',         state: 'GA', image: P.south },
-  { city: 'Miami',           state: 'FL', image: P.sunbelt },
-  { city: 'Minneapolis',     state: 'MN', image: P.midwest },
-  { city: 'Washington',      state: 'DC', image: P.skyline },
-  { city: 'Detroit',         state: 'MI', image: P.midwest },
-  { city: 'Baltimore',       state: 'MD', image: P.neCity },
-  { city: 'Milwaukee',       state: 'WI', image: P.midwest },
-  { city: 'Sacramento',      state: 'CA', image: P.westCoast },
-  { city: 'Kansas City',     state: 'MO', image: P.midwest },
-  { city: 'Raleigh',         state: 'NC', image: P.south },
-  { city: 'Tampa',           state: 'FL', image: P.sunbelt },
-  { city: 'Orlando',         state: 'FL', image: P.sunbelt },
-  { city: 'Cleveland',       state: 'OH', image: P.midwest },
-  { city: 'Pittsburgh',      state: 'PA', image: P.neCity },
-  { city: 'Cincinnati',      state: 'OH', image: P.midwest },
-  { city: 'St. Louis',       state: 'MO', image: P.midwest },
-  { city: 'Louisville',      state: 'KY', image: P.south },
-  { city: 'New Orleans',     state: 'LA', image: P.south },
-  { city: 'Salt Lake City',  state: 'UT', image: P.mountain },
-  { city: 'Providence',      state: 'RI', image: P.neCity },
-  { city: 'Richmond',        state: 'VA', image: P.south },
-  { city: 'Buffalo',         state: 'NY', image: P.neCity },
-  { city: 'Hartford',        state: 'CT', image: P.neCity },
-  { city: 'Oklahoma City',   state: 'OK', image: P.desertCity },
-  { city: 'Memphis',         state: 'TN', image: P.south },
-  { city: 'Albuquerque',     state: 'NM', image: P.desertCity },
-  { city: 'Tucson',          state: 'AZ', image: P.desertCity },
-  { city: 'Omaha',           state: 'NE', image: P.midwest },
+  { city: 'New York',        state: 'NY', image: IMG.nyc },
+  { city: 'Los Angeles',     state: 'CA', image: IMG.la },
+  { city: 'Chicago',         state: 'IL', image: IMG.chicago },
+  { city: 'Houston',         state: 'TX', image: texasMetro },
+  { city: 'Phoenix',         state: 'AZ', image: phoenixImg },
+  { city: 'Philadelphia',    state: 'PA', image: northeastMetro },
+  { city: 'San Antonio',     state: 'TX', image: texasMetro },
+  { city: 'San Diego',       state: 'CA', image: socalMetro },
+  { city: 'Dallas',          state: 'TX', image: texasMetro },
+  { city: 'Austin',          state: 'TX', image: IMG.austin },
+  { city: 'Jacksonville',    state: 'FL', image: floridaMetro },
+  { city: 'Fort Worth',      state: 'TX', image: texasMetro },
+  { city: 'Columbus',        state: 'OH', image: midwestMetro },
+  { city: 'Charlotte',       state: 'NC', image: southernMetro },
+  { city: 'Indianapolis',    state: 'IN', image: midwestMetro },
+  { city: 'San Francisco',   state: 'CA', image: IMG.sf },
+  { city: 'Seattle',         state: 'WA', image: IMG.seattle },
+  { city: 'Denver',          state: 'CO', image: mountainWest },
+  { city: 'Boston',          state: 'MA', image: northeastMetro },
+  { city: 'Nashville',       state: 'TN', image: nashvilleImg },
+  { city: 'Portland',        state: 'OR', image: portlandImg },
+  { city: 'Las Vegas',       state: 'NV', image: IMG.vegas },
+  { city: 'Atlanta',         state: 'GA', image: IMG.atlanta },
+  { city: 'Miami',           state: 'FL', image: IMG.miami },
+  { city: 'Minneapolis',     state: 'MN', image: midwestMetro },
+  { city: 'Washington',      state: 'DC', image: IMG.dc },
+  { city: 'Detroit',         state: 'MI', image: midwestMetro },
+  { city: 'Baltimore',       state: 'MD', image: northeastMetro },
+  { city: 'Milwaukee',       state: 'WI', image: midwestMetro },
+  { city: 'Sacramento',      state: 'CA', image: socalMetro },
+  { city: 'Kansas City',     state: 'MO', image: midwestMetro },
+  { city: 'Raleigh',         state: 'NC', image: southernMetro },
+  { city: 'Tampa',           state: 'FL', image: floridaMetro },
+  { city: 'Orlando',         state: 'FL', image: floridaMetro },
+  { city: 'Cleveland',       state: 'OH', image: midwestMetro },
+  { city: 'Pittsburgh',      state: 'PA', image: northeastMetro },
+  { city: 'Cincinnati',      state: 'OH', image: midwestMetro },
+  { city: 'St. Louis',       state: 'MO', image: midwestMetro },
+  { city: 'Louisville',      state: 'KY', image: southernMetro },
+  { city: 'New Orleans',     state: 'LA', image: IMG.nola },
+  { city: 'Salt Lake City',  state: 'UT', image: mountainWest },
+  { city: 'Providence',      state: 'RI', image: northeastMetro },
+  { city: 'Richmond',        state: 'VA', image: southernMetro },
+  { city: 'Buffalo',         state: 'NY', image: northeastMetro },
+  { city: 'Hartford',        state: 'CT', image: northeastMetro },
+  { city: 'Oklahoma City',   state: 'OK', image: southwestMetro },
+  { city: 'Memphis',         state: 'TN', image: southernMetro },
+  { city: 'Albuquerque',     state: 'NM', image: southwestMetro },
+  { city: 'Tucson',          state: 'AZ', image: southwestMetro },
+  { city: 'Omaha',           state: 'NE', image: midwestMetro },
 ];
