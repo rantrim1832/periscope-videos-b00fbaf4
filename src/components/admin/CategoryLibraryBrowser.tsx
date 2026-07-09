@@ -66,6 +66,7 @@ export function CategoryLibraryBrowser({
   onPreviewQuery: (slug: string, query: string) => Promise<PreviewResult | null>;
   onImportSelected: (slug: string, query: string, videoIds: string[]) => Promise<{ imported: number; skipped: number; totalFound: number } | null>;
   openSlug?: string | null;
+  openTick?: number;
 }) {
   const { toast } = useToast();
   const [counts, setCounts] = useState<Record<string, number>>({});
@@ -114,7 +115,7 @@ export function CategoryLibraryBrowser({
       openPreview(openSlug, firstQ);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [openSlug]);
+  }, [openSlug, openTick]);
 
   const loadVideos = async (slug: string) => {
     setLoadingSlug(slug);
