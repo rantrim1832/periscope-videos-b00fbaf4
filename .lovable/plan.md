@@ -1,106 +1,54 @@
-# Pre-Launch Audit + P0 Fixes
+# Stock state photos, top cities, smart search
 
-You picked: **hard gate**, **illustrated state shapes (bento)**, **audit + fix blockers in parallel**, **ship current legal drafts as-is**.
+## 1. State tiles → stock photos
 
-## ⚠️ One flag I have to state on the record
-Hard-gating everything contradicts `docs/PRODUCT_SPEC.md` ("renters never paywalled") and kills:
-- Google indexing of `/property/*` and `/city/*` (sitemap becomes useless — every crawler hits a login wall)
-- Link unfurls in iMessage/Slack/Twitter (previews show login screen)
-- Word-of-mouth ("check out this apartment on Periscope" → friction wall)
+Replace the SVG silhouettes in `src/components/StateTile.tsx` with themed stock photos (Unsplash CDN).
 
-I'll build it as you asked. But I'm adding a **feature flag** (`VITE_PUBLIC_BROWSING`) so you can flip to soft-gate in 30 seconds post-launch when you see signup conversion vs. traffic loss. I'll also update the sitemap to only include ungated routes so Google doesn't index login-wall pages (which gets you penalized).
+- New `src/data/stateArt.ts` maps each of the 50 states + DC to a **theme** (beach, mountains, desert, city, forest, farm, tropical, bayou, snow, plains) and each theme resolves to a known-stable Unsplash photo ID. ~10 reusable regional photos, ~5–7 states per theme (California→beach, Colorado→mountains, Arizona→desert, Illinois→city skyline, Oregon→forest, Iowa→farm, Florida→tropical, Louisiana→bayou, Alaska→snow, etc.).
+- `StateTile` renders `<img src=... loading="lazy">` filling the tile, with a dark gradient wash so the white state code + name + count stay readable. Removes the SVG path rendering path entirely; keeps the size/highlight props.
+- Silhouette JSON (`src/data/usStates.json`) is no longer referenced by the tile — leaves it in place (harmless) so we don't churn other files.
 
----
+## 2. Top cities section on Browse
 
-## Part 1 — P0 launch blockers (I ship these now)
+Add a **"Top cities"** section above the state grid on `/browse`.
 
-### 1. Auth hard gate
-- New `<AuthGate>` wrapper in `App.tsx` around all routes except: `/`, `/auth`, `/welcome`, `/terms`, `/privacy`, `/dmca`, `/contact`, `/reset-password`
-- Unauthenticated users hitting gated routes → redirect to `/auth?next=<original>`
-- After sign-in, redirect back to `next`
-- Feature flag: `VITE_PUBLIC_BROWSING=true` disables the gate
-- Marketing home (`/`) redesigned as a real landing page (value prop, signup CTA, screenshots) instead of the current authenticated dashboard
-- Update `robots.txt` + `sitemap` edge function to exclude gated routes while flag is off
+- New `src/data/topCities.ts` — curated list of 50 major US metros (New York, Los Angeles, Chicago, Houston, Phoenix, Philadelphia, San Antonio, San Diego, Dallas, Austin, Jacksonville, Fort Worth, Columbus, Charlotte, Indianapolis, San Francisco, Seattle, Denver, Boston, Nashville, Portland, Las Vegas, Atlanta, Miami, Minneapolis, D.C., Detroit, Baltimore, Milwaukee, Sacramento, Kansas City, Raleigh, Tampa, Orlando, Cleveland, Pittsburgh, Cincinnati, St. Louis, Louisville, New Orleans, Salt Lake City, Providence, Richmond, Buffalo, Hartford, Oklahoma City, Memphis, Albuquerque, Tucson, Omaha). Each has `{ city, state, image }` using themed Unsplash photos from the same pool.
+- Rendered as a horizontal poster rail using the existing `PromptTileRail` styling patterns (or a simple `overflow-x-auto` grid) with photo covers. Each tile links to `/city/:state/:city`.
+- Count badges are optional and omitted for now (adding a per-city count query would require a new provider method + N queries).
 
-### 2. States page: illustrated tiles + perf fix
-Current cause of slowness: `listStates()` in `propertyProvider` is doing a full aggregate query on every mount, no cache, no pagination.
-Fixes:
-- Cache state counts in `sessionStorage` with 1hr TTL (states don't change)
-- Add DB-side materialized view or a single `state_counts` RPC (one row per state) — one round-trip instead of counting-in-loop
-- Replace text cards with **bento-grid of illustrated state SVG tiles**: state outline in brand teal gradient, name + count overlay, hover lift
-- 50 lightweight inline SVG state shapes (all US states) — no image licensing, no network requests, ships in JS bundle (~40KB gzipped)
-- Skeleton loaders on first paint
+## 3. Smart search with autofill + cascading filters
 
-### 3. Error boundaries + monitoring
-- Wrap all routes in the existing `ErrorBoundary` (currently only wraps some)
-- Add a route-level fallback with "Report this" CTA linking to `/contact`
-- Add basic client-side error logging via `console.error` → an `error_logs` table (edge function ingest, admin-viewable)
-- Wire an "Uh oh" fallback page for `NotFound` improvements
+Upgrade `src/pages/Search.tsx` in place; the Header search icon continues to route here.
 
-### 4. Legal + compliance quick-fixes (ship drafts as-is per your call)
-- Remove "Launch draft. Not legal advice." disclaimer from `Legal.tsx`
-- Add "Last updated: 2026-07-09" and a contact email
-- Add cookie banner (single-consent, no vendors) — required for CA/EU visitors even at low volume
-- Add "Delete my account" flow in Profile settings (CCPA/GDPR minimum)
-- Link Terms + Privacy from the signup form (checkbox: "I agree to…")
+- **Cascading filters row** above the search input: `State` select (populated from `provider.listStates()`) → when a state is chosen, `City` select (populated from `provider.listCities(state)`). Selecting either narrows the query.
+- **Autofill dropdown** anchored to the text input, opens as user types (≥2 chars), debounced 150ms. Shows up to 12 grouped suggestions:
+  - **Properties** — matched by name / address (from `provider.search(q)` filtered by state/city if set).
+  - **Cities** — matched from the top-cities list + provider's cities.
+  - **States** — matched from the state list.
+- Clicking a property row → `/property/:id`. Clicking a city → `/city/:state/:city`. Clicking a state → sets the state filter. Pressing Enter runs the current text search (existing behavior) scoped by the filters.
+- Uses shadcn `Command` (already installed via cmdk) for the popover list — keyboard nav free.
 
-### 5. SEO metadata + social sharing
-- Fix `index.html`: real `<title>`, `<meta name="description">`, og:*, twitter:card (currently likely template defaults)
-- Add JSON-LD `Organization` schema to home
-- With hard gate on: sitemap only lists `/`, `/auth`, `/welcome`, `/terms`, `/privacy`, `/dmca` — nothing behind login
+Header stays as-is: its search icon still opens `/search`, which now has the full smart experience. No new global command palette in this pass.
 
-### 6. Accessibility P0s
-- Add `aria-label` to icon-only buttons across Header, PropertyCard, etc.
-- `h-screen` → `h-dvh` for mobile viewport correctness
-- Focus-visible rings on all interactive elements (already partly via shadcn)
-- Alt text on all `<img>` (audit pass)
+## Files touched
 
----
+```text
+src/components/StateTile.tsx         # img-based tile
+src/data/stateArt.ts                 # NEW: state → theme → photo
+src/data/topCities.ts                # NEW: 50 curated cities
+src/pages/Browse.tsx                 # Top cities rail above state grid
+src/pages/Search.tsx                 # Filters + autofill popover
+```
 
-## Part 2 — Written audit (I deliver as `docs/LAUNCH_AUDIT.md` alongside the code)
+## Explicitly out of scope
 
-Comprehensive review across 12 dimensions with severity ratings (P0/P1/P2) — you decide what else to ship before launch:
+- No new provider methods (no per-city counts, no server-side FTS).
+- No global cmd-k palette in the Header — only the Search page is upgraded.
+- No changes to auth/routes/schema.
+- Old `usStates.json` silhouette data left in place, unused.
 
-1. **Product/UX** — onboarding funnel, empty states, dead ends, mobile touch targets, form validation feedback
-2. **Auth & security** — password rules, HIBP check, session expiry, RLS policy coverage per table, admin route hardening
-3. **Data integrity** — property dedup, review moderation queue SLA, orphaned records
-4. **Performance** — bundle size, image lazy-loading, LCP on key routes, `Property.tsx` render cost
-5. **SEO/discoverability** — given hard gate, essentially only landing page matters — recommendations for marketing site pages
-6. **Legal/compliance** — Terms/Privacy gaps, GDPR/CCPA, DMCA process readiness, tenant screening disclaimer visibility, cookie consent
-7. **Content moderation** — reporting flow SLA, ban/appeal, PM response abuse
-8. **Analytics** — what to instrument (signup funnel, contribution completion, share events) — currently minimal
-9. **Monitoring/ops** — error tracking (Sentry?), uptime, edge function alerting, DB slow-query watch
-10. **Email deliverability** — SPF/DKIM/DMARC status on `joinperiscope.com`, welcome/verification/reset templates, unsubscribe compliance
-11. **Payments/business** — none live; but PM claim flow → analytics needs pricing page + Stripe scaffold before PM sales
-12. **Launch marketing readiness** — press kit, referral links, seed-content plan (empty city pages look dead)
+## Risk / assumptions
 
-Each finding: severity, impact, effort, my recommendation, and whether it blocks launch.
-
----
-
-## Part 3 — Explicitly NOT in this pass (call these out separately)
-
-- Real legal review by an attorney (you said you'll do post-launch — I flag this as **HIGH risk** but respect your call)
-- Sentry/analytics vendor integration (need your account creds — I'll scaffold hooks; you connect)
-- Payments (not needed for T-1)
-- Mobile app (per MOBILE_STRATEGY.md, out of scope)
-
----
-
-## Technical details
-
-- Feature flag lives in `src/services/env.ts`; default `false` = hard gate
-- State SVG data: single `src/data/us-states.ts` file with `{code, name, path}` per state
-- New tables: `error_logs` (id, user_id nullable, route, message, stack, ua, created_at) — RLS: user reads own, admins read all
-- New edge function: `log-error` (accepts POST, inserts row, no auth required)
-- Sitemap function updated to respect the gate flag via URL param
-- `AuthGate` uses existing `useAuth`/`ProtectedRoute` pattern — mostly a route-config change in `App.tsx`
-
-## Order of operations
-1. Auth gate + landing page rework
-2. State tiles + perf fix (feels like the biggest visible win)
-3. Error boundaries + logging
-4. SEO/legal/a11y sweeps
-5. Deliver `docs/LAUNCH_AUDIT.md`
-
-Estimated ~4–6 file edits per section, one migration for `error_logs`, ~10 total file touches. Approve and I'll execute in order.
+- Unsplash photo IDs are hand-picked from well-known stable photos; if any 404, swapping an ID is a one-line fix.
+- Top-50 city list is editorial — you can trim/reorder later without code changes.
+- Autofill queries reuse existing `provider.search()` — response time depends on the current data source.

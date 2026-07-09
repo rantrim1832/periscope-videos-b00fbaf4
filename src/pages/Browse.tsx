@@ -4,10 +4,11 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ChevronRight, Search, Building2 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { getPropertyProvider, type LocationCount } from "@/data/propertyProvider";
 import { getStoredLocalState } from "@/lib/localDiscovery";
 import { StateTile } from "@/components/StateTile";
+import { TOP_CITIES } from "@/data/topCities";
 
 const STATE_CACHE_KEY = 'periscope:browse-states:v1';
 const STATE_CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
@@ -125,6 +126,34 @@ const Browse = () => {
               <Input placeholder={view === "states" ? "Filter states…" : "Filter cities…"} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10 h-11" />
             </div>
           </div>
+
+          {view === "states" && !searchQuery && (
+            <section>
+              <div className="flex items-end justify-between mb-3">
+                <div>
+                  <h2 className="text-lg md:text-xl font-bold tracking-tight">Top cities</h2>
+                  <p className="text-xs md:text-sm text-muted-foreground">Jump straight to the biggest metros.</p>
+                </div>
+                <Link to="/search" className="text-sm font-medium text-primary hover:underline">Search all</Link>
+              </div>
+              <div className="grid grid-flow-col auto-cols-[10rem] md:auto-cols-[12rem] gap-3 overflow-x-auto no-scrollbar pb-2 -mx-4 px-4">
+                {TOP_CITIES.map((c) => (
+                  <Link
+                    key={`${c.state}-${c.city}`}
+                    to={`/city/${encodeURIComponent(c.state)}/${encodeURIComponent(c.city)}`}
+                    className="group relative aspect-[4/5] overflow-hidden rounded-xl border border-border/60 bg-muted hover:border-primary/60 hover:shadow-card-hover transition-all"
+                  >
+                    <img src={c.image} alt="" loading="lazy" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-foreground/90 via-foreground/40 to-transparent" />
+                    <div className="absolute inset-x-0 bottom-0 p-3">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-background/80">{c.state}</p>
+                      <p className="text-sm md:text-base font-semibold text-background leading-tight">{c.city}</p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
 
           {view === "states" && (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 auto-rows-[minmax(9rem,auto)] gap-3 md:gap-4">
