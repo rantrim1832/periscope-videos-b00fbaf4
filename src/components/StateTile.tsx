@@ -1,9 +1,5 @@
-import { memo, useMemo } from 'react';
-import { Link } from 'react-router-dom';
-import statesData from '@/data/usStates.json';
-
-type StateEntry = { id: string; name: string; path: string; viewBox: string };
-const BY_ID = new Map<string, StateEntry>((statesData as StateEntry[]).map((s) => [s.id, s]));
+import { memo } from 'react';
+import { stateImageUrl } from '@/data/stateArt';
 
 export interface StateTileProps {
   code: string;
@@ -22,8 +18,9 @@ const SPAN_CLASSES: Record<NonNullable<StateTileProps['span']>, string> = {
 };
 
 /**
- * Illustrated state tile: brand-gradient background with the state's outline
- * silhouette drawn in the foreground. No image licensing, no network requests.
+ * Themed stock-photo tile for a US state (California → beach, Colorado →
+ * mountains, etc.). Photos come from a small curated pool served by the
+ * Unsplash CDN; see `src/data/stateArt.ts`.
  */
 export const StateTile = memo(function StateTile({
   code,
@@ -33,37 +30,28 @@ export const StateTile = memo(function StateTile({
   highlighted,
   onClick,
 }: StateTileProps) {
-  const entry = useMemo(() => BY_ID.get(code.toUpperCase()), [code]);
-
   const content = (
     <div
-      className={`group relative overflow-hidden rounded-2xl border transition-all cursor-pointer h-full min-h-[9rem] md:min-h-[10.5rem] ${
+      className={`group relative overflow-hidden rounded-2xl border transition-all cursor-pointer h-full min-h-[9rem] md:min-h-[10.5rem] bg-muted ${
         highlighted
-          ? 'border-primary/60 bg-gradient-to-br from-primary/25 via-primary/10 to-secondary/15 shadow-elevated'
-          : 'border-border/60 bg-gradient-to-br from-primary/10 via-background to-secondary/10 hover:border-primary/40 hover:shadow-card-hover hover:-translate-y-0.5'
+          ? 'border-primary shadow-elevated ring-2 ring-primary/30'
+          : 'border-border/60 hover:border-primary/60 hover:shadow-card-hover hover:-translate-y-0.5'
       }`}
     >
-      {/* Silhouette watermark */}
-      {entry && (
-        <svg
-          viewBox={entry.viewBox}
-          className="absolute inset-0 w-full h-full opacity-30 group-hover:opacity-45 transition-opacity"
-          preserveAspectRatio="xMidYMid meet"
-          aria-hidden="true"
-        >
-          <defs>
-            <linearGradient id={`grad-${code}`} x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.9" />
-              <stop offset="100%" stopColor="hsl(var(--secondary))" stopOpacity="0.7" />
-            </linearGradient>
-          </defs>
-          <path d={entry.path} fill={`url(#grad-${code})`} />
-        </svg>
-      )}
+      {/* Themed stock photo */}
+      <img
+        src={stateImageUrl(code)}
+        alt=""
+        loading="lazy"
+        aria-hidden="true"
+        className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+      />
+      {/* Dark gradient wash for legibility */}
+      <div className="absolute inset-0 bg-gradient-to-t from-foreground/90 via-foreground/45 to-foreground/15" />
 
-      <div className="relative z-10 h-full flex flex-col justify-between p-4 md:p-5">
+      <div className="relative z-10 h-full flex flex-col justify-between p-4 md:p-5 text-background">
         <div className="flex items-start justify-between gap-2">
-          <span className="text-[10px] font-bold tracking-widest uppercase text-primary/80">
+          <span className="text-[10px] font-bold tracking-widest uppercase bg-background/90 text-primary px-1.5 py-0.5 rounded">
             {code}
           </span>
           {highlighted && (
@@ -73,10 +61,10 @@ export const StateTile = memo(function StateTile({
           )}
         </div>
         <div>
-          <h3 className="font-bold text-lg md:text-xl leading-tight text-foreground drop-shadow-sm">
+          <h3 className="font-bold text-lg md:text-xl leading-tight text-background drop-shadow-md">
             {name}
           </h3>
-          <p className="text-xs md:text-sm text-muted-foreground mt-1">
+          <p className="text-xs md:text-sm text-background/85 mt-1">
             {count.toLocaleString()} propert{count === 1 ? 'y' : 'ies'}
           </p>
         </div>
@@ -94,5 +82,3 @@ export const StateTile = memo(function StateTile({
     </button>
   );
 });
-
-export { BY_ID as US_STATE_SHAPES };
