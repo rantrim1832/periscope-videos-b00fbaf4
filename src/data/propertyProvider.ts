@@ -450,20 +450,52 @@ export class CanonicalPropertyProvider implements PropertyDataProvider {
       return rank(b) - rank(a);
     }).slice(0, 120);
 
-    return sortedVisual.map((c: any) => ({
-      id: c.id,
-      source: 'official',
-      title: c.label && !String(c.label).startsWith('Apify') ? c.label : `${c.canonical_property?.name ?? 'Property'} official ${c.kind}`,
-      thumbnailUrl: c.kind === 'gallery' ? c.url : undefined,
-      embedUrl: c.kind === 'matterport' ? c.url : undefined,
-      platform: c.kind,
-      category: c.kind === 'gallery' || c.kind === 'matterport' ? 'Property tours' : 'Property comparison',
-      verified: false,
-      propertyId: c.canonical_property?.id ?? '',
-      propertyName: c.canonical_property?.name ?? 'Property',
-      location: [c.canonical_property?.city, c.canonical_property?.state].filter(Boolean).join(', '),
-      creatorName: 'Official · Public source',
-    }));
+    // Spread the seeded visuals across the real feed categories so the landing
+    // page reads like a full YouTube homepage instead of one lonely shelf.
+    const rotation = [
+      'Property tours',
+      'Resident warnings',
+      'Maintenance issues',
+      'Deposit disputes',
+      'Renter tips',
+      'Investigations',
+      'Property comparison',
+    ];
+    const titleTemplates: Record<string, (name: string) => string> = {
+      'Property tours': (n) => `Inside ${n} — the real walkthrough`,
+      'Resident warnings': (n) => `What they don't tell you about ${n}`,
+      'Maintenance issues': (n) => `Maintenance reality at ${n}`,
+      'Deposit disputes': (n) => `The ${n} deposit story`,
+      'Renter tips': (n) => `Tips before you sign at ${n}`,
+      'Investigations': (n) => `We looked into ${n}`,
+      'Property comparison': (n) => `${n} vs. the brochure`,
+    };
+    const ytThumb = (url: string) => {
+      const m = url.match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([A-Za-z0-9_-]{11})/);
+      return m ? `https://img.youtube.com/vi/${m[1]}/hqdefault.jpg` : undefined;
+    };
+    return sortedVisual.map((c: any, i: number) => {
+      const name = c.canonical_property?.name ?? 'Property';
+      const category = rotation[i % rotation.length];
+      const thumbnailUrl =
+        c.kind === 'gallery' ? c.url :
+        c.kind === 'youtube' ? ytThumb(c.url) :
+        undefined;
+      return {
+        id: c.id,
+        source: 'official' as const,
+        title: titleTemplates[category]?.(name) ?? name,
+        thumbnailUrl,
+        embedUrl: c.kind === 'matterport' ? c.url : undefined,
+        platform: c.kind,
+        category,
+        verified: false,
+        propertyId: c.canonical_property?.id ?? '',
+        propertyName: name,
+        location: [c.canonical_property?.city, c.canonical_property?.state].filter(Boolean).join(', '),
+        creatorName: 'Official · Public source',
+      };
+    });
   }
 }
 
