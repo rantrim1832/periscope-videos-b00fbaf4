@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { CURATED_CATEGORIES } from '@/lib/curatedCategories';
 import { parseEmbed } from '@/services/providers/embed';
 import { Loader2, Youtube, Link2, Trash2, Sparkles, Plus, Save, Pencil } from 'lucide-react';
+import { Building2, Star } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { CategoryLibraryBrowser } from '@/components/admin/CategoryLibraryBrowser';
 
@@ -230,6 +231,8 @@ const AdminCuratedVideos = () => {
   const [count, setCount] = useState(25);
   const [importing, setImporting] = useState(false);
   const [bulkSeeding, setBulkSeeding] = useState(false);
+  const [linking, setLinking] = useState(false);
+  const [fetchingGoogle, setFetchingGoogle] = useState(false);
   const [perQuery, setPerQuery] = useState(15);
 
   const [pasteUrl, setPasteUrl] = useState('');
