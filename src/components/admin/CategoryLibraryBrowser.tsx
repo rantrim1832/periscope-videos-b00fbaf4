@@ -17,6 +17,22 @@ export type BrowserCategory = {
   is_active: boolean;
 };
 
+export type PreviewCandidate = {
+  videoId: string;
+  title: string;
+  channel: string;
+  description: string;
+  thumbnail: string;
+  watchUrl: string;
+  alreadyImported: boolean;
+};
+
+export type PreviewResult = {
+  totalFound: number;
+  alreadyImported: number;
+  candidates: PreviewCandidate[];
+};
+
 type VideoRow = {
   id: string;
   title: string;
@@ -58,7 +74,7 @@ export function CategoryLibraryBrowser({
   const [previewKey, setPreviewKey] = useState<string | null>(null); // which query is being previewed
   const [previewLoading, setPreviewLoading] = useState(false);
   const [preview, setPreview] = useState<PreviewResult | null>(null);
-  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [selected, setSelected] = useState<Set<string>>(new Set<string>());
   const [importing, setImporting] = useState(false);
 
   // Load per-category counts by inspecting every video's hashtags (small dataset).
@@ -141,7 +157,7 @@ export function CategoryLibraryBrowser({
 
   const toggleSelected = (id: string) => {
     setSelected((s) => {
-      const n = new Set(s);
+      const n = new Set<string>(s);
       if (n.has(id)) n.delete(id);
       else n.add(id);
       return n;
