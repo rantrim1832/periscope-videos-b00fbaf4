@@ -242,6 +242,7 @@ const AdminCuratedVideos = () => {
         description: `Imported ${data.imported} new · skipped ${data.skipped} duplicates · found ${data.totalFound}.`,
       });
       load();
+      setBrowserRefresh((n) => n + 1);
     } catch (e: any) {
       toast({ title: 'Import failed', description: e.message ?? String(e), variant: 'destructive' });
     } finally {
@@ -266,6 +267,7 @@ const AdminCuratedVideos = () => {
         description: `Imported ${data.totalImported} · skipped ${data.totalSkipped} dupes · found ${data.totalFound}.`,
       });
       load();
+      setBrowserRefresh((n) => n + 1);
     } catch (e: any) {
       toast({ title: 'Bulk seed failed', description: e.message ?? String(e), variant: 'destructive' });
     } finally {
@@ -300,6 +302,7 @@ const AdminCuratedVideos = () => {
       toast({ title: 'Added', description: 'Video added to the feed.' });
       setPasteUrl(''); setPasteTitle(''); setPasteCreator('');
       load();
+      setBrowserRefresh((n) => n + 1);
     } catch (e: any) {
       toast({ title: 'Add failed', description: e.message ?? String(e), variant: 'destructive' });
     } finally {
