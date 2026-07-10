@@ -513,10 +513,23 @@ const AdminCuratedVideos = () => {
     try {
       const { data, error } = await supabase.functions.invoke('link-videos-to-properties', { body: {} });
       if (error) throw error;
-      toast({
-        title: 'Linking complete',
-        description: `Matched ${data?.matched ?? 0} · auto-approved ${data?.autoApproved ?? 0} · needs review ${data?.needsReview ?? 0}.`,
-      });
+      const matched = data?.matched ?? 0;
+      const videosConsidered = data?.videosConsidered ?? 0;
+      const propertiesConsidered = data?.propertiesConsidered ?? 0;
+      if (matched === 0) {
+        const reason =
+          videosConsidered === 0
+            ? 'No approved YouTube videos to link yet — approve videos in the moderation queue below first.'
+            : propertiesConsidered === 0
+              ? 'No properties found in the database to match against.'
+              : `Scanned ${videosConsidered} approved videos against ${propertiesConsidered} properties, but no video title/caption mentioned a property name, address, or management company. This is normal for generic "apartment tour" content — links happen when a video calls out a specific building.`;
+        toast({ title: 'Linking finished · 0 matches', description: reason });
+      } else {
+        toast({
+          title: 'Linking complete',
+          description: `Matched ${matched} (auto-approved ${data?.autoApproved ?? 0} · needs review ${data?.needsReview ?? 0}) from ${videosConsidered} videos × ${propertiesConsidered} properties.`,
+        });
+      }
     } catch (e: any) {
       toast({ title: 'Linking failed', description: extractErrorMessage(e), variant: 'destructive' });
     } finally {
