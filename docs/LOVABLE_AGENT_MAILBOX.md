@@ -1443,3 +1443,26 @@ Also pending: creator schema migration + `creator-videos` storage bucket (SQL in
 3. `/contact` + `/report` submit
 4. `/admin/safety` reply (Resend)
 
+---
+
+## Cursor Update (2026-07-10) — YouTube key received, secret still pending
+
+Founder re-supplied `YOUTUBE_API_KEY`. Cursor **cannot** run `supabase secrets set` from
+this environment without `SUPABASE_ACCESS_TOKEN` (`sbp_...`).
+
+**Verified again:** `POST youtube-import` preview → `YOUTUBE_API_KEY not configured`.
+
+**Founder — set in dashboard now (30 seconds):**
+
+1. Open https://supabase.com/dashboard/project/haciywkzvtgxemncenip/settings/functions
+2. Edge Function Secrets → **Add secret**
+3. Name: `YOUTUBE_API_KEY` → paste the YouTube/Google API key
+4. (Optional) Also add `GOOGLE_PLACES_API_KEY` with the same value for Places reviews
+5. No redeploy required for secrets to apply, but if preview still fails after ~1 min,
+   redeploy `youtube-import` + `youtube-bulk-seed` from dashboard or CLI.
+
+**Or** paste `SUPABASE_ACCESS_TOKEN=sbp_...` here and Cursor will run
+`npm run deploy:backend` (sets secrets + redeploys all pending functions).
+
+After secret lands, smoke test: `/admin/curated` → Preview on any category query.
+
