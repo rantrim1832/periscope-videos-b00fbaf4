@@ -457,8 +457,8 @@ const FeedCard = ({ item }: { item: FeedItem }) => {
   };
 
   return (
-    <section className="snap-start h-[calc(100dvh-8rem)] md:h-[calc(100dvh-9rem)] flex items-center justify-center bg-black relative">
-      <div className="relative w-full max-w-sm h-full mx-auto">
+    <section className="snap-start h-[calc(100dvh-8rem)] md:h-[calc(100dvh-9rem)] w-full flex items-center justify-center bg-black relative overflow-hidden">
+      <div className="relative w-full h-full mx-auto sm:max-w-sm">
         {/* Media */}
         <div className="absolute inset-0 flex items-center justify-center">
           {playing ? (
