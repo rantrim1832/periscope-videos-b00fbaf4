@@ -626,6 +626,13 @@ const AdminCuratedVideos = () => {
   const runGenerateSummaries = async () => {
     setGeneratingSummaries(true);
     try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData?.session?.access_token) {
+        const detail = 'Your admin session expired. Sign in again and retry.';
+        setLastAction({ kind: 'error', title: 'Not signed in', detail });
+        toast({ title: 'Not signed in', description: detail, variant: 'destructive' });
+        return;
+      }
       const missingFunctionMessage = await getMissingFunctionMessage('generate-video-summary');
       if (missingFunctionMessage) {
         setLastAction({ kind: 'error', title: 'AI descriptions backend missing', detail: missingFunctionMessage });
