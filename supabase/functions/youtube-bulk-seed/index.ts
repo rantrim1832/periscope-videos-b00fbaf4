@@ -22,18 +22,16 @@ Deno.serve(async (req) => {
     if (!authHeader?.startsWith('Bearer ')) return json({ error: 'Unauthorized' }, 401);
 
     const supaUrl = Deno.env.get('SUPABASE_URL')!;
-    const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const ytKey = Deno.env.get('YOUTUBE_API_KEY');
     if (!ytKey) return json({ error: 'YOUTUBE_API_KEY not configured' }, 500);
 
-    const authed = createClient(supaUrl, anonKey, { global: { headers: { Authorization: authHeader } } });
-    const token = authHeader.replace('Bearer ', '');
-    const { data: claims, error: claimsErr } = await authed.auth.getClaims(token);
-    if (claimsErr || !claims?.claims?.sub) return json({ error: 'Unauthorized' }, 401);
-    const userId = claims.claims.sub as string;
-
     const admin = createClient(supaUrl, serviceKey);
+    const token = authHeader.replace('Bearer ', '');
+    const { data: userData, error: userErr } = await admin.auth.getUser(token);
+    if (userErr || !userData?.user?.id) return json({ error: 'Unauthorized' }, 401);
+    const userId = userData.user.id;
+
     const { data: role } = await admin.from('user_roles').select('role')
       .eq('user_id', userId).eq('role', 'admin').maybeSingle();
     if (!role) return json({ error: 'Admin only' }, 403);
@@ -98,14 +96,7 @@ async function searchAndInsert(admin: any, ytKey: string, query: string, categor
   const ids: string[] = (searchJson.items ?? []).map((it: any) => it?.id?.videoId).filter(Boolean);
   if (ids.length === 0) return { imported: 0, skipped: 0, found: 0 };
 
-  const ytTags = ids.map((id) => `yt:${id}`);
-  const { data: existing } = await admin.from('seeded_videos').select('hashtags').overlaps('hashtags', ytTags);
-  const existingIds = new Set<string>();
-  for (const row of existing ?? []) {
-    for (const t of row.hashtags ?? []) {
-      if (typeof t === 'string' && t.startsWith('yt:')) existingIds.add(t.slice(3));
-    }
-  }
+  const existingIds = await loadExistingYouTubeIds(admin);
   const freshIds = ids.filter((id) => !existingIds.has(id));
   if (freshIds.length === 0) return { imported: 0, skipped: ids.length, found: ids.length };
 
@@ -148,6 +139,25 @@ async function searchAndInsert(admin: any, ytKey: string, query: string, categor
     if (!error) inserted = count ?? rows.length;
   }
   return { imported: inserted, skipped: ids.length - freshIds.length, found: ids.length };
+}
+
+async function loadExistingYouTubeIds(admin: any): Promise<Set<string>> {
+  const { data } = await admin
+    .from('seeded_videos')
+    .select('hashtags')
+    .eq('source', 'youtube')
+    .limit(20000);
+  const existingIds = new Set<string>();
+  for (const row of data ?? []) {
+    for (const t of normalizeTags(row.hashtags)) {
+      if (t.startsWith('yt:')) existingIds.add(t.slice(3));
+    }
+  }
+  return existingIds;
+}
+
+function normalizeTags(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((tag): tag is string => typeof tag === 'string') : [];
 }
 
 function json(body: unknown, status = 200) {

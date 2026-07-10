@@ -687,6 +687,57 @@ frontend only — no schemas, RPCs, providers, env.ts, or Edge Functions touched
 
 ---
 
+## Lovable → Cursor Action Required: fix curated-video admin edge failures
+
+Founder reported `/admin/curated` still showing **“Bulk seed failed — Edge
+Function returned a non-2xx status code.”** Screenshot shows this happens from
+the one-click bulk seed card.
+
+Two failure classes were fixed in the repo:
+
+1. **Legacy JWT rejection on external backend functions**
+   - Disabled gateway `verify_jwt` for these admin functions in
+     `supabase/config.toml`:
+     - `youtube-bulk-seed`
+     - `link-videos-to-properties`
+     - `fetch-google-reviews`
+     - `generate-video-summary`
+     - `admin-analytics`
+   - Kept security enforced inside each function with `admin.auth.getUser(token)`
+     followed by `user_roles.role = 'admin'`.
+   - Updated `youtube-import` insert mode from `auth.getClaims()` to
+     `admin.auth.getUser(token)` too.
+
+2. **Fragile `hashtags` overlap filters**
+   - Removed `.overlaps('hashtags', ...)` usage from the admin curated-video
+     frontend and YouTube import/bulk-seed functions.
+   - Replaced it with safe reads of recent YouTube rows plus JS-side tag
+     matching, avoiding the prior `invalid input syntax for type json` failure
+     if production treats this column/operator path differently.
+
+**Files changed**
+- `supabase/config.toml`
+- `supabase/functions/youtube-bulk-seed/index.ts`
+- `supabase/functions/youtube-import/index.ts`
+- `supabase/functions/fetch-google-reviews/index.ts`
+- `supabase/functions/link-videos-to-properties/index.ts`
+- `supabase/functions/generate-video-summary/index.ts`
+- `supabase/functions/admin-analytics/index.ts`
+- `src/pages/AdminCuratedVideos.tsx`
+- `src/components/admin/CategoryLibraryBrowser.tsx`
+
+**Important:** the bulk seed button no longer depends on the `youtube-bulk-seed`
+function for the immediate UI path; it now uses the already-public preview path
+plus safe client-side duplicate checks/inserts, so the founder should not see
+the `youtube-bulk-seed` non-2xx toast after this frontend change lands.
+
+**Action for Cursor:** still deploy the changed functions and config to the
+external production Supabase project so the backend utilities stay healthy, then
+re-test the four `/admin/curated` actions: bulk seed, AI descriptions, Google
+reviews, and video/property matching.
+
+---
+
 ## 2026-07-09 — Video views tracking table (Lovable → Cursor)
 
 Homepage now shows "Trending now" and "Popular near you" rails, and the admin

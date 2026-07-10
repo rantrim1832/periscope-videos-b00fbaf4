@@ -12,6 +12,7 @@ import { Loader2, Youtube, Link2, Trash2, Sparkles, Plus, Save, Pencil } from 'l
 import { Building2, Star, Eye } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { CategoryLibraryBrowser } from '@/components/admin/CategoryLibraryBrowser';
+import { getPublicSupabasePublishableKey, getPublicSupabaseUrl } from '@/services/env';
 
 type Row = {
   id: string;
@@ -51,8 +52,8 @@ type YouTubePreviewResult = {
   candidates: YouTubePreviewCandidate[];
 };
 
-const YOUTUBE_FUNCTION_URL = `${String(import.meta.env.VITE_SUPABASE_URL ?? '').replace(/\/$/, '')}/functions/v1/youtube-import`;
-const YOUTUBE_FUNCTION_KEY = String(import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? '');
+const YOUTUBE_FUNCTION_URL = `${String(getPublicSupabaseUrl() ?? '').replace(/\/$/, '')}/functions/v1/youtube-import`;
+const YOUTUBE_FUNCTION_KEY = String(getPublicSupabasePublishableKey() ?? '');
 
 function extractErrorMessage(error: unknown) {
   if (!error) return 'Unknown error';
@@ -60,6 +61,27 @@ function extractErrorMessage(error: unknown) {
   if (typeof error === 'string') return error;
   const maybe = error as { message?: string; error?: string; detail?: string };
   return maybe.detail || maybe.message || maybe.error || String(error);
+}
+
+function normalizeTags(value: unknown): string[] {
+  if (Array.isArray(value)) return value.filter((tag): tag is string => typeof tag === 'string');
+  return [];
+}
+
+async function loadExistingYouTubeIds(): Promise<Set<string>> {
+  const { data, error } = await supabase
+    .from('seeded_videos')
+    .select('hashtags')
+    .eq('source', 'youtube')
+    .limit(20000);
+  if (error) throw error;
+  const ids = new Set<string>();
+  for (const row of data ?? []) {
+    for (const tag of normalizeTags((row as { hashtags?: unknown }).hashtags)) {
+      if (tag.startsWith('yt:')) ids.add(tag.slice(3));
+    }
+  }
+  return ids;
 }
 
 async function previewYouTubeVideos(query: string, category: string, maxResults = 25): Promise<YouTubePreviewResult> {
@@ -79,18 +101,7 @@ async function previewYouTubeVideos(query: string, category: string, maxResults 
   if (!res.ok) throw new Error(extractErrorMessage(json) || `Video preview failed (${res.status})`);
   const candidates = (Array.isArray(json?.candidates) ? json.candidates : []) as YouTubePreviewCandidate[];
   const ytTags = candidates.map((candidate) => `yt:${candidate.videoId}`);
-  const alreadyImported = new Set<string>();
-  if (ytTags.length > 0) {
-    const { data: existing } = await supabase
-      .from('seeded_videos')
-      .select('hashtags')
-      .overlaps('hashtags', ytTags);
-    for (const row of existing ?? []) {
-      for (const tag of row.hashtags ?? []) {
-        if (typeof tag === 'string' && tag.startsWith('yt:')) alreadyImported.add(tag.slice(3));
-      }
-    }
-  }
+  const alreadyImported = ytTags.length > 0 ? await loadExistingYouTubeIds() : new Set<string>();
   const markedCandidates = candidates.map((candidate) => ({
     ...candidate,
     alreadyImported: alreadyImported.has(candidate.videoId),
@@ -107,19 +118,7 @@ async function insertPreviewCandidates(category: string, query: string, candidat
   const ids = candidates.map((candidate) => candidate.videoId);
   if (ids.length === 0) return { imported: 0, skipped: 0, totalFound: 0 };
 
-  const ytTags = ids.map((id) => `yt:${id}`);
-  const { data: existing, error: existingError } = await supabase
-    .from('seeded_videos')
-    .select('hashtags')
-    .overlaps('hashtags', ytTags);
-  if (existingError) throw existingError;
-
-  const existingIds = new Set<string>();
-  for (const row of existing ?? []) {
-    for (const tag of row.hashtags ?? []) {
-      if (typeof tag === 'string' && tag.startsWith('yt:')) existingIds.add(tag.slice(3));
-    }
-  }
+  const existingIds = await loadExistingYouTubeIds();
 
   const rows = candidates
     .filter((candidate) => !existingIds.has(candidate.videoId))
@@ -327,10 +326,12 @@ const AdminCuratedVideos = () => {
       .select('id,title,embed_url,caption,hashtags,source,created_at,moderation_status')
       .order('created_at', { ascending: false })
       .limit(200);
-    if (filter !== 'all') q = q.overlaps('hashtags', [`cat:${filter}`]);
     const { data, error } = await q;
     if (error) toast({ title: 'Load failed', description: error.message, variant: 'destructive' });
-    setRows((data ?? []) as Row[]);
+    const filtered = filter === 'all'
+      ? (data ?? [])
+      : (data ?? []).filter((row: any) => normalizeTags(row.hashtags).includes(`cat:${filter}`));
+    setRows(filtered as Row[]);
     setLoading(false);
   };
 
@@ -420,14 +421,37 @@ const AdminCuratedVideos = () => {
     )) return;
     setBulkSeeding(true);
     try {
-      const body: Record<string, unknown> = { perQuery };
-      if (categoryOnly) body.category = categoryOnly;
-      const { data, error } = await supabase.functions.invoke('youtube-bulk-seed', { body });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.detail || data.error);
+      const selectedCategories = categories.filter((category) =>
+        category.is_active && (!categoryOnly || category.slug === categoryOnly)
+      );
+      if (selectedCategories.length === 0) throw new Error('No active categories found.');
+
+      let totalImported = 0;
+      let totalSkipped = 0;
+      let totalFound = 0;
+      let failed = 0;
+      let firstFailure = '';
+
+      for (const category of selectedCategories) {
+        const queries = category.suggested_queries.map((item) => item.trim()).filter(Boolean);
+        for (const suggestedQuery of queries) {
+          try {
+            const preview = await previewYouTubeVideos(suggestedQuery, category.slug, perQuery);
+            const result = await insertPreviewCandidates(category.slug, suggestedQuery, preview.candidates);
+            totalImported += result.imported;
+            totalSkipped += result.skipped;
+            totalFound += result.totalFound;
+          } catch (err) {
+            failed += 1;
+            if (!firstFailure) firstFailure = extractErrorMessage(err);
+          }
+        }
+      }
+
+      if (totalFound === 0 && failed > 0) throw new Error(firstFailure || 'Every seed query failed.');
       toast({
         title: 'Bulk seed complete',
-        description: `Imported ${data?.totalImported ?? 0} · skipped ${data?.totalSkipped ?? 0} dupes · found ${data?.totalFound ?? 0}.`,
+        description: `Imported ${totalImported} · skipped ${totalSkipped} dupes · found ${totalFound}${failed ? ` · ${failed} failed` : ''}.`,
       });
       load();
       setBrowserRefresh((n) => n + 1);

@@ -41,7 +41,6 @@ Deno.serve(async (req) => {
     const authHeader = req.headers.get('Authorization');
 
     const supaUrl = Deno.env.get('SUPABASE_URL')!;
-    const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const ytKey = Deno.env.get('YOUTUBE_API_KEY');
     if (!ytKey) return json({ error: 'YOUTUBE_API_KEY not configured' }, 500);
@@ -60,13 +59,10 @@ Deno.serve(async (req) => {
       // Preview mode is read-only and only talks to YouTube. Database writes
       // still require an admin caller.
       if (!authHeader?.startsWith('Bearer ')) return json({ error: 'Unauthorized' }, 401);
-      const authed = createClient(supaUrl, anonKey, {
-        global: { headers: { Authorization: authHeader } },
-      });
       const token = authHeader.replace('Bearer ', '');
-      const { data: claims, error: claimsErr } = await authed.auth.getClaims(token);
-      if (claimsErr || !claims?.claims?.sub) return json({ error: 'Unauthorized' }, 401);
-      const userId = claims.claims.sub as string;
+      const { data: userData, error: userErr } = await admin.auth.getUser(token);
+      if (userErr || !userData?.user?.id) return json({ error: 'Unauthorized' }, 401);
+      const userId = userData.user.id;
       const { data: role } = await admin
         .from('user_roles')
         .select('role')
@@ -100,17 +96,7 @@ Deno.serve(async (req) => {
     if (ids.length === 0) return json({ imported: 0, skipped: 0, totalFound: 0, candidates: [] });
 
     // 2) Skip anything already stored (by yt:<id> tag).
-    const ytTags = ids.map((id) => `yt:${id}`);
-    const { data: existing } = await admin
-      .from('seeded_videos')
-      .select('hashtags')
-      .overlaps('hashtags', ytTags);
-    const existingIds = new Set<string>();
-    for (const row of existing ?? []) {
-      for (const t of row.hashtags ?? []) {
-        if (typeof t === 'string' && t.startsWith('yt:')) existingIds.add(t.slice(3));
-      }
-    }
+    const existingIds = await loadExistingYouTubeIds(admin);
     const freshIds = ids.filter((id) => !existingIds.has(id));
 
     // 3) Fetch full snippet data for ALL ids (needed for preview thumbnails, and
@@ -196,11 +182,15 @@ Deno.serve(async (req) => {
         const ytIds = rows.map((r: any) => (r.hashtags ?? []).find((t: string) => t.startsWith('yt:'))?.slice(3)).filter(Boolean);
         if (ytIds.length > 0 && authHeader) {
           const { data: fresh } = await admin.from('seeded_videos')
-            .select('id')
-            .overlaps('hashtags', ytIds.map((y: string) => `yt:${y}`))
+            .select('id, hashtags')
+            .eq('source', 'youtube')
             .order('created_at', { ascending: false })
-            .limit(ytIds.length);
-          const ids = (fresh ?? []).map((r: any) => r.id);
+            .limit(500);
+          const ytIdSet = new Set(ytIds.map((id: string) => `yt:${id}`));
+          const ids = (fresh ?? [])
+            .filter((r: any) => normalizeTags(r.hashtags).some((tag) => ytIdSet.has(tag)))
+            .slice(0, ytIds.length)
+            .map((r: any) => r.id);
           if (ids.length > 0) {
             // Best-effort; no await on the body.
             fetch(`${supaUrl}/functions/v1/generate-video-summary`, {
@@ -222,6 +212,25 @@ Deno.serve(async (req) => {
     return json({ error: 'Unhandled', detail: String(e) }, 500);
   }
 });
+
+async function loadExistingYouTubeIds(admin: any): Promise<Set<string>> {
+  const { data } = await admin
+    .from('seeded_videos')
+    .select('hashtags')
+    .eq('source', 'youtube')
+    .limit(20000);
+  const existingIds = new Set<string>();
+  for (const row of data ?? []) {
+    for (const t of normalizeTags(row.hashtags)) {
+      if (t.startsWith('yt:')) existingIds.add(t.slice(3));
+    }
+  }
+  return existingIds;
+}
+
+function normalizeTags(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((tag): tag is string => typeof tag === 'string') : [];
+}
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
