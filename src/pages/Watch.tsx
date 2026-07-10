@@ -131,6 +131,56 @@ export default function Watch() {
           </p>
         )}
 
+        {meta.angle && (
+          <p className="mt-4 text-base md:text-lg font-medium text-foreground">
+            {meta.angle}
+          </p>
+        )}
+        {meta.summary && (
+          <div className="mt-3 rounded-lg border border-border/60 bg-muted/30 p-4">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-primary inline-flex items-center gap-1.5">
+              <Sparkles className="h-3.5 w-3.5" /> Why we highlighted this
+            </p>
+            <p className="mt-1.5 text-sm md:text-base text-foreground/90 whitespace-pre-line">
+              {meta.summary}
+            </p>
+          </div>
+        )}
+        {meta.tags.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {meta.tags.map((t) => (
+              <span key={t} className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full border border-border bg-muted/40 text-muted-foreground">
+                <Tag className="h-3 w-3" /> {t.replace(/-/g, ' ')}
+              </span>
+            ))}
+          </div>
+        )}
+        {meta.editorNote && (
+          <p className="mt-3 text-xs italic text-muted-foreground border-l-2 border-primary/40 pl-3">
+            Editor's note: {meta.editorNote}
+          </p>
+        )}
+
+        {/* Attribution — required by YouTube ToS and the right thing to do */}
+        <div className="mt-5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+          <span>Original video by</span>
+          {youtubeChannelUrl(channel) ? (
+            <a href={youtubeChannelUrl(channel)!} target="_blank" rel="noopener noreferrer"
+               className="font-semibold text-foreground hover:text-primary inline-flex items-center gap-1">
+              {channel} <ExternalLink className="h-3 w-3" />
+            </a>
+          ) : (
+            <span className="font-semibold text-foreground">{channel}</span>
+          )}
+          <span>on YouTube.</span>
+          {youtubeUrlFor(meta.youtubeId) && (
+            <a href={youtubeUrlFor(meta.youtubeId)!} target="_blank" rel="noopener noreferrer"
+               className="text-primary hover:underline inline-flex items-center gap-1">
+              Watch on YouTube <ExternalLink className="h-3 w-3" />
+            </a>
+          )}
+        </div>
+
         {/* Upsell — the whole point of keeping watchers on-site */}
         <div className="mt-8 rounded-2xl border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-background to-background p-6 md:p-8">
           <div className="flex items-start gap-3">
