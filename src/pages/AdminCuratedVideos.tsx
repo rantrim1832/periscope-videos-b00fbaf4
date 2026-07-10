@@ -496,8 +496,8 @@ const AdminCuratedVideos = () => {
 
       if (totalFound === 0 && failed > 0) throw new Error(firstFailure || 'Every seed query failed.');
       toast({
-        title: 'Bulk seed complete',
-        description: `Imported ${totalImported} · skipped ${totalSkipped} dupes · found ${totalFound}${failed ? ` · ${failed} failed` : ''}.`,
+        title: `Bulk import complete · ${totalImported} new videos`,
+        description: `${totalImported} added to the library below · ${totalSkipped} were already imported (dupes) · ${totalFound} total results scanned${failed ? ` · ${failed} queries failed` : ''}. Scroll down to review and moderate them.`,
       });
       load();
       setBrowserRefresh((n) => n + 1);
