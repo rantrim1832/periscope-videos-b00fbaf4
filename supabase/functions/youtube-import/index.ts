@@ -184,6 +184,33 @@ Deno.serve(async (req) => {
         .insert(rows, { count: 'exact' });
       if (insErr) return json({ error: 'Insert failed', detail: insErr.message }, 500);
       inserted = count ?? rows.length;
+
+      // Fire-and-forget: kick off AI description generation for the newly
+      // inserted rows. We don't block the import response on this — the admin
+      // gets fast feedback and summaries appear on the next reload.
+      try {
+        const supaUrl = Deno.env.get('SUPABASE_URL')!;
+        const authHeader = req.headers.get('Authorization') ?? '';
+        // Look up the ids we just inserted (by yt: hashtag) so we can pass
+        // an explicit list — the caller's token is required for admin check.
+        const ytIds = rows.map((r: any) => (r.hashtags ?? []).find((t: string) => t.startsWith('yt:'))?.slice(3)).filter(Boolean);
+        if (ytIds.length > 0 && authHeader) {
+          const { data: fresh } = await admin.from('seeded_videos')
+            .select('id')
+            .overlaps('hashtags', ytIds.map((y: string) => `yt:${y}`))
+            .order('created_at', { ascending: false })
+            .limit(ytIds.length);
+          const ids = (fresh ?? []).map((r: any) => r.id);
+          if (ids.length > 0) {
+            // Best-effort; no await on the body.
+            fetch(`${supaUrl}/functions/v1/generate-video-summary`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': authHeader },
+              body: JSON.stringify({ videoIds: ids, limit: ids.length }),
+            }).catch(() => { /* swallow */ });
+          }
+        }
+      } catch { /* never block the import */ }
     }
 
     return json({
