@@ -29,37 +29,49 @@ Deno.serve(async (req) => {
     const now = new Date();
     const iso = (d: Date) => d.toISOString();
     const daysAgo = (n: number) => new Date(now.getTime() - n * 86400_000);
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
     // Fetch counts in parallel.
     const [
       usersList, // auth.users listing
       reviewsHead, reviews7, reviews30,
-      videosHead, videos7,
+      videosHead, videosToday, videos7, videos30, videosPending,
       shortsHead,
-      propertiesHead, properties7,
+      propertiesHead, propertiesToday, properties7, properties30,
       verificationsHead, verificationsPending,
       curatedHead,
-      contactHead, contactNew,
+      contactHead, contactNew, contact7,
       recentReviews, recentVideos, recentContact, recentProperties,
+      rolesList, propertyCities, videoViewsHead,
     ] = await Promise.all([
       admin.auth.admin.listUsers({ page: 1, perPage: 1000 }),
       admin.from('reviews').select('*', { head: true, count: 'exact' }),
       admin.from('reviews').select('*', { head: true, count: 'exact' }).gte('created_at', iso(daysAgo(7))),
       admin.from('reviews').select('*', { head: true, count: 'exact' }).gte('created_at', iso(daysAgo(30))),
       admin.from('seeded_videos').select('*', { head: true, count: 'exact' }),
+      admin.from('seeded_videos').select('*', { head: true, count: 'exact' }).gte('created_at', iso(startOfToday)),
       admin.from('seeded_videos').select('*', { head: true, count: 'exact' }).gte('created_at', iso(daysAgo(7))),
+      admin.from('seeded_videos').select('*', { head: true, count: 'exact' }).gte('created_at', iso(daysAgo(30))),
+      admin.from('seeded_videos').select('*', { head: true, count: 'exact' }).eq('moderation_status', 'pending'),
       admin.from('shorts').select('*', { head: true, count: 'exact' }),
       admin.from('properties').select('*', { head: true, count: 'exact' }),
+      admin.from('properties').select('*', { head: true, count: 'exact' }).gte('created_at', iso(startOfToday)),
       admin.from('properties').select('*', { head: true, count: 'exact' }).gte('created_at', iso(daysAgo(7))),
+      admin.from('properties').select('*', { head: true, count: 'exact' }).gte('created_at', iso(daysAgo(30))),
       admin.from('user_verifications').select('*', { head: true, count: 'exact' }),
       admin.from('user_verifications').select('*', { head: true, count: 'exact' }).eq('status', 'pending'),
       admin.from('curated_categories').select('*', { head: true, count: 'exact' }),
       admin.from('contact_message').select('*', { head: true, count: 'exact' }),
       admin.from('contact_message').select('*', { head: true, count: 'exact' }).eq('status', 'new'),
+      admin.from('contact_message').select('*', { head: true, count: 'exact' }).gte('created_at', iso(daysAgo(7))),
       admin.from('reviews').select('id, created_at, user_id, property_id, rating').order('created_at', { ascending: false }).limit(10),
       admin.from('seeded_videos').select('id, created_at, title, source').order('created_at', { ascending: false }).limit(10),
       admin.from('contact_message').select('id, created_at, subject, sender_email, status').order('created_at', { ascending: false }).limit(10),
       admin.from('properties').select('id, created_at, name, city, state').order('created_at', { ascending: false }).limit(10),
+      admin.from('user_roles').select('role, user_id').limit(5000),
+      admin.from('properties').select('city, created_at').not('city', 'is', null).limit(20000),
+      // Video views table may not exist yet — swallow the error and treat as 0.
+      admin.from('video_views' as any).select('*', { head: true, count: 'exact' }).then((r: any) => r).catch(() => ({ count: null })),
     ]);
 
     const allUsers = usersList.data?.users ?? [];
@@ -93,6 +105,30 @@ Deno.serve(async (req) => {
       .sort((a, b) => b[1] - a[1]).slice(0, 10)
       .map(([user_id, count]) => ({ user_id, email: emailById.get(user_id) ?? '—', reviews: count }));
 
+    // Role breakdown
+    const roleCounts: Record<string, number> = { admin: 0, moderator: 0, user: 0, property_manager: 0, staff: 0 };
+    for (const r of (rolesList.data as any[]) ?? []) {
+      const k = r.role as string;
+      roleCounts[k] = (roleCounts[k] ?? 0) + 1;
+    }
+
+    // Top cities (all-time) + new-in-30d by city
+    const cityAll = new Map<string, number>();
+    const cityNew = new Map<string, number>();
+    const cutoff30 = daysAgo(30).getTime();
+    for (const p of (propertyCities.data as any[]) ?? []) {
+      const c = (p.city ?? '').trim();
+      if (!c) continue;
+      cityAll.set(c, (cityAll.get(c) ?? 0) + 1);
+      if (new Date(p.created_at).getTime() >= cutoff30) {
+        cityNew.set(c, (cityNew.get(c) ?? 0) + 1);
+      }
+    }
+    const topCities = [...cityAll.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10)
+      .map(([city, count]) => ({ city, count }));
+    const newByCity = [...cityNew.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10)
+      .map(([city, count]) => ({ city, count }));
+
     return json({
       generated_at: now.toISOString(),
       totals: {
@@ -103,16 +139,26 @@ Deno.serve(async (req) => {
         reviews_new_7d: reviews7.count ?? 0,
         reviews_new_30d: reviews30.count ?? 0,
         videos: videosHead.count ?? 0,
+        videos_new_today: videosToday.count ?? 0,
         videos_new_7d: videos7.count ?? 0,
+        videos_new_30d: videos30.count ?? 0,
+        videos_pending: videosPending.count ?? 0,
         shorts: shortsHead.count ?? 0,
         properties: propertiesHead.count ?? 0,
+        properties_new_today: propertiesToday.count ?? 0,
         properties_new_7d: properties7.count ?? 0,
+        properties_new_30d: properties30.count ?? 0,
         verifications: verificationsHead.count ?? 0,
         verifications_pending: verificationsPending.count ?? 0,
         curated_categories: curatedHead.count ?? 0,
         contact_messages: contactHead.count ?? 0,
         contact_new: contactNew.count ?? 0,
+        contact_new_7d: contact7.count ?? 0,
+        video_views: (videoViewsHead as any)?.count ?? null,
       },
+      roles: roleCounts,
+      top_cities: topCities,
+      new_by_city: newByCity,
       signup_series: signupSeries,
       recent_users: recentUsers,
       top_contributors: topContributors,

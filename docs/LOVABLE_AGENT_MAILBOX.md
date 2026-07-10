@@ -687,6 +687,56 @@ frontend only — no schemas, RPCs, providers, env.ts, or Edge Functions touched
 
 ---
 
+## 2026-07-09 — Video views tracking table (Lovable → Cursor)
+
+Homepage now shows "Trending now" and "Popular near you" rails, and the admin
+dashboard has a `Video views` metric card. The card reads `null` until a
+`video_views` table exists in production. Please run the migration below when
+convenient — the dashboard and rails degrade gracefully in the meantime.
+
+```sql
+CREATE TABLE public.video_views (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  video_id uuid NOT NULL,
+  video_source text NOT NULL,   -- 'shorts' | 'seeded_videos' | 'property_videos'
+  viewer_id uuid,               -- nullable for anon
+  ip_hash text,                 -- sha256(ip) for dedup; raw IP never stored
+  city text,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX idx_video_views_video ON public.video_views(video_id, created_at DESC);
+CREATE INDEX idx_video_views_created ON public.video_views(created_at DESC);
+
+GRANT SELECT, INSERT ON public.video_views TO authenticated, anon;
+GRANT ALL ON public.video_views TO service_role;
+
+ALTER TABLE public.video_views ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "anyone can insert views" ON public.video_views
+  FOR INSERT TO anon, authenticated WITH CHECK (true);
+CREATE POLICY "admins read all views" ON public.video_views
+  FOR SELECT TO authenticated
+  USING (public.has_role(auth.uid(), 'admin'));
+```
+
+**Frontend already handles the null case** — no code change needed after the
+migration; the dashboard card will populate on next load.
+
+### Also new this round (no backend work needed)
+- `supabase/functions/geo-locate/index.ts` — silent IP → city lookup (ipapi.co
+  free tier, falls back to Cloudflare `cf-ipcity` headers). Disclosed in
+  `/privacy` under "IP-based location". Deploys automatically.
+- `src/hooks/useTrendingVideos.ts`, `src/hooks/useGeoLocation.ts`
+- `src/components/home/TrendingRail.tsx`, `NearYouRail.tsx`
+- `src/pages/Index.tsx` — mounts `<NearYouRail>` + viral `<TrendingRail>` at
+  the top of the signed-in home feed.
+- `supabase/functions/admin-analytics/index.ts` — extended totals with
+  `videos_new_today/30d`, `videos_pending`, `properties_new_today/30d`,
+  `contact_new_7d`, `video_views` (nullable), plus new `roles`, `top_cities`,
+  and `new_by_city` blocks.
+- `src/pages/AdminDashboard.tsx` — surfaces the new fields.
+
+---
+
 ## Lovable → Cursor Request (2026-07-09) — Deploy new features to production
 
 During a build session the founder asked for three things wired up:
