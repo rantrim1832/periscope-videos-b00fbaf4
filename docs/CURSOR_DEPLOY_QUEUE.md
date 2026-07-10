@@ -12,6 +12,10 @@ Format:
 
 ## Pending
 
+- [ ] 2026-07-10 — Google reviews diagnostics and stronger Places lookup
+  - Functions: `fetch-google-reviews`
+  - Notes: Redeploy so `/admin/curated` shows real failure breakdown (`google_api_error`, `no_place_found`, `no_reviews_returned`) instead of silently reporting `0 reviews cached`.
+
 - [ ] 2026-07-10 — AI descriptions button + Google reviews seeding
   - Functions: `generate-video-summary`, `fetch-google-reviews`
   - Secrets: `GOOGLE_PLACES_API_KEY`
