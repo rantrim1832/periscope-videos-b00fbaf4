@@ -12,6 +12,7 @@ import { Loader2, Youtube, Link2, Trash2, Sparkles, Plus, Save, Pencil } from 'l
 import { Building2, Star, Eye } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { CategoryLibraryBrowser } from '@/components/admin/CategoryLibraryBrowser';
+import { getPublicSupabasePublishableKey, getPublicSupabaseUrl } from '@/services/env';
 
 type Row = {
   id: string;
@@ -51,8 +52,8 @@ type YouTubePreviewResult = {
   candidates: YouTubePreviewCandidate[];
 };
 
-const YOUTUBE_FUNCTION_URL = `${String(import.meta.env.VITE_SUPABASE_URL ?? '').replace(/\/$/, '')}/functions/v1/youtube-import`;
-const YOUTUBE_FUNCTION_KEY = String(import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? '');
+const YOUTUBE_FUNCTION_URL = `${String(getPublicSupabaseUrl() ?? '').replace(/\/$/, '')}/functions/v1/youtube-import`;
+const YOUTUBE_FUNCTION_KEY = String(getPublicSupabasePublishableKey() ?? '');
 
 function extractErrorMessage(error: unknown) {
   if (!error) return 'Unknown error';
