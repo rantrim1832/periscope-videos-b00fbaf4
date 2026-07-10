@@ -19,6 +19,12 @@ export type TrendingVideo = {
 // Slugs of the viral / funny / hot-take curated categories. Anything tagged
 // `cat:<slug>` on a seeded video shows up in the trending rail.
 export const VIRAL_CATEGORY_SLUGS = [
+  // Current import slugs
+  'viral-hits',
+  'funny-fails',
+  'hot-takes',
+  'tiktok-famous',
+  // Older admin slugs kept for already-approved rows
   'viral-apartment-hits',
   'funny-apartment-fails',
   'hot-takes-rants',
