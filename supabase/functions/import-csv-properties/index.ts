@@ -115,8 +115,12 @@ serve(async (req) => {
 
     console.log(`Parsed ${properties.length} properties, ${skipped} skipped, ${errors.length} errors`);
 
-    // Insert properties in batches
+    // Insert properties in batches. Keep the raw import rows for audit/review,
+    // but also mirror each building into `properties`, because property-video
+    // linking uses `property_videos.property_id -> properties.id`.
     let inserted = 0;
+    let linkableInserted = 0;
+    let linkableSkipped = 0;
     const BATCH_SIZE = 100;
 
     for (let i = 0; i < properties.length; i += BATCH_SIZE) {
@@ -133,13 +137,44 @@ serve(async (req) => {
       } else {
         inserted += data?.length || 0;
       }
+
+      const linkableRows = batch.map(toLinkableProperty).filter(Boolean);
+      for (const row of linkableRows) {
+        const { data: existing, error: lookupError } = await supabase
+          .from('properties')
+          .select('id')
+          .eq('address', row.address)
+          .eq('city', row.city)
+          .eq('state', row.state)
+          .maybeSingle();
+
+        if (lookupError) {
+          console.error('Properties lookup error:', lookupError);
+          errors.push(`Linkable property lookup failed for ${row.name}: ${lookupError.message}`);
+          continue;
+        }
+        if (existing) {
+          linkableSkipped++;
+          continue;
+        }
+
+        const { error: propertyError } = await supabase.from('properties').insert(row);
+        if (propertyError) {
+          console.error('Properties mirror insert error:', propertyError);
+          errors.push(`Linkable property insert failed for ${row.name}: ${propertyError.message}`);
+        } else {
+          linkableInserted++;
+        }
+      }
     }
 
-    console.log(`Successfully inserted ${inserted} properties`);
+    console.log(`Successfully inserted ${inserted} imported rows and ${linkableInserted} linkable properties`);
 
     return new Response(
       JSON.stringify({
         inserted,
+        linkableInserted,
+        linkableSkipped,
         skipped,
         errors,
         total: lines.length - 1,
@@ -193,4 +228,50 @@ function parseCSVLine(line: string): string[] {
   result.push(current);
 
   return result;
+}
+
+function toLinkableProperty(property: any): any | null {
+  const name = cleanText(property.name);
+  const address = cleanText(property.address);
+  const city = cleanText(property.city);
+  const state = cleanText(property.state)?.toUpperCase();
+
+  if (!name || !address || !city || !state) return null;
+
+  return {
+    name,
+    address,
+    address_line1: address,
+    city,
+    state,
+    zip_code: cleanText(property.zip_code),
+    zip: cleanText(property.zip_code),
+    management_company: cleanText(property.management_company),
+    phone: cleanText(property.phone),
+    units_count: typeof property.units === 'number' ? property.units : null,
+    beds: parseNumber(property.beds),
+    baths: parseNumber(property.baths),
+    rent: typeof property.avg_rent === 'number' ? property.avg_rent : null,
+    year_built: typeof property.year_built === 'number' ? property.year_built : null,
+    website: cleanText(property.url),
+    county: cleanText(property.county),
+    property_type: cleanText(property.housing_type) ?? 'multifamily',
+    status: 'approved',
+    is_verified: false,
+    verification_required: true,
+    created_by_user_id: property.imported_by_user_id ?? null,
+  };
+}
+
+function cleanText(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  return trimmed || null;
+}
+
+function parseNumber(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (typeof value !== 'string') return null;
+  const parsed = Number.parseFloat(value.replace(/[^0-9.]/g, ''));
+  return Number.isFinite(parsed) ? parsed : null;
 }
