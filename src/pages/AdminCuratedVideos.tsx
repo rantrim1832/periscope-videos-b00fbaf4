@@ -431,8 +431,8 @@ const AdminCuratedVideos = () => {
       }
       const data = await insertPreviewCandidates(slug, query.trim(), preview.candidates);
       toast({
-        title: 'Import complete',
-        description: `Imported ${data.imported} new · skipped ${data.skipped} duplicates · found ${data.totalFound}.`,
+        title: `Import complete · ${data.imported} new videos`,
+        description: `${data.imported} added to the library below · ${data.skipped} already imported (dupes) · ${data.totalFound} results scanned. Scroll down to review them.`,
       });
       load();
       setBrowserRefresh((n) => n + 1);
