@@ -8,7 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { CURATED_CATEGORIES } from '@/lib/curatedCategories';
 import { parseEmbed } from '@/services/providers/embed';
-import { Loader2, Youtube, Link2, Trash2, Sparkles, Plus, Save, Pencil } from 'lucide-react';
+import { Loader2, Youtube, Link2, Trash2, Sparkles, Plus, Save, Pencil, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { Building2, Star, Eye } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { CategoryLibraryBrowser } from '@/components/admin/CategoryLibraryBrowser';
@@ -52,6 +52,14 @@ type YouTubePreviewResult = {
   candidates: YouTubePreviewCandidate[];
   error?: string;
   quotaExceeded?: boolean;
+};
+
+type AdminActionStatus = {
+  kind: 'success' | 'warning' | 'error' | 'info';
+  title: string;
+  detail: string;
+  metrics?: { label: string; value: string | number }[];
+  cta?: { label: string; targetId: string };
 };
 
 const YOUTUBE_FUNCTION_URL = `${String(getPublicSupabaseUrl() ?? '').replace(/\/$/, '')}/functions/v1/youtube-import`;
@@ -269,6 +277,7 @@ const AdminCuratedVideos = () => {
   const [seedingKey, setSeedingKey] = useState<string | null>(null);
   const [previewCache, setPreviewCache] = useState<Record<string, YouTubePreviewCandidate[]>>({});
   const [youtubeQuotaError, setYoutubeQuotaError] = useState<string | null>(null);
+  const [lastAction, setLastAction] = useState<AdminActionStatus | null>(null);
   const [openBrowserSlug, setOpenBrowserSlug] = useState<string | null>(null);
   const [openBrowserTick, setOpenBrowserTick] = useState(0);
 
@@ -279,6 +288,10 @@ const AdminCuratedVideos = () => {
     setTimeout(() => {
       document.getElementById('category-library-browser')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 50);
+  };
+
+  const jumpToSection = (targetId: string) => {
+    document.getElementById(targetId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   // Topic editor state
@@ -430,9 +443,22 @@ const AdminCuratedVideos = () => {
         throw new Error(message);
       }
       const data = await insertPreviewCandidates(slug, query.trim(), preview.candidates);
+      setLastAction({
+        kind: data.imported > 0 ? 'success' : 'warning',
+        title: 'YouTube import complete',
+        detail: data.imported > 0
+          ? 'New videos were added to the library below and are already approved for the feed.'
+          : 'No new videos were added because the results were already imported.',
+        metrics: [
+          { label: 'New videos', value: data.imported },
+          { label: 'Duplicates skipped', value: data.skipped },
+          { label: 'Results scanned', value: data.totalFound },
+        ],
+        cta: { label: 'Review library', targetId: 'video-library' },
+      });
       toast({
         title: 'Import complete',
-        description: `Imported ${data.imported} new · skipped ${data.skipped} duplicates · found ${data.totalFound}.`,
+        description: `${data.imported} new videos added to the library below · ${data.skipped} were already imported · ${data.totalFound} results scanned.`,
       });
       load();
       setBrowserRefresh((n) => n + 1);
@@ -495,9 +521,25 @@ const AdminCuratedVideos = () => {
       }
 
       if (totalFound === 0 && failed > 0) throw new Error(firstFailure || 'Every seed query failed.');
+      setLastAction({
+        kind: failed && totalImported === 0 ? 'warning' : 'success',
+        title: 'Bulk seed complete',
+        detail: totalImported > 0
+          ? 'New videos were added to the library below. Review the library to confirm the imported topics look right.'
+          : totalSkipped > 0
+            ? 'The seed ran, but every result was already in the library, so nothing new was added.'
+            : 'The seed ran but did not find usable videos for these queries.',
+        metrics: [
+          { label: 'New videos', value: totalImported },
+          { label: 'Duplicates skipped', value: totalSkipped },
+          { label: 'Results scanned', value: totalFound },
+          ...(failed ? [{ label: 'Failed queries', value: failed }] : []),
+        ],
+        cta: { label: 'Review library', targetId: 'video-library' },
+      });
       toast({
         title: 'Bulk seed complete',
-        description: `Imported ${totalImported} · skipped ${totalSkipped} dupes · found ${totalFound}${failed ? ` · ${failed} failed` : ''}.`,
+        description: `${totalImported} new videos added to the library below · ${totalSkipped} already imported · ${totalFound} results scanned${failed ? ` · ${failed} failed` : ''}.`,
       });
       load();
       setBrowserRefresh((n) => n + 1);
@@ -513,11 +555,36 @@ const AdminCuratedVideos = () => {
     try {
       const { data, error } = await supabase.functions.invoke('link-videos-to-properties', { body: {} });
       if (error) throw error;
+      const matched = Number(data?.matched ?? 0);
+      const autoApproved = Number(data?.autoApproved ?? 0);
+      const needsReview = Number(data?.needsReview ?? 0);
+      const videosConsidered = Number(data?.videosConsidered ?? 0);
+      const propertiesConsidered = Number(data?.propertiesConsidered ?? 0);
+      const detail = matched > 0
+        ? 'Property-video links were created. High-confidence matches are approved automatically; medium-confidence matches need moderation.'
+        : videosConsidered === 0
+          ? 'No approved YouTube videos are available to link yet. Import or approve videos first, then run linking again.'
+          : propertiesConsidered === 0
+            ? 'No properties are available to match against. Import building data first, then run linking again.'
+            : `Scanned ${videosConsidered} approved videos against ${propertiesConsidered} properties, but no titles/captions named a specific building, address, or manager. Generic apartment videos usually will not link to a property.`;
+      setLastAction({
+        kind: matched > 0 ? 'success' : 'warning',
+        title: matched > 0 ? 'Property linking complete' : 'No property matches found',
+        detail,
+        metrics: [
+          { label: 'Matches found', value: matched },
+          { label: 'Auto-approved', value: autoApproved },
+          { label: 'Need moderation', value: needsReview },
+          { label: 'Videos scanned', value: videosConsidered },
+          { label: 'Properties scanned', value: propertiesConsidered },
+        ],
+      });
       toast({
-        title: 'Linking complete',
-        description: `Matched ${data?.matched ?? 0} · auto-approved ${data?.autoApproved ?? 0} · needs review ${data?.needsReview ?? 0}.`,
+        title: matched > 0 ? 'Linking complete' : 'No property matches found',
+        description: detail,
       });
     } catch (e: any) {
+      setLastAction({ kind: 'error', title: 'Linking failed', detail: extractErrorMessage(e) });
       toast({ title: 'Linking failed', description: extractErrorMessage(e), variant: 'destructive' });
     } finally {
       setLinking(false);
@@ -547,6 +614,16 @@ const AdminCuratedVideos = () => {
         body: { limit: summaryLimit, onlyMissing: true },
       });
       if (error) throw error;
+      setLastAction({
+        kind: 'success',
+        title: 'AI descriptions complete',
+        detail: 'Videos with missing summaries were processed. Updated descriptions will appear on Watch pages and video rails.',
+        metrics: [
+          { label: 'Processed', value: data?.processed ?? 0 },
+          { label: 'Updated', value: data?.updated ?? 0 },
+          { label: 'Skipped', value: data?.skipped ?? 0 },
+        ],
+      });
       toast({
         title: 'AI descriptions written',
         description: `Processed ${data?.processed ?? 0} · updated ${data?.updated ?? 0} · skipped ${data?.skipped ?? 0}.`,
@@ -583,7 +660,14 @@ const AdminCuratedVideos = () => {
         is_positive: false,
       });
       if (error) throw error;
-      toast({ title: 'Added', description: 'Video added to the feed.' });
+      setLastAction({
+        kind: 'success',
+        title: 'Video added',
+        detail: 'The pasted link was added to the approved video library and can appear in the feed.',
+        metrics: [{ label: 'New videos', value: 1 }],
+        cta: { label: 'Review library', targetId: 'video-library' },
+      });
+      toast({ title: 'Added', description: 'Video added to the feed and library below.' });
       setPasteUrl(''); setPasteTitle(''); setPasteCreator('');
       load();
       setBrowserRefresh((n) => n + 1);
@@ -617,6 +701,19 @@ const AdminCuratedVideos = () => {
       }
       setPreviewCache((cache) => ({ ...cache, [key]: preview.candidates }));
       const data = await insertPreviewCandidates(catSlug, q, preview.candidates);
+      setLastAction({
+        kind: data.imported > 0 ? 'success' : 'warning',
+        title: `Seeded "${q}"`,
+        detail: data.imported > 0
+          ? 'New videos were added to the library below.'
+          : 'This query ran, but every result was already imported.',
+        metrics: [
+          { label: 'New videos', value: data.imported },
+          { label: 'Duplicates skipped', value: data.skipped },
+          { label: 'Results scanned', value: data.totalFound },
+        ],
+        cta: { label: 'Review library', targetId: 'video-library' },
+      });
       toast({
         title: `Seeded "${q}"`,
         description: `+${data.imported} new · ${data.skipped} dupes · ${data.totalFound} found`,
@@ -655,6 +752,19 @@ const AdminCuratedVideos = () => {
     try {
       const candidates = previewCache[key] ?? (await previewYouTubeVideos(q, catSlug, 25)).candidates;
       const data = await insertPreviewCandidates(catSlug, q, candidates, videoIds);
+      setLastAction({
+        kind: data.imported > 0 ? 'success' : 'warning',
+        title: 'Selected import complete',
+        detail: data.imported > 0
+          ? 'Selected videos were added to the approved library below.'
+          : 'No new selected videos were added because they were already imported.',
+        metrics: [
+          { label: 'New videos', value: data.imported },
+          { label: 'Duplicates skipped', value: data.skipped },
+          { label: 'Results scanned', value: data.totalFound },
+        ],
+        cta: { label: 'Review library', targetId: 'video-library' },
+      });
       toast({
         title: `Imported ${data.imported} selected videos`,
         description: `${data.skipped} skipped · ${data.totalFound} found for "${q}"`,
@@ -695,6 +805,39 @@ const AdminCuratedVideos = () => {
             <CardContent className="p-4">
               <p className="text-sm font-medium text-destructive">YouTube search quota exhausted</p>
               <p className="text-sm text-muted-foreground mt-1">{youtubeQuotaError}</p>
+            </CardContent>
+          </Card>
+        )}
+
+        {lastAction && (
+          <Card className={`mb-6 ${lastAction.kind === 'error' ? 'border-destructive/40' : lastAction.kind === 'warning' ? 'border-primary/40' : 'border-primary/30'}`}>
+            <CardContent className="p-4">
+              <div className="flex items-start gap-3">
+                {lastAction.kind === 'success' ? (
+                  <CheckCircle2 className="w-5 h-5 text-primary mt-0.5" />
+                ) : (
+                  <AlertCircle className={`w-5 h-5 mt-0.5 ${lastAction.kind === 'error' ? 'text-destructive' : 'text-primary'}`} />
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium">{lastAction.title}</p>
+                  <p className="text-sm text-muted-foreground mt-1">{lastAction.detail}</p>
+                  {lastAction.metrics && lastAction.metrics.length > 0 && (
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mt-3">
+                      {lastAction.metrics.map((metric) => (
+                        <div key={metric.label} className="rounded-md border border-border p-2">
+                          <p className="text-lg font-semibold leading-none">{typeof metric.value === 'number' ? metric.value.toLocaleString() : metric.value}</p>
+                          <p className="text-[11px] text-muted-foreground mt-1">{metric.label}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {lastAction.cta && (
+                    <Button size="sm" variant="outline" className="mt-3" onClick={() => jumpToSection(lastAction.cta!.targetId)}>
+                      {lastAction.cta.label}
+                    </Button>
+                  )}
+                </div>
+              </div>
             </CardContent>
           </Card>
         )}
@@ -909,7 +1052,7 @@ const AdminCuratedVideos = () => {
           </CardContent>
         </Card>
 
-        <div className="flex items-center justify-between mb-3 gap-3 flex-wrap">
+        <div id="video-library" className="flex items-center justify-between mb-3 gap-3 flex-wrap scroll-mt-24">
           <h2 className="text-lg font-semibold">Library ({rows.length})</h2>
           <select
             className="h-9 rounded-md border border-input bg-background px-2 text-sm"
