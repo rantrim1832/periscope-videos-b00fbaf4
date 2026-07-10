@@ -35,6 +35,18 @@ export function deriveCategory(lifeStage: string | null, isPositive: boolean | n
   return 'Resident warnings';
 }
 
+function extractYouTubeId(embedUrl: string | null | undefined, hashtags: string[] | null | undefined): string | null {
+  const yt = (hashtags ?? []).find((t) => typeof t === 'string' && t.startsWith('yt:'));
+  if (yt) return yt.slice(3);
+  const match = embedUrl?.match(/(?:youtube(?:-nocookie)?\.com\/(?:embed\/|watch\?v=|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+  return match ? match[1] : null;
+}
+
+function youtubeEmbedUrl(url: string | null | undefined, hashtags: string[] | null | undefined): string | undefined {
+  const ytId = extractYouTubeId(url, hashtags);
+  return ytId ? `https://www.youtube-nocookie.com/embed/${ytId}?rel=0&modestbranding=1&playsinline=1` : (url ?? undefined);
+}
+
 function tally<T>(rows: T[], key: (r: T) => string | null | undefined): { value: string; count: number }[] {
   const map = new Map<string, number>();
   for (const r of rows) {
@@ -404,6 +416,11 @@ export class CanonicalPropertyProvider implements PropertyDataProvider {
   }
 
   async feed(): Promise<FeedItem[]> {
+    // Curated public videos are the primary cold-start content library. Load
+    // them first so `/feed` never looks empty just because resident reviews are
+    // still ramping up.
+    const curatedItems = await this.fetchCuratedFeedItems();
+
     // Approved reviews that carry playable media, newest first, with property context.
     const { data } = await this.db
       .from('canonical_review')
@@ -427,9 +444,6 @@ export class CanonicalPropertyProvider implements PropertyDataProvider {
       creatorName: r.resident?.display_name ?? r.resident?.pseudonym ?? r.author_pseudonym ?? undefined,
     }));
 
-    // Blend in curated seeded_videos (public YouTube/TikTok/Instagram embeds)
-    // so every category has plenty of content immediately.
-    const curatedItems = await this.fetchCuratedFeedItems();
     if (reviewItems.length > 0 || curatedItems.length > 0) {
       // Interleave curated between real reviews so the feed feels alive but
       // real resident reviews stay near the top.
@@ -523,20 +537,20 @@ export class CanonicalPropertyProvider implements PropertyDataProvider {
       const tags: string[] = Array.isArray(r.hashtags) ? r.hashtags : [];
       const catTag = tags.find((t) => typeof t === 'string' && t.startsWith('cat:'));
       const chTag = tags.find((t) => typeof t === 'string' && t.startsWith('ch:'));
-      const ytTag = tags.find((t) => typeof t === 'string' && t.startsWith('yt:'));
+      const ytId = extractYouTubeId(r.embed_url, tags);
       const slug = catTag ? catTag.slice(4) : 'reviews';
       const category = feedCategoryForSlug(slug);
-      const thumb = ytTag ? `https://img.youtube.com/vi/${ytTag.slice(3)}/hqdefault.jpg` : undefined;
+      const thumb = ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : undefined;
       return {
-        id: `seed:${r.id}`,
+        id: r.id,
         source: 'imported' as const,
         title: r.title,
         thumbnailUrl: thumb,
-        embedUrl: r.embed_url,
+        embedUrl: youtubeEmbedUrl(r.embed_url, tags),
         platform: r.source,
         category,
         verified: false,
-        propertyId: '',
+        propertyId: `watch/${r.id}`,
         propertyName: chTag ? chTag.slice(3) : 'Featured creator',
         location: r.city ?? '',
         creatorName: chTag ? chTag.slice(3) : (r.caption?.split('·')?.[0]?.trim() || 'Public source'),
