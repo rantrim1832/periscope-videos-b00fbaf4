@@ -21,7 +21,6 @@ Deno.serve(async (req) => {
     if (!authHeader?.startsWith('Bearer ')) return json({ error: 'Unauthorized' }, 401);
 
     const supaUrl = Deno.env.get('SUPABASE_URL')!;
-    const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     // Accept either a dedicated Places key OR the same Google Cloud key we
     // already use for YouTube (many users enable Places API on that same key).
@@ -30,13 +29,12 @@ Deno.serve(async (req) => {
       Deno.env.get('YOUTUBE_API_KEY');
     if (!googleKey) return json({ error: 'No Google API key configured (GOOGLE_PLACES_API_KEY or YOUTUBE_API_KEY)' }, 500);
 
-    const authed = createClient(supaUrl, anonKey, { global: { headers: { Authorization: authHeader } } });
-    const token = authHeader.replace('Bearer ', '');
-    const { data: claims, error: claimsErr } = await authed.auth.getClaims(token);
-    if (claimsErr || !claims?.claims?.sub) return json({ error: 'Unauthorized' }, 401);
-    const userId = claims.claims.sub as string;
-
     const admin = createClient(supaUrl, serviceKey);
+    const token = authHeader.replace('Bearer ', '');
+    const { data: userData, error: userErr } = await admin.auth.getUser(token);
+    if (userErr || !userData?.user?.id) return json({ error: 'Unauthorized' }, 401);
+    const userId = userData.user.id;
+
     const { data: role } = await admin.from('user_roles').select('role')
       .eq('user_id', userId).eq('role', 'admin').maybeSingle();
     if (!role) return json({ error: 'Admin only' }, 403);

@@ -14,8 +14,10 @@ verify_jwt = false
 [functions.submit-report]
 verify_jwt = false
 
-# All other functions require a valid JWT at the gateway AND enforce
-# admin/authenticated checks in-function (see _shared/auth.ts).
+# Privileged functions validate the user's session and admin role inside the
+# function with auth.getUser(). Gateway JWT verification is disabled on selected
+# external-backend admin tools so legacy sessions are not rejected before our
+# code can validate them.
 [functions.moderate-content]
 verify_jwt = true
 
@@ -49,13 +51,19 @@ verify_jwt = true
 verify_jwt = false
 
 [functions.youtube-bulk-seed]
-verify_jwt = true
+verify_jwt = false
 
 [functions.link-videos-to-properties]
-verify_jwt = true
+verify_jwt = false
 
 [functions.fetch-google-reviews]
-verify_jwt = true
+verify_jwt = false
+
+[functions.generate-video-summary]
+verify_jwt = false
+
+[functions.admin-analytics]
+verify_jwt = false
 
 # Public OG image for link-unfurl previews.
 [functions.og-image]
