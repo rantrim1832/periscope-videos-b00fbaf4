@@ -420,23 +420,14 @@ const AdminCuratedVideos = () => {
     )) return;
     setBulkSeeding(true);
     try {
-      const targetCategories = (categoryOnly ? categories.filter((c) => c.slug === categoryOnly) : categories)
-        .filter((c) => c.is_active !== false);
-      let totalImported = 0;
-      let totalSkipped = 0;
-      let totalFound = 0;
-      for (const category of targetCategories) {
-        for (const suggestedQuery of category.suggested_queries) {
-          const preview = await previewYouTubeVideos(suggestedQuery, category.slug, perQuery);
-          const result = await insertPreviewCandidates(category.slug, suggestedQuery, preview.candidates);
-          totalImported += result.imported;
-          totalSkipped += result.skipped;
-          totalFound += result.totalFound;
-        }
-      }
+      const body: Record<string, unknown> = { perQuery };
+      if (categoryOnly) body.category = categoryOnly;
+      const { data, error } = await supabase.functions.invoke('youtube-bulk-seed', { body });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.detail || data.error);
       toast({
         title: 'Bulk seed complete',
-        description: `Imported ${totalImported} · skipped ${totalSkipped} dupes · found ${totalFound}.`,
+        description: `Imported ${data?.totalImported ?? 0} · skipped ${data?.totalSkipped ?? 0} dupes · found ${data?.totalFound ?? 0}.`,
       });
       load();
       setBrowserRefresh((n) => n + 1);
