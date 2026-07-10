@@ -420,14 +420,37 @@ const AdminCuratedVideos = () => {
     )) return;
     setBulkSeeding(true);
     try {
-      const body: Record<string, unknown> = { perQuery };
-      if (categoryOnly) body.category = categoryOnly;
-      const { data, error } = await supabase.functions.invoke('youtube-bulk-seed', { body });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.detail || data.error);
+      const selectedCategories = categories.filter((category) =>
+        category.is_active && (!categoryOnly || category.slug === categoryOnly)
+      );
+      if (selectedCategories.length === 0) throw new Error('No active categories found.');
+
+      let totalImported = 0;
+      let totalSkipped = 0;
+      let totalFound = 0;
+      let failed = 0;
+      let firstFailure = '';
+
+      for (const category of selectedCategories) {
+        const queries = category.suggested_queries.map((item) => item.trim()).filter(Boolean);
+        for (const suggestedQuery of queries) {
+          try {
+            const preview = await previewYouTubeVideos(suggestedQuery, category.slug, perQuery);
+            const result = await insertPreviewCandidates(category.slug, suggestedQuery, preview.candidates);
+            totalImported += result.imported;
+            totalSkipped += result.skipped;
+            totalFound += result.totalFound;
+          } catch (err) {
+            failed += 1;
+            if (!firstFailure) firstFailure = extractErrorMessage(err);
+          }
+        }
+      }
+
+      if (totalFound === 0 && failed > 0) throw new Error(firstFailure || 'Every seed query failed.');
       toast({
         title: 'Bulk seed complete',
-        description: `Imported ${data?.totalImported ?? 0} · skipped ${data?.totalSkipped ?? 0} dupes · found ${data?.totalFound ?? 0}.`,
+        description: `Imported ${totalImported} · skipped ${totalSkipped} dupes · found ${totalFound}${failed ? ` · ${failed} failed` : ''}.`,
       });
       load();
       setBrowserRefresh((n) => n + 1);
