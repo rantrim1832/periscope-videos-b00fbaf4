@@ -65,7 +65,23 @@ const Search = () => {
   const { data: results = [], isLoading } = useQuery({
     queryKey: ['search', q, initialState, initialCity],
     queryFn: async () => {
-      const all = await getPropertyProvider().search(q);
+      const provider = getPropertyProvider();
+      // Location-only search (no free-text query): use the location listing
+      // so state/city filters actually return matching properties.
+      if (!q.trim()) {
+        if (initialState && initialCity) {
+          return provider.listByLocation(initialState, initialCity);
+        }
+        if (initialState) {
+          const cities = await provider.listCities(initialState);
+          const perCity = await Promise.all(
+            cities.slice(0, 8).map((c) => provider.listByLocation(initialState, c.city!)),
+          );
+          return perCity.flat();
+        }
+        return [];
+      }
+      const all = await provider.search(q);
       return all.filter((p) =>
         (!initialState || p.state === initialState) &&
         (!initialCity || p.city === initialCity),
