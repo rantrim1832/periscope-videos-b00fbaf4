@@ -58,6 +58,22 @@ const Auth = () => {
     // Falls back to home in demo mode / if the profile table isn't reachable.
     (async () => {
       try {
+        // Admins land straight in Mission Control (/admin dashboard).
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const { data: adminRow } = await (supabase as any)
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', user.id)
+            .eq('role', 'admin')
+            .maybeSingle();
+          if (adminRow) {
+            navigate(returnTo && returnTo.startsWith('/') ? returnTo : '/admin');
+            return;
+          }
+        } catch {
+          // fall through to default routing
+        }
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data, error } = await (supabase as any)
           .from('resident_profile').select('intent').eq('id', user.id).maybeSingle();
@@ -221,6 +237,14 @@ const Auth = () => {
                 ? 'Already have an account? Sign in'
                 : "Don't have an account? Sign up"}
             </button>
+          </div>
+          <div className="mt-3 text-center border-t pt-3">
+            <a
+              href="/admin"
+              className="text-xs font-medium text-primary hover:underline"
+            >
+              Admin? Go to Mission Control →
+            </a>
           </div>
         </CardContent>
       </Card>
