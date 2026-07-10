@@ -28,6 +28,7 @@ const PAGES = {
       ['Social embeds', 'Public social content may be displayed through embeds or links. Embedded platforms may process viewer data under their own policies.'],
       ['Reports and safety', 'Safety, privacy, copyright, and abuse reports are routed to admins. Reporter details are used for follow-up and investigation, not public display.'],
       ['Analytics', 'We may use privacy-conscious analytics to understand search, sharing, contribution, claim, and retention flows.'],
+      ['IP-based location', 'We use your IP address to show locally relevant videos (e.g. a "Popular near you" rail). This is a coarse city-level lookup performed silently on page load; we do not store the raw IP, and we never share your location with third parties or other users.'],
       ['Requests', 'Use the contact page for privacy, deletion, correction, or access requests. We may retain records needed for safety, fraud prevention, and legal compliance.'],
     ],
   },
