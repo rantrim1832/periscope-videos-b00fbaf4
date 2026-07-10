@@ -1,17 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import type { User } from '@supabase/supabase-js';
 
 export const useAdmin = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    checkAdminStatus();
-  }, []);
-
-  const checkAdminStatus = async () => {
+  const checkAdminStatus = useCallback(async (authUser?: User | null) => {
+    setLoading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = authUser ?? (await supabase.auth.getUser()).data.user;
       
       if (!user) {
         setIsAdmin(false);
@@ -37,7 +35,17 @@ export const useAdmin = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    checkAdminStatus();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      checkAdminStatus(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, [checkAdminStatus]);
 
   return { isAdmin, loading, refreshAdminStatus: checkAdminStatus };
 };
