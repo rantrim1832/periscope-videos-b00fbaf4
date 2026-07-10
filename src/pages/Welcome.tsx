@@ -1,54 +1,29 @@
-import { useNavigate } from 'react-router-dom';
-import { Header } from '@/components/Header';
-import { Card, CardContent } from '@/components/ui/card';
-import { Search, PenLine, Building2, Video } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { RolePicker } from '@/components/landing/RolePicker';
+import { Sparkles } from 'lucide-react';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
-const OPTIONS = [
-  { intent: 'renter', icon: Search, title: "I'm apartment hunting", desc: 'Browse apartment videos and search properties.', to: '/feed' },
-  { intent: 'resident', icon: PenLine, title: 'I live (or lived) somewhere', desc: 'Add a review for a property you\'ve lived at.', to: '/feed' },
-  { intent: 'manager', icon: Building2, title: 'I manage a property', desc: 'Find or add your property, claim it, and connect official content.', to: '/manager' },
-  { intent: 'creator', icon: Video, title: "I'm a creator / investigator", desc: 'Publish apartment reviews and investigation content.', to: '/feed' },
-] as const;
-
+/**
+ * Netflix "Who's watching?" — full-bleed cinematic role picker.
+ * Shown to new/returning visitors who need to pick their path.
+ */
 const Welcome = () => {
-  const navigate = useNavigate();
-
-  const choose = async (intent: string, to: string) => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) await (supabase as any).from('resident_profile').update({ intent }).eq('id', user.id);
-    } catch { /* demo mode / not signed in — routing still works */ }
-    navigate(to);
-  };
-
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <div className="container mx-auto px-4 py-12 max-w-3xl">
-        <div className="text-center mb-10">
-          <h1 className="text-3xl md:text-4xl font-bold mb-2">Welcome to Periscope</h1>
-          <p className="text-muted-foreground">What brings you here? We'll take you to the right place.</p>
+    <div className="min-h-dvh bg-black text-white flex flex-col">
+      <div className="absolute inset-0 -z-10 bg-gradient-to-br from-primary/20 via-black to-secondary/20" aria-hidden />
+      <div className="container flex-1 flex flex-col justify-center py-16 md:py-24">
+        <div className="text-center max-w-2xl mx-auto mb-10 md:mb-14">
+          <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-white/90 backdrop-blur">
+            <Sparkles className="h-3 w-3" /> Welcome to Periscope
+          </span>
+          <h1 className="mt-5 text-4xl md:text-6xl font-bold tracking-tight text-balance">
+            Who's watching?
+          </h1>
+          <p className="mt-3 text-white/70 md:text-lg">
+            Pick your path — we'll take you straight to what you need. You can switch anytime.
+          </p>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {OPTIONS.map((o) => {
-            const Icon = o.icon;
-            return (
-              <Card key={o.intent} onClick={() => choose(o.intent, o.to)} className="cursor-pointer hover:border-primary hover:shadow-lg transition-all">
-                <CardContent className="p-6 space-y-2">
-                  <Icon className="w-8 h-8 text-primary" />
-                  <h2 className="font-semibold text-lg">{o.title}</h2>
-                  <p className="text-sm text-muted-foreground">{o.desc}</p>
-                </CardContent>
-              </Card>
-            );
-          })}
+        <div className="max-w-6xl mx-auto w-full">
+          <RolePicker />
         </div>
-        <p className="text-center text-xs text-muted-foreground mt-8">
-          You can do all of these anytime — this just personalizes your start.
-        </p>
       </div>
     </div>
   );
