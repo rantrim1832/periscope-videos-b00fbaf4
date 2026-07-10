@@ -34,6 +34,31 @@ function isBlocked(...parts: (string | undefined | null)[]): boolean {
   return parts.some((p) => (p ? BLOCKED_RE.test(p) : false));
 }
 
+async function readYouTubeError(res: Response): Promise<{ detail: string; quotaExceeded: boolean }> {
+  const detail = await res.text();
+  const quotaExceeded =
+    res.status === 429 ||
+    /quota exceeded|rateLimitExceeded|RATE_LIMIT_EXCEEDED|RESOURCE_EXHAUSTED|defaultSearchListPerDayPerProject/i.test(detail);
+  return { detail, quotaExceeded };
+}
+
+function youtubeFailure(error: string, detail: string, status: number, mode: ImportBody['mode']) {
+  if (/quota exceeded|rateLimitExceeded|RATE_LIMIT_EXCEEDED|RESOURCE_EXHAUSTED|defaultSearchListPerDayPerProject/i.test(detail) || status === 429) {
+    const body = {
+      error: 'YouTube daily search quota is exhausted. Manual link import still works; wait for the daily reset or use a key/project with higher YouTube Search quota.',
+      quotaExceeded: true,
+      imported: 0,
+      skipped: 0,
+      totalFound: 0,
+      candidates: [],
+    };
+    // Return 200 for quota exhaustion so admin UI/runtime monitoring does not
+    // treat an expected third-party quota limit as an app crash.
+    return json(mode === 'preview' ? { ...body, mode: 'preview', alreadyImported: 0 } : body, 200);
+  }
+  return json({ error, detail }, status);
+}
+
 interface ImportBody {
   query: string;
   category: string;        // slug, e.g. "maintenance"
@@ -100,8 +125,8 @@ Deno.serve(async (req) => {
 
     const searchRes = await fetch(searchUrl, { headers: { Referer: GOOGLE_REFERRER } });
     if (!searchRes.ok) {
-      const t = await searchRes.text();
-      return json({ error: 'YouTube search failed', detail: t }, searchRes.status);
+      const { detail } = await readYouTubeError(searchRes);
+      return youtubeFailure('YouTube search failed', detail, searchRes.status, mode);
     }
     const searchJson = await searchRes.json();
     const ids: string[] = (searchJson.items ?? [])
@@ -125,8 +150,8 @@ Deno.serve(async (req) => {
       detailsUrl.searchParams.set('key', ytKey);
       const detailsRes = await fetch(detailsUrl, { headers: { Referer: GOOGLE_REFERRER } });
       if (!detailsRes.ok) {
-        const t = await detailsRes.text();
-        return json({ error: 'YouTube details failed', detail: t }, detailsRes.status);
+        const { detail } = await readYouTubeError(detailsRes);
+        return youtubeFailure('YouTube details failed', detail, detailsRes.status, mode);
       }
       const detailsJson = await detailsRes.json();
       for (const it of detailsJson.items ?? []) {
