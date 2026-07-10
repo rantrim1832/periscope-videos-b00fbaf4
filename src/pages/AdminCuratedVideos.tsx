@@ -64,6 +64,7 @@ type AdminActionStatus = {
 
 const YOUTUBE_FUNCTION_URL = `${String(getPublicSupabaseUrl() ?? '').replace(/\/$/, '')}/functions/v1/youtube-import`;
 const YOUTUBE_FUNCTION_KEY = String(getPublicSupabasePublishableKey() ?? '');
+const SUPABASE_FUNCTIONS_BASE_URL = `${String(getPublicSupabaseUrl() ?? '').replace(/\/$/, '')}/functions/v1`;
 
 function extractErrorMessage(error: unknown) {
   if (!error) return 'Unknown error';
@@ -85,6 +86,21 @@ function normalizeYouTubePreviewError(message: string) {
 
 function isYouTubeQuotaError(message: string) {
   return /quota exceeded|rateLimitExceeded|RATE_LIMIT_EXCEEDED|RESOURCE_EXHAUSTED|defaultSearchListPerDayPerProject|daily search quota/i.test(message);
+}
+
+async function getMissingFunctionMessage(functionName: string) {
+  if (!SUPABASE_FUNCTIONS_BASE_URL.startsWith('https://')) return null;
+  try {
+    const response = await fetch(`${SUPABASE_FUNCTIONS_BASE_URL}/${functionName}`, { method: 'GET' });
+    if (response.status !== 404) return null;
+    const body = await response.json().catch(() => null);
+    if (body?.code === 'NOT_FOUND' || /not found/i.test(String(body?.message ?? ''))) {
+      return `Backend function "${functionName}" is not deployed on the external production backend. Cursor needs to deploy it there before this button can run.`;
+    }
+  } catch {
+    return null;
+  }
+  return null;
 }
 
 function normalizeTags(value: unknown): string[] {
@@ -610,6 +626,12 @@ const AdminCuratedVideos = () => {
   const runGenerateSummaries = async () => {
     setGeneratingSummaries(true);
     try {
+      const missingFunctionMessage = await getMissingFunctionMessage('generate-video-summary');
+      if (missingFunctionMessage) {
+        setLastAction({ kind: 'error', title: 'AI descriptions backend missing', detail: missingFunctionMessage });
+        toast({ title: 'AI descriptions backend missing', description: missingFunctionMessage, variant: 'destructive' });
+        return;
+      }
       const { data, error } = await supabase.functions.invoke('generate-video-summary', {
         body: { limit: summaryLimit, onlyMissing: true },
       });
