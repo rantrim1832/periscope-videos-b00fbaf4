@@ -14,6 +14,7 @@ import { VerdictHero } from '@/components/property/VerdictHero';
 import { ReportCard } from '@/components/property/ReportCard';
 import { EvidenceFeed } from '@/components/property/EvidenceFeed';
 import { ReviewsByLifeStage } from '@/components/property/ReviewsByLifeStage';
+import { GoogleReviews } from '@/components/property/GoogleReviews';
 import { StickyContribute } from '@/components/property/StickyContribute';
 import { LocationSection } from '@/components/property/LocationSection';
 import { StoryCompleteness } from '@/components/property/StoryCompleteness';
@@ -133,6 +134,8 @@ const Property = () => {
       <ContentSuggestions property={property} />
 
       <ReviewsByLifeStage property={property} onContribute={contribute} />
+
+      <GoogleReviews propertyId={property.id} />
 
       <LocationSection property={property} />
 
