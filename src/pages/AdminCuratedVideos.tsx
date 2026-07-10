@@ -50,6 +50,7 @@ type YouTubePreviewResult = {
   totalFound: number;
   alreadyImported: number;
   candidates: YouTubePreviewCandidate[];
+  error?: string;
 };
 
 const YOUTUBE_FUNCTION_URL = `${String(getPublicSupabaseUrl() ?? '').replace(/\/$/, '')}/functions/v1/youtube-import`;
@@ -61,6 +62,13 @@ function extractErrorMessage(error: unknown) {
   if (typeof error === 'string') return error;
   const maybe = error as { message?: string; error?: string; detail?: string };
   return maybe.detail || maybe.message || maybe.error || String(error);
+}
+
+function normalizeYouTubePreviewError(message: string) {
+  if (/YOUTUBE_API_KEY|YouTube API key/i.test(message)) {
+    return 'YouTube import is missing its API key on the external production backend. Manual link import still works; set YOUTUBE_API_KEY on that backend and redeploy youtube-import to restore previews.';
+  }
+  return message;
 }
 
 function normalizeTags(value: unknown): string[] {
@@ -98,7 +106,9 @@ async function previewYouTubeVideos(query: string, category: string, maxResults 
     body: JSON.stringify({ query, category, maxResults, mode: 'preview' }),
   });
   const json = await res.json().catch(() => null);
-  if (!res.ok) throw new Error(extractErrorMessage(json) || `Video preview failed (${res.status})`);
+  if (!res.ok) {
+    throw new Error(normalizeYouTubePreviewError(extractErrorMessage(json) || `Video preview failed (${res.status})`));
+  }
   const candidates = (Array.isArray(json?.candidates) ? json.candidates : []) as YouTubePreviewCandidate[];
   const ytTags = candidates.map((candidate) => `yt:${candidate.videoId}`);
   const alreadyImported = ytTags.length > 0 ? await loadExistingYouTubeIds() : new Set<string>();
@@ -443,7 +453,7 @@ const AdminCuratedVideos = () => {
             totalFound += result.totalFound;
           } catch (err) {
             failed += 1;
-            if (!firstFailure) firstFailure = extractErrorMessage(err);
+      if (!firstFailure) firstFailure = normalizeYouTubePreviewError(extractErrorMessage(err));
           }
         }
       }
@@ -583,8 +593,9 @@ const AdminCuratedVideos = () => {
       setPreviewCache((cache) => ({ ...cache, [`${catSlug}::${q}`]: data.candidates }));
       return data;
     } catch (e: any) {
-      toast({ title: 'Preview failed', description: extractErrorMessage(e), variant: 'destructive' });
-      return null;
+      const message = normalizeYouTubePreviewError(extractErrorMessage(e));
+      toast({ title: 'Preview failed', description: message, variant: 'destructive' });
+      return { totalFound: 0, alreadyImported: 0, candidates: [], error: message };
     }
   };
 
