@@ -670,10 +670,23 @@ const AdminCuratedVideos = () => {
         toast({ title: 'AI descriptions backend missing', description: missingFunctionMessage, variant: 'destructive' });
         return;
       }
-      const { data, error } = await supabase.functions.invoke('generate-video-summary', {
-        body: { limit: summaryLimit, onlyMissing: true },
-      });
-      if (error) throw error;
+      // Loop until no more rows are missing summaries. Each call processes
+      // up to `summaryLimit` rows; we keep going until updated+skipped == 0
+      // or we hit a safety cap. This makes "enrich everything" one click.
+      let totalProcessed = 0, totalUpdated = 0, totalSkipped = 0;
+      let lastData: any = null;
+      for (let i = 0; i < 40; i++) {
+        const { data, error } = await supabase.functions.invoke('generate-video-summary', {
+          body: { limit: summaryLimit, onlyMissing: true },
+        });
+        if (error) throw error;
+        lastData = data;
+        totalProcessed += data?.processed ?? 0;
+        totalUpdated += data?.updated ?? 0;
+        totalSkipped += data?.skipped ?? 0;
+        if ((data?.processed ?? 0) === 0 || (data?.updated ?? 0) === 0) break;
+      }
+      const data = { processed: totalProcessed, updated: totalUpdated, skipped: totalSkipped, ...(lastData ?? {}) };
       setLastAction({
         kind: 'success',
         title: 'AI descriptions complete',
