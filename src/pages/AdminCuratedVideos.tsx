@@ -657,9 +657,13 @@ const AdminCuratedVideos = () => {
   const runGenerateSummaries = async () => {
     setGeneratingSummaries(true);
     try {
+      // Re-validate with the auth server — getSession() returns cached tokens
+      // even after they've expired, which is exactly what causes the edge
+      // function's getUser(token) call to return 401.
+      const { data: userCheck, error: userCheckErr } = await supabase.auth.getUser();
       const { data: sessionData } = await supabase.auth.getSession();
-      if (!sessionData?.session?.access_token) {
-        const detail = 'Your admin session expired. Sign in again and retry.';
+      if (userCheckErr || !userCheck?.user || !sessionData?.session?.access_token) {
+        const detail = 'Your admin session expired. Sign out, sign back in, and retry.';
         setLastAction({ kind: 'error', title: 'Not signed in', detail });
         toast({ title: 'Not signed in', description: detail, variant: 'destructive' });
         return;
