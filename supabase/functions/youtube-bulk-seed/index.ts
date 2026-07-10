@@ -24,6 +24,15 @@ const NEGATIVE_QUERY_TERMS =
 const BLOCKED_RE =
   /\b(airbnb|air\s*bnb|brownstone|townhouse|single[-\s]?family|brooklyn|manhattan|new york city|\bnyc\b)\b/i;
 
+async function readYouTubeError(res: Response): Promise<{ quotaExceeded: boolean }> {
+  const detail = await res.text();
+  return {
+    quotaExceeded:
+      res.status === 429 ||
+      /quota exceeded|rateLimitExceeded|RATE_LIMIT_EXCEEDED|RESOURCE_EXHAUSTED|defaultSearchListPerDayPerProject/i.test(detail),
+  };
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
   try {
@@ -76,6 +85,17 @@ Deno.serve(async (req) => {
       perCat[cat.slug] = { imported: 0, skipped: 0, found: 0 };
       for (const q of cat.queries) {
         const r = await searchAndInsert(admin, ytKey, q, cat.slug, perQuery);
+        if (r.quotaExceeded) {
+          return json({
+            ok: false,
+            quotaExceeded: true,
+            error: 'YouTube daily search quota is exhausted. Manual link import still works; wait for the daily reset or use a key/project with higher YouTube Search quota.',
+            totalImported,
+            totalSkipped,
+            totalFound,
+            perCategory: perCat,
+          });
+        }
         perCat[cat.slug].imported += r.imported;
         perCat[cat.slug].skipped += r.skipped;
         perCat[cat.slug].found += r.found;
@@ -105,7 +125,10 @@ async function searchAndInsert(admin: any, ytKey: string, query: string, categor
   searchUrl.searchParams.set('key', ytKey);
 
   const searchRes = await fetch(searchUrl);
-  if (!searchRes.ok) return { imported: 0, skipped: 0, found: 0 };
+  if (!searchRes.ok) {
+    const { quotaExceeded } = await readYouTubeError(searchRes);
+    return { imported: 0, skipped: 0, found: 0, quotaExceeded };
+  }
   const searchJson = await searchRes.json();
   const ids: string[] = (searchJson.items ?? []).map((it: any) => it?.id?.videoId).filter(Boolean);
   if (ids.length === 0) return { imported: 0, skipped: 0, found: 0 };
@@ -119,7 +142,10 @@ async function searchAndInsert(admin: any, ytKey: string, query: string, categor
   detailsUrl.searchParams.set('id', freshIds.join(','));
   detailsUrl.searchParams.set('key', ytKey);
   const detailsRes = await fetch(detailsUrl);
-  if (!detailsRes.ok) return { imported: 0, skipped: ids.length - freshIds.length, found: ids.length };
+  if (!detailsRes.ok) {
+    const { quotaExceeded } = await readYouTubeError(detailsRes);
+    return { imported: 0, skipped: ids.length - freshIds.length, found: ids.length, quotaExceeded };
+  }
   const detailsJson = await detailsRes.json();
 
   const rows: any[] = [];
@@ -152,7 +178,7 @@ async function searchAndInsert(admin: any, ytKey: string, query: string, categor
     const { error, count } = await admin.from('seeded_videos').insert(rows, { count: 'exact' });
     if (!error) inserted = count ?? rows.length;
   }
-  return { imported: inserted, skipped: ids.length - freshIds.length, found: ids.length };
+  return { imported: inserted, skipped: ids.length - freshIds.length, found: ids.length, quotaExceeded: false };
 }
 
 async function loadExistingYouTubeIds(admin: any): Promise<Set<string>> {

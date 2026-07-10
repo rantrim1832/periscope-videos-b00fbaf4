@@ -51,6 +51,7 @@ type YouTubePreviewResult = {
   alreadyImported: number;
   candidates: YouTubePreviewCandidate[];
   error?: string;
+  quotaExceeded?: boolean;
 };
 
 const YOUTUBE_FUNCTION_URL = `${String(getPublicSupabaseUrl() ?? '').replace(/\/$/, '')}/functions/v1/youtube-import`;
@@ -68,7 +69,14 @@ function normalizeYouTubePreviewError(message: string) {
   if (/YOUTUBE_API_KEY|YouTube API key/i.test(message)) {
     return 'YouTube import is missing its API key on the external production backend. Manual link import still works; set YOUTUBE_API_KEY on that backend and redeploy youtube-import to restore previews.';
   }
+  if (isYouTubeQuotaError(message)) {
+    return 'YouTube daily search quota is exhausted. Manual link import still works; wait for the daily reset or use a YouTube API project with a higher Search quota.';
+  }
   return message;
+}
+
+function isYouTubeQuotaError(message: string) {
+  return /quota exceeded|rateLimitExceeded|RATE_LIMIT_EXCEEDED|RESOURCE_EXHAUSTED|defaultSearchListPerDayPerProject|daily search quota/i.test(message);
 }
 
 function normalizeTags(value: unknown): string[] {
@@ -120,6 +128,8 @@ async function previewYouTubeVideos(query: string, category: string, maxResults 
     totalFound: Number(json?.totalFound ?? 0),
     alreadyImported: markedCandidates.filter((candidate) => candidate.alreadyImported).length,
     candidates: markedCandidates,
+    error: typeof json?.error === 'string' ? normalizeYouTubePreviewError(json.error) : undefined,
+    quotaExceeded: Boolean(json?.quotaExceeded),
   };
 }
 
@@ -258,6 +268,7 @@ const AdminCuratedVideos = () => {
   const [browserRefresh, setBrowserRefresh] = useState(0);
   const [seedingKey, setSeedingKey] = useState<string | null>(null);
   const [previewCache, setPreviewCache] = useState<Record<string, YouTubePreviewCandidate[]>>({});
+  const [youtubeQuotaError, setYoutubeQuotaError] = useState<string | null>(null);
   const [openBrowserSlug, setOpenBrowserSlug] = useState<string | null>(null);
   const [openBrowserTick, setOpenBrowserTick] = useState(0);
 
@@ -406,9 +417,18 @@ const AdminCuratedVideos = () => {
 
   const runImport = async () => {
     if (!query.trim()) return;
+    if (youtubeQuotaError) {
+      toast({ title: 'YouTube quota exhausted', description: youtubeQuotaError, variant: 'destructive' });
+      return;
+    }
     setImporting(true);
     try {
       const preview = await previewYouTubeVideos(query.trim(), slug, count);
+      if (preview.quotaExceeded || preview.error) {
+        const message = preview.error ?? 'YouTube preview failed.';
+        if (preview.quotaExceeded) setYoutubeQuotaError(message);
+        throw new Error(message);
+      }
       const data = await insertPreviewCandidates(slug, query.trim(), preview.candidates);
       toast({
         title: 'Import complete',
@@ -445,17 +465,33 @@ const AdminCuratedVideos = () => {
       for (const category of selectedCategories) {
         const queries = category.suggested_queries.map((item) => item.trim()).filter(Boolean);
         for (const suggestedQuery of queries) {
+          if (youtubeQuotaError) {
+            failed += 1;
+            if (!firstFailure) firstFailure = youtubeQuotaError;
+            break;
+          }
           try {
             const preview = await previewYouTubeVideos(suggestedQuery, category.slug, perQuery);
+            if (preview.quotaExceeded || preview.error) {
+              const message = preview.error ?? 'YouTube preview failed.';
+              if (preview.quotaExceeded) setYoutubeQuotaError(message);
+              throw new Error(message);
+            }
             const result = await insertPreviewCandidates(category.slug, suggestedQuery, preview.candidates);
             totalImported += result.imported;
             totalSkipped += result.skipped;
             totalFound += result.totalFound;
           } catch (err) {
             failed += 1;
-      if (!firstFailure) firstFailure = normalizeYouTubePreviewError(extractErrorMessage(err));
+            const message = normalizeYouTubePreviewError(extractErrorMessage(err));
+            if (!firstFailure) firstFailure = message;
+            if (isYouTubeQuotaError(message)) {
+              setYoutubeQuotaError(message);
+              break;
+            }
           }
         }
+        if (firstFailure && isYouTubeQuotaError(firstFailure)) break;
       }
 
       if (totalFound === 0 && failed > 0) throw new Error(firstFailure || 'Every seed query failed.');
@@ -566,10 +602,19 @@ const AdminCuratedVideos = () => {
   };
 
   const seedOneQuery = async (catSlug: string, q: string) => {
+    if (youtubeQuotaError) {
+      toast({ title: 'YouTube quota exhausted', description: youtubeQuotaError, variant: 'destructive' });
+      return null;
+    }
     const key = `${catSlug}::${q}`;
     setSeedingKey(key);
     try {
       const preview = await previewYouTubeVideos(q, catSlug, 15);
+      if (preview.quotaExceeded || preview.error) {
+        const message = preview.error ?? 'YouTube preview failed.';
+        if (preview.quotaExceeded) setYoutubeQuotaError(message);
+        throw new Error(message);
+      }
       setPreviewCache((cache) => ({ ...cache, [key]: preview.candidates }));
       const data = await insertPreviewCandidates(catSlug, q, preview.candidates);
       toast({
@@ -588,14 +633,19 @@ const AdminCuratedVideos = () => {
   };
 
   const previewOneQuery = async (catSlug: string, q: string) => {
+    if (youtubeQuotaError) {
+      return { totalFound: 0, alreadyImported: 0, candidates: [], error: youtubeQuotaError, quotaExceeded: true };
+    }
     try {
       const data = await previewYouTubeVideos(q, catSlug, 25);
+      if (data.quotaExceeded) setYoutubeQuotaError(data.error ?? 'YouTube daily search quota is exhausted.');
       setPreviewCache((cache) => ({ ...cache, [`${catSlug}::${q}`]: data.candidates }));
       return data;
     } catch (e: any) {
       const message = normalizeYouTubePreviewError(extractErrorMessage(e));
+      if (isYouTubeQuotaError(message)) setYoutubeQuotaError(message);
       toast({ title: 'Preview failed', description: message, variant: 'destructive' });
-      return { totalFound: 0, alreadyImported: 0, candidates: [], error: message };
+      return { totalFound: 0, alreadyImported: 0, candidates: [], error: message, quotaExceeded: isYouTubeQuotaError(message) };
     }
   };
 
@@ -639,6 +689,15 @@ const AdminCuratedVideos = () => {
             Only the official embed is stored — the creator keeps full credit.
           </p>
         </div>
+
+        {youtubeQuotaError && (
+          <Card className="mb-6 border-destructive/40 bg-destructive/5">
+            <CardContent className="p-4">
+              <p className="text-sm font-medium text-destructive">YouTube search quota exhausted</p>
+              <p className="text-sm text-muted-foreground mt-1">{youtubeQuotaError}</p>
+            </CardContent>
+          </Card>
+        )}
 
         {topicsEditable && <Card className="mb-6">
           <CardHeader>
