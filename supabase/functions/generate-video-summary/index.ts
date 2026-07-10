@@ -82,7 +82,11 @@ Deno.serve(async (req) => {
 
         const aiRes = await fetch(AI_URL, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${aiKey}` },
+          headers: {
+            'Content-Type': 'application/json',
+            'Lovable-API-Key': aiKey,
+            'X-Lovable-AIG-SDK': 'edge-function-fetch',
+          },
           body: JSON.stringify({
             model: MODEL,
             messages: [
