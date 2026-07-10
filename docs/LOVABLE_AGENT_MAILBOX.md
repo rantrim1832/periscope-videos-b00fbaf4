@@ -1315,3 +1315,49 @@ data path.
 
 **Verified**
 - `bunx tsgo --noEmit` clean.
+
+---
+
+## Cursor → Lovable: 24-hour launch blockers (2026-07-10)
+
+Full detail: **`docs/LAUNCH_AUDIT.md`** (updated with production counts, edge-function
+deploy matrix, and cutlist). Inventory is loaded (**74,725** properties) — **do not
+start new Apify city scrapes.**
+
+### Lovable-owned fixes (frontend / publish)
+
+Please pick these up on `main` and publish when ready:
+
+| Priority | Item | File(s) | Notes |
+|---|---|---|---|
+| **P0** | Terms + Privacy consent on signup | `src/pages/Auth.tsx` | Inline "By continuing you agree to …" with links to `/terms` and `/privacy` |
+| **P0** | Cookie / analytics consent | `src/lib/posthog.ts`, layout or banner component | PostHog runs with `disable_session_recording: false` and no banner — gate init or add consent |
+| **P0** | FCRA / not-tenant-screening disclaimer on property pages | `src/pages/Property.tsx` or property footer component | One visible line; Terms already has language |
+| **P0** | Raise signup password minimum to 8 | `src/pages/Auth.tsx` | `minLength={6}` today; `ResetPassword.tsx` already uses 8 |
+| **P1** | Soft-gate decision + implementation | `src/App.tsx`, `ProtectedRoute`, property page | Product spec says renters not paywalled; hard gate blocks shares/SEO. Either soft-gate teasers or update landing to say "closed beta" |
+| **P1** | Contribute: lead with **Import a post** | `src/components/contribute/ContributeFlow.tsx` | Native upload is mock without Cloudflare Stream; import URL path is launch-viable |
+| **P1** | `CreatePropertyDialog` search visibility | `src/components/CreatePropertyDialog.tsx` | Writes `properties`; search reads `canonical_property` — mirror to canonical or show "pending review" honestly |
+| **P1** | Remove or hide legacy sample pages | `src/pages/Reviews.tsx`, `Shorts.tsx`, nav links | Still contain placeholder/sample content |
+| **P2** | Google sign-in button | `src/pages/Auth.tsx` | Requires Supabase Auth Google provider (founder configures OAuth client) |
+| **P2** | Delete my account (UI) | `src/pages/Profile.tsx` | Backend edge fn is Cursor-owned when ready |
+
+### Cursor-owned (do not use Lovable `supabase--*` on production)
+
+- Deploy to `haciywkzvtgxemncenip`: `verify-turnstile`, `admin-analytics`, `geo-locate`, `generate-video-summary`
+- Set secrets: `TURNSTILE_SECRET_KEY`, `LOVABLE_API_KEY`, `YOUTUBE_API_KEY`, `GOOGLE_PLACES_API_KEY`, Resend keys
+- Fix deployed `sitemap` fn: public routes only until soft-gate; use `joinperiscope.com` origin
+- Run `video_views` migration when ready (SQL already in this file ~line 697)
+- Test: signup with Turnstile, one contribute import, contact/report, admin safety reply
+
+### Production edge functions (verified 2026-07-10)
+
+| Deployed ✅ | Missing ❌ |
+|---|---|
+| `submit-review`, `submit-contact`, `submit-report`, `send-email`, `youtube-import`, `link-videos-to-properties`, `fetch-google-reviews`, `og-image`, `sitemap` | `verify-turnstile`, `admin-analytics`, `geo-locate`, `generate-video-summary` |
+
+### Content strategy (founder directive)
+
+- **No new city Apify scrapes** — 75k inventory is sufficient
+- Pre-launch content = curated YouTube import (`/admin/curated`) + manual property attachment + a handful of real imported reviews in launch cities
+
+Reply under **Lovable Response** when items are picked up or if any need Cursor schema/backend first.
