@@ -189,7 +189,14 @@ export const Header = () => {
               </Link>
             </Button>
           )}
-          {/* Mobile: single search icon + hamburger keeps the bar to two controls */}
+          {isAdmin && (
+            <Button variant="outline" size="icon" className="md:hidden border-primary/60 text-primary hover:text-primary" asChild>
+              <Link to="/admin/curated" aria-label="Admin tools">
+                <Shield className="h-5 w-5" />
+              </Link>
+            </Button>
+          )}
+          {/* Mobile: keep primary controls directly tappable */}
           <Button variant="ghost" size="icon" className="md:hidden relative" asChild>
             <Link to={user ? '/notifications' : '/search'} aria-label={user ? 'Notifications' : 'Search'}>
               {user ? <Bell className="h-5 w-5" /> : <Search className="h-5 w-5" />}
@@ -215,6 +222,13 @@ export const Header = () => {
                   <span className="text-xs text-muted-foreground">Theme</span>
                   <ThemeToggle />
                 </div>
+                {isAdmin && (
+                  <MobileSection title={<span className="flex items-center gap-1.5"><Shield className="h-3 w-3" /> Admin</span>}>
+                    {ADMIN_LINKS.map((l) => (
+                      <MobileLink key={l.to} to={l.to} onNav={() => setMobileMenuOpen(false)}>{l.label}</MobileLink>
+                    ))}
+                  </MobileSection>
+                )}
                 <MobileSection title="Explore">
                   <MobileLink to="/discover" onNav={() => setMobileMenuOpen(false)}>Discover</MobileLink>
                   <MobileLink to="/search" onNav={() => setMobileMenuOpen(false)}>Search</MobileLink>
@@ -244,14 +258,6 @@ export const Header = () => {
                   <MobileLink to="/contact" onNav={() => setMobileMenuOpen(false)}>Contact</MobileLink>
                   <MobileLink to="/report" onNav={() => setMobileMenuOpen(false)}>Report content</MobileLink>
                 </MobileSection>
-
-                {isAdmin && (
-                  <MobileSection title={<span className="flex items-center gap-1.5"><Shield className="h-3 w-3" /> Admin</span>}>
-                    {ADMIN_LINKS.map((l) => (
-                      <MobileLink key={l.to} to={l.to} onNav={() => setMobileMenuOpen(false)}>{l.label}</MobileLink>
-                    ))}
-                  </MobileSection>
-                )}
               </div>
               {!user ? (
                 <div className="p-5 border-t">
