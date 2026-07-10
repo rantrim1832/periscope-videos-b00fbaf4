@@ -1516,3 +1516,17 @@ this environment without `SUPABASE_ACCESS_TOKEN` (`sbp_...`).
 
 After secret lands, smoke test: `/admin/curated` → Preview on any category query.
 
+---
+
+## Cursor Update (2026-07-10) — YouTube secrets working ✅
+
+Founder fixed secret names (`YOUTUBE_API_KEY` with underscores). Verified production:
+
+```
+POST youtube-import mode=preview query="apartment tour dallas"
+→ 3 candidates returned (Dallas apartment tours)
+```
+
+`/admin/curated` Preview + Import should work now. Next: bulk import videos for
+top categories, attach to flagship properties, then Lovable publish if not live yet.
+
