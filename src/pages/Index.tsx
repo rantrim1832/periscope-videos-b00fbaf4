@@ -97,15 +97,19 @@ const Index = () => {
   const navigate = useNavigate();
   const [q, setQ] = useState("");
   const [localCity, setLocalCity] = useState<LocalCity | null>(() => getStoredLocalCity());
-  const { user, isManager } = useViewer();
-  const { isAdmin } = useAdmin();
+  const { user, isManager, ready: viewerReady } = useViewer();
+  const { isAdmin, loading: adminLoading } = useAdmin();
   // Signed-in renters land on the Feed — that's the primary experience for
   // them. Managers and admins keep the Index dashboard.
   useEffect(() => {
+    // Wait for BOTH role checks to finish before deciding — otherwise admins
+    // and managers get redirected to /feed on the initial render (when user
+    // is set but isAdmin/isManager haven't resolved yet).
+    if (!viewerReady || adminLoading) return;
     if (user && !isAdmin && !isManager) {
       navigate('/feed', { replace: true });
     }
-  }, [user, isAdmin, isManager, navigate]);
+  }, [user, isAdmin, isManager, viewerReady, adminLoading, navigate]);
   const runSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (q.trim()) navigate(`/search?q=${encodeURIComponent(q.trim())}`);
@@ -210,23 +214,25 @@ const Index = () => {
 const useViewer = () => {
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [isManager, setIsManager] = useState(false);
+  const [ready, setReady] = useState(false);
   useEffect(() => {
     let active = true;
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!active) return;
       setUser(user);
-      if (!user) return;
+      if (!user) { setReady(true); return; }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data } = await (supabase as any)
         .from('property_manager').select('id').eq('user_id', user.id).limit(1).maybeSingle();
-      if (active) setIsManager(!!data);
+      if (active) { setIsManager(!!data); setReady(true); }
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
       setUser(session?.user ?? null);
+      if (!session?.user) setReady(true);
     });
     return () => { active = false; subscription.unsubscribe(); };
   }, []);
-  return { user, isManager };
+  return { user, isManager, ready };
 };
 
 // Compact personalized top bar — replaces the oversized cinematic hero.
