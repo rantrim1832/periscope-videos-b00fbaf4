@@ -260,7 +260,7 @@ const Feed = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background overflow-x-hidden">
       <Header />
       {/* Compact single-line filter bar. Expands on demand so it never eats the video. */}
       <div className="sticky top-14 md:top-16 z-30 bg-background/95 backdrop-blur border-b border-border/40">
@@ -332,7 +332,7 @@ const Feed = () => {
         />
       ) : (
         <>
-          <div className="h-[calc(100dvh-8rem)] md:h-[calc(100dvh-9rem)] overflow-y-auto snap-y snap-mandatory">
+          <div className="h-[calc(100dvh-8rem)] md:h-[calc(100dvh-9rem)] overflow-y-auto overflow-x-hidden snap-y snap-mandatory">
             {filtered.map((item) => <FeedCard key={item.id} item={item} />)}
           </div>
           <div className="container px-4 py-6 space-y-6">
