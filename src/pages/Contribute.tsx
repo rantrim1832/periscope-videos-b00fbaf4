@@ -227,7 +227,14 @@ const Contribute = () => {
                         No match. <Link to="/browse" className="underline">Browse all properties</Link> — or add it below so you can leave a review.
                       </p>
                       <CreatePropertyDialog
-                        onPropertyCreated={(id) => navigate(`/contribute/${id}${topicQS}`)}
+                        onPropertyCreated={() => {
+                          // The new property lands in `properties` with status='pending'
+                          // and is not yet in `canonical_property`, so we can't route
+                          // the user straight into /contribute/:id (it would 404).
+                          // Reset the search and let the dialog's toast confirm submission.
+                          setInput('');
+                          setQuery('');
+                        }}
                         trigger={
                           <Button type="button" variant="hero" size="sm">
                             Add this property
@@ -235,7 +242,7 @@ const Contribute = () => {
                         }
                       />
                       <p className="text-xs">
-                        You're adding this as a renter — no claim required. Managers can claim it later.
+                        Submitted properties are reviewed before they go live — usually within a day. You'll be able to post your review as soon as it's approved.
                       </p>
                     </div>
                   ) : (

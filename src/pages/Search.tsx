@@ -65,7 +65,23 @@ const Search = () => {
   const { data: results = [], isLoading } = useQuery({
     queryKey: ['search', q, initialState, initialCity],
     queryFn: async () => {
-      const all = await getPropertyProvider().search(q);
+      const provider = getPropertyProvider();
+      // Location-only search (no free-text query): use the location listing
+      // so state/city filters actually return matching properties.
+      if (!q.trim()) {
+        if (initialState && initialCity) {
+          return provider.listByLocation(initialState, initialCity);
+        }
+        if (initialState) {
+          const cities = await provider.listCities(initialState);
+          const perCity = await Promise.all(
+            cities.slice(0, 8).map((c) => provider.listByLocation(initialState, c.city!)),
+          );
+          return perCity.flat();
+        }
+        return [];
+      }
+      const all = await provider.search(q);
       return all.filter((p) =>
         (!initialState || p.state === initialState) &&
         (!initialCity || p.city === initialCity),
@@ -247,7 +263,7 @@ const Search = () => {
           </div>
         </form>
 
-        {!q ? (
+        {!q && !initialState && !initialCity ? (
           <div className="text-center py-16 max-w-md mx-auto">
             <div className="mx-auto w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
               <SearchIcon className="w-6 h-6 text-primary" />
@@ -277,16 +293,24 @@ const Search = () => {
         ) : results.length === 0 ? (
           <Card className="p-10 text-center bg-muted/30 border-dashed">
             <MapPin className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
-            <h2 className="text-xl font-semibold mb-2">No match for &ldquo;{q}&rdquo;</h2>
+            <h2 className="text-xl font-semibold mb-2">
+              {q
+                ? <>No match for &ldquo;{q}&rdquo;</>
+                : <>No properties in {[initialCity, initialState].filter(Boolean).join(', ') || 'that area'}</>}
+            </h2>
             <p className="text-muted-foreground mb-4">
-              This property isn't in our database. You can add it.
+              {q
+                ? "This property isn't in our database. You can add it."
+                : "We don't have any listings here yet. Try broadening the filters or add a property."}
             </p>
             <Button variant="hero" asChild><a href="/contribute">Add this property</a></Button>
           </Card>
         ) : (
           <>
             <p className="text-sm text-muted-foreground mb-4">
-              <span className="font-medium text-foreground">{results.length}</span> result{results.length === 1 ? '' : 's'} for &ldquo;{q}&rdquo;
+              <span className="font-medium text-foreground">{results.length}</span> result{results.length === 1 ? '' : 's'}
+              {q ? <> for &ldquo;{q}&rdquo;</> : null}
+              {(initialCity || initialState) ? <> in {[initialCity, initialState].filter(Boolean).join(', ')}</> : null}
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {results.map((p) => (

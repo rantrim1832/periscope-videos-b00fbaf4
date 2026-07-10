@@ -457,19 +457,17 @@ export class CanonicalPropertyProvider implements PropertyDataProvider {
     const { data: channels } = await this.db
       .from('property_channel')
       .select('id, kind, url, label, created_at, canonical_property:canonical_property_id(id, name, city, state)')
-      .in('kind', ['gallery', 'matterport', 'youtube', 'instagram', 'tiktok'])
+      .in('kind', ['gallery', 'matterport', 'youtube'])
       .limit(500);
 
     const visual = (channels ?? []).filter((c: any) =>
       c.kind === 'matterport' ||
       c.kind === 'youtube' ||
-      c.kind === 'tiktok' ||
-      (c.kind === 'instagram' && /instagram\.com\/(p|reel|tv)\//i.test(c.url)) ||
       (c.kind === 'gallery' && /\.(jpg|jpeg|png|webp)(\?|$)/i.test(c.url)),
     );
 
     const sortedVisual = visual.sort((a: any, b: any) => {
-      const rank = (x: any) => x.kind === 'gallery' ? 5 : x.kind === 'matterport' ? 4 : x.kind === 'instagram' ? 3 : 2;
+      const rank = (x: any) => x.kind === 'gallery' ? 5 : x.kind === 'matterport' ? 4 : x.kind === 'youtube' ? 3 : 2;
       return rank(b) - rank(a);
     }).slice(0, 120);
 
@@ -504,12 +502,19 @@ export class CanonicalPropertyProvider implements PropertyDataProvider {
         c.kind === 'gallery' ? c.url :
         c.kind === 'youtube' ? ytThumb(c.url) :
         undefined;
+      // Set an embedUrl for anything the FeedTile can actually play in-browser.
+      // Cross-origin embeds for tiktok / non-post instagram are unreliable, so
+      // those kinds are excluded above rather than surfaced as broken tiles.
+      const embedUrl =
+        c.kind === 'matterport' ? c.url :
+        c.kind === 'youtube' ? youtubeEmbedUrl(c.url, []) :
+        undefined;
       return {
         id: c.id,
         source: 'official' as const,
         title: titleTemplates[category]?.(name) ?? name,
         thumbnailUrl,
-        embedUrl: c.kind === 'matterport' ? c.url : undefined,
+        embedUrl,
         platform: c.kind,
         category,
         verified: false,
