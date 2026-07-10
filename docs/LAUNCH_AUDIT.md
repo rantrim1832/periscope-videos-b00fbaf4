@@ -2,6 +2,11 @@
 
 Scope: T-1 launch review across product, security, legal, performance, SEO, ops. Severity: **P0** = launch blocker, **P1** = fix week 1, **P2** = fix in first month.
 
+> **Latest production check:** 2026-07-10 (Cursor). Inventory is loaded (~75k properties).
+> City Apify scrapes are **on hold** — do not start new scrapes. See
+> [24-hour launch cutlist](#24-hour-launch-cutlist-2026-07-10) and
+> `docs/LOVABLE_AGENT_MAILBOX.md` (Lovable action items).
+
 ## What just shipped in this pass (P0 fixes, done)
 
 - **Hard auth gate** — all routes except `/`, `/auth`, `/welcome`, `/terms`, `/privacy`, `/dmca`, `/contact`, `/help`, `/report` now require login. Unauthenticated users hitting a gated route land on `/auth?returnTo=<path>` and bounce back after signin.
@@ -156,3 +161,152 @@ Terms/Privacy/DMCA are still Lovable-drafted policy text. Recommend getting a re
 ## Notes on process
 
 Because Cursor owns the production schema (per `mem://constraints/external-supabase`), no database migrations were created in this pass. Items requiring schema changes (error_logs table, delete-account edge function, moderation alerts table) are flagged for you or Cursor to implement on the external Supabase project directly.
+
+---
+
+## Production snapshot (2026-07-10)
+
+Verified against external Supabase `haciywkzvtgxemncenip` and `main` @ `3413bf2`.
+
+| Asset | Count / status |
+|---|---|
+| `canonical_property` | **74,725** |
+| `property_alias` | **74,725** |
+| `property_channel` | **22,248** (~30% of properties have official/public content) |
+| `seeded_videos` (approved) | **22** |
+| User `reviews` | **0** |
+| `npm run build` | ✅ passes |
+| `npm test` | ✅ 25 tests |
+
+**Inventory is done.** The gap is launch mechanics, UGC/video density, and a handful of undeployed edge functions — not more property scraping.
+
+---
+
+## Edge function deploy status (production)
+
+Checked via `OPTIONS` against `https://haciywkzvtgxemncenip.supabase.co/functions/v1/<name>`:
+
+| Function | Status | Impact if missing |
+|---|---|---|
+| `submit-review` | ✅ 200 | — |
+| `submit-contact` | ✅ 200 | — |
+| `submit-report` | ✅ 200 | — |
+| `send-email` | ✅ 200 | — |
+| `youtube-import` | ✅ 200 | — |
+| `link-videos-to-properties` | ✅ 200 | — |
+| `fetch-google-reviews` | ✅ 200 | — |
+| `og-image` | ✅ 200 | — |
+| `sitemap` | ✅ 200 | ⚠️ still emits ~45k gated property URLs; wrong default origin (`pariscope.app`) |
+| **`verify-turnstile`** | ❌ **404** | **Signup/login broken on `joinperiscope.com`** (Auth enforces Turnstile there) |
+| **`admin-analytics`** | ❌ **404** | `/admin/dashboard` metrics fail to load |
+| **`geo-locate`** | ❌ **404** | "Popular near you" homepage rail silent |
+| **`generate-video-summary`** | ❌ **404** | Admin AI video summaries won't run |
+
+**Cursor:** deploy the four missing functions + set secrets (`TURNSTILE_SECRET_KEY`, `LOVABLE_API_KEY`, etc.).
+
+---
+
+## P0 — Will break or block users (2026-07-10)
+
+### 1. Signup/login on production likely broken
+`src/pages/Auth.tsx` enforces Cloudflare Turnstile on `joinperiscope.com`, but `verify-turnstile` is **not deployed**. Users see captcha failure.
+
+**Owner:** Cursor (deploy fn + `TURNSTILE_SECRET_KEY` secret).  
+**Lovable:** confirm `VITE_TURNSTILE_SITE_KEY` in `.env` if moving key out of hardcode.
+
+### 2. Review posting may queue/reject everything
+`submit-review` is fail-closed without `LOVABLE_API_KEY`. Zero user reviews in production today.
+
+**Owner:** Cursor (set secret + test one post).  
+**Lovable:** verify contribute success UI handles `pending` vs `published` clearly.
+
+### 3. Hard auth gate kills sharing + SEO
+Shared `/property/:id` links → login wall. Contradicts `docs/PRODUCT_SPEC.md` ("renters never paywalled").
+
+**Owner:** product decision.  
+**Lovable:** implement **soft-gate** (name, hero image, 1–2 review teasers public; gate full reviews/videos/contribute) OR accept closed-beta positioning on landing copy.
+
+### 4. Sitemap contradicts robots.txt
+`public/robots.txt` disallows `/property/` and `/city/`, but deployed `sitemap` still lists ~45k property URLs.
+
+**Owner:** Cursor (redeploy `sitemap` to public routes only until soft-gate).  
+**Lovable:** no change needed once fn is fixed.
+
+### 5. `CreatePropertyDialog` invisible in search
+Renter-created properties write legacy `properties` table; browse/search reads `canonical_property`.
+
+**Owner:** product decision.  
+**Lovable:** mirror insert to `canonical_property` + `property_alias`, or show honest "submitted for review" state. See mailbox Contribute-flow note.
+
+### 6. Native video upload not production-ready
+No `CLOUDFLARE_*` keys → mock upload provider. **Import social link** (YouTube/TikTok/IG) is the viable launch path.
+
+**Lovable:** de-emphasize or label "Record/upload" as beta; lead with "Import a post" in contribute hero.
+
+---
+
+## P0 — Legal / trust (2026-07-10)
+
+| Gap | Owner | Notes |
+|---|---|---|
+| No Terms/Privacy checkbox on signup | **Lovable** | `Auth.tsx` — add inline consent copy + link |
+| PostHog session recording, no cookie banner | **Lovable** | `src/lib/posthog.ts` — consent gate or disable recording until banner |
+| No FCRA/screening disclaimer on property pages | **Lovable** | One line in property page footer; also in Terms |
+| Password `minLength={6}` on signup | **Lovable** | Raise to 8+; `ResetPassword.tsx` already uses 8 |
+| No Google/Apple OAuth | **Lovable + founder** | Supabase Auth providers + Auth UI button |
+| No delete-my-account flow | **Lovable UI + Cursor fn** | Profile button → edge function |
+| Email deliverability untested | **Founder** | SPF/DKIM/DMARC on `joinperiscope.com`; test Gmail/Outlook |
+| Keys pasted in chat | **Founder** | Rotate Resend, Apify, YouTube, Turnstile after setup |
+
+---
+
+## P1 — Product feels empty (2026-07-10)
+
+- **74k properties, 22 videos, 0 reviews** — most pages look sparse.
+- **Lovable:** seed curated videos via `/admin/curated`; surface trending/near-you rails once fns deploy.
+- **Founder/Cursor:** attach videos to flagship properties; no new city Apify scrapes.
+
+Other P1 items unchanged from sections above (empty city states, bundle size, legacy `/reviews` + `/shorts` sample content, `video_views` migration pending).
+
+---
+
+## 24-hour launch cutlist (2026-07-10)
+
+### Must do before public flip
+
+1. **Cursor:** Deploy `verify-turnstile` + set `TURNSTILE_SECRET_KEY`
+2. **Cursor:** Set `LOVABLE_API_KEY`; test contribute → moderate → property page
+3. **Cursor:** Deploy `admin-analytics` (if using admin dashboard launch day)
+4. **Cursor:** Fix `sitemap` edge function (public routes only; `joinperiscope.com` origin)
+5. **Lovable:** Terms/Privacy consent on signup (`Auth.tsx`)
+6. **Founder:** Test email (signup, reset, contact, admin reply)
+7. **Lovable:** Publish latest `main` to `joinperiscope.com`
+
+### Should do (or launch feels dead)
+
+8. Import **50–100 curated videos** (`/admin/curated`) across top markets
+9. Attach videos to flagship properties (`/admin/properties`)
+10. Seed **5–10 imported reviews** in launch cities (social embeds, not native upload)
+11. Decide closed beta (hard gate OK) vs soft-gate property teasers
+
+### Can wait week 1
+
+Google OAuth, delete account, cookie banner, Sentry, attorney review, soft-gate migration, `video_views` table, Cloudflare Stream native upload.
+
+---
+
+## Likely day-1 user complaints
+
+1. "Link asked me to sign up" — hard gate
+2. "Captcha failed" — `verify-turnstile` not deployed
+3. "Property is empty" — thin UGC + video coverage
+4. "I added my apartment but can't find it" — `properties` vs `canonical_property`
+5. "Video upload didn't work" — use import link instead
+6. "Review stuck pending" — moderation fail-closed / admin not approving
+7. "Is this tenant screening?" — need property-page disclaimer
+
+---
+
+## Safest 24h launch posture
+
+**Closed beta:** fix Turnstile + moderation + email, preload 50–100 curated videos, no paid ads, PM outreach framed as early access. Do **not** run new Apify city scrapes — inventory is sufficient.
