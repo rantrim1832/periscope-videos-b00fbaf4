@@ -96,14 +96,7 @@ async function searchAndInsert(admin: any, ytKey: string, query: string, categor
   const ids: string[] = (searchJson.items ?? []).map((it: any) => it?.id?.videoId).filter(Boolean);
   if (ids.length === 0) return { imported: 0, skipped: 0, found: 0 };
 
-  const ytTags = ids.map((id) => `yt:${id}`);
-  const { data: existing } = await admin.from('seeded_videos').select('hashtags').overlaps('hashtags', ytTags);
-  const existingIds = new Set<string>();
-  for (const row of existing ?? []) {
-    for (const t of row.hashtags ?? []) {
-      if (typeof t === 'string' && t.startsWith('yt:')) existingIds.add(t.slice(3));
-    }
-  }
+  const existingIds = await loadExistingYouTubeIds(admin);
   const freshIds = ids.filter((id) => !existingIds.has(id));
   if (freshIds.length === 0) return { imported: 0, skipped: ids.length, found: ids.length };
 
@@ -146,6 +139,25 @@ async function searchAndInsert(admin: any, ytKey: string, query: string, categor
     if (!error) inserted = count ?? rows.length;
   }
   return { imported: inserted, skipped: ids.length - freshIds.length, found: ids.length };
+}
+
+async function loadExistingYouTubeIds(admin: any): Promise<Set<string>> {
+  const { data } = await admin
+    .from('seeded_videos')
+    .select('hashtags')
+    .eq('source', 'youtube')
+    .limit(20000);
+  const existingIds = new Set<string>();
+  for (const row of data ?? []) {
+    for (const t of normalizeTags(row.hashtags)) {
+      if (t.startsWith('yt:')) existingIds.add(t.slice(3));
+    }
+  }
+  return existingIds;
+}
+
+function normalizeTags(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((tag): tag is string => typeof tag === 'string') : [];
 }
 
 function json(body: unknown, status = 200) {

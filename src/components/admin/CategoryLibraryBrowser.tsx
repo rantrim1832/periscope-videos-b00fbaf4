@@ -48,6 +48,11 @@ function tagValue(tags: string[] | null | undefined, prefix: string) {
   return (tags ?? []).find((t) => t.startsWith(prefix))?.slice(prefix.length);
 }
 
+function normalizeTags(value: unknown): string[] {
+  if (Array.isArray(value)) return value.filter((tag): tag is string => typeof tag === 'string');
+  return [];
+}
+
 export function CategoryLibraryBrowser({
   categories,
   onSeedQuery,
@@ -91,7 +96,7 @@ export function CategoryLibraryBrowser({
     if (error) return;
     const c: Record<string, number> = {};
     for (const row of data ?? []) {
-      const slug = (row.hashtags as string[] | null | undefined ?? []).find((t) => t.startsWith('cat:'))?.slice(4);
+      const slug = normalizeTags((row as { hashtags?: unknown }).hashtags).find((t) => t.startsWith('cat:'))?.slice(4);
       if (!slug) continue;
       c[slug] = (c[slug] ?? 0) + 1;
     }
@@ -123,13 +128,15 @@ export function CategoryLibraryBrowser({
     const { data, error } = await supabase
       .from('seeded_videos')
       .select('id,title,embed_url,caption,hashtags,source,created_at,moderation_status')
-      .overlaps('hashtags', [`cat:${slug}`])
       .order('created_at', { ascending: false })
-      .limit(60);
+      .limit(500);
     if (error) {
       toast({ title: 'Load videos failed', description: error.message, variant: 'destructive' });
     } else {
-      setVideosBySlug((v) => ({ ...v, [slug]: (data ?? []) as VideoRow[] }));
+      const filtered = (data ?? [])
+        .filter((row: any) => normalizeTags(row.hashtags).includes(`cat:${slug}`))
+        .slice(0, 60);
+      setVideosBySlug((v) => ({ ...v, [slug]: filtered as VideoRow[] }));
     }
     setLoadingSlug(null);
   };

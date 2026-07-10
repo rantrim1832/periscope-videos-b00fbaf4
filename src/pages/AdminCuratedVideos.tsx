@@ -62,6 +62,27 @@ function extractErrorMessage(error: unknown) {
   return maybe.detail || maybe.message || maybe.error || String(error);
 }
 
+function normalizeTags(value: unknown): string[] {
+  if (Array.isArray(value)) return value.filter((tag): tag is string => typeof tag === 'string');
+  return [];
+}
+
+async function loadExistingYouTubeIds(): Promise<Set<string>> {
+  const { data, error } = await supabase
+    .from('seeded_videos')
+    .select('hashtags')
+    .eq('source', 'youtube')
+    .limit(20000);
+  if (error) throw error;
+  const ids = new Set<string>();
+  for (const row of data ?? []) {
+    for (const tag of normalizeTags((row as { hashtags?: unknown }).hashtags)) {
+      if (tag.startsWith('yt:')) ids.add(tag.slice(3));
+    }
+  }
+  return ids;
+}
+
 async function previewYouTubeVideos(query: string, category: string, maxResults = 25): Promise<YouTubePreviewResult> {
   if (!YOUTUBE_FUNCTION_URL.startsWith('https://') || !YOUTUBE_FUNCTION_KEY) {
     throw new Error('Video preview service is not configured.');
@@ -79,18 +100,7 @@ async function previewYouTubeVideos(query: string, category: string, maxResults 
   if (!res.ok) throw new Error(extractErrorMessage(json) || `Video preview failed (${res.status})`);
   const candidates = (Array.isArray(json?.candidates) ? json.candidates : []) as YouTubePreviewCandidate[];
   const ytTags = candidates.map((candidate) => `yt:${candidate.videoId}`);
-  const alreadyImported = new Set<string>();
-  if (ytTags.length > 0) {
-    const { data: existing } = await supabase
-      .from('seeded_videos')
-      .select('hashtags')
-      .overlaps('hashtags', ytTags);
-    for (const row of existing ?? []) {
-      for (const tag of row.hashtags ?? []) {
-        if (typeof tag === 'string' && tag.startsWith('yt:')) alreadyImported.add(tag.slice(3));
-      }
-    }
-  }
+  const alreadyImported = ytTags.length > 0 ? await loadExistingYouTubeIds() : new Set<string>();
   const markedCandidates = candidates.map((candidate) => ({
     ...candidate,
     alreadyImported: alreadyImported.has(candidate.videoId),
@@ -107,19 +117,7 @@ async function insertPreviewCandidates(category: string, query: string, candidat
   const ids = candidates.map((candidate) => candidate.videoId);
   if (ids.length === 0) return { imported: 0, skipped: 0, totalFound: 0 };
 
-  const ytTags = ids.map((id) => `yt:${id}`);
-  const { data: existing, error: existingError } = await supabase
-    .from('seeded_videos')
-    .select('hashtags')
-    .overlaps('hashtags', ytTags);
-  if (existingError) throw existingError;
-
-  const existingIds = new Set<string>();
-  for (const row of existing ?? []) {
-    for (const tag of row.hashtags ?? []) {
-      if (typeof tag === 'string' && tag.startsWith('yt:')) existingIds.add(tag.slice(3));
-    }
-  }
+  const existingIds = await loadExistingYouTubeIds();
 
   const rows = candidates
     .filter((candidate) => !existingIds.has(candidate.videoId))
@@ -327,10 +325,12 @@ const AdminCuratedVideos = () => {
       .select('id,title,embed_url,caption,hashtags,source,created_at,moderation_status')
       .order('created_at', { ascending: false })
       .limit(200);
-    if (filter !== 'all') q = q.overlaps('hashtags', [`cat:${filter}`]);
     const { data, error } = await q;
     if (error) toast({ title: 'Load failed', description: error.message, variant: 'destructive' });
-    setRows((data ?? []) as Row[]);
+    const filtered = filter === 'all'
+      ? (data ?? [])
+      : (data ?? []).filter((row: any) => normalizeTags(row.hashtags).includes(`cat:${filter}`));
+    setRows(filtered as Row[]);
     setLoading(false);
   };
 
