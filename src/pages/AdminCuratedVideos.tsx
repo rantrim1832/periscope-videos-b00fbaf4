@@ -565,7 +565,7 @@ const AdminCuratedVideos = () => {
         : videosConsidered === 0
           ? 'No approved YouTube videos are available to link yet. Import or approve videos first, then run linking again.'
           : propertiesConsidered === 0
-            ? 'No properties are available to match against. Import building data first, then run linking again.'
+            ? 'No linkable property records are available. CSV rows must be mirrored into the main properties table before videos can link; redeploy the updated import-csv-properties and link-videos-to-properties functions, then re-import building data.'
             : `Scanned ${videosConsidered} approved videos against ${propertiesConsidered} properties, but no titles/captions named a specific building, address, or manager. Generic apartment videos usually will not link to a property.`;
       setLastAction({
         kind: matched > 0 ? 'success' : 'warning',

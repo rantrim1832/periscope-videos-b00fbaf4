@@ -44,7 +44,7 @@ Deno.serve(async (req) => {
     // legal_description) — this function only needs matching fields.
     const [{ data: props, error: pErr }, { data: vids, error: vErr }] = await Promise.all([
       admin.from('properties')
-        .select('id, name, address_line1, city, state, management_company')
+        .select('id, name, address, address_line1, city, state, management_company')
         .limit(propertyLimit),
       admin.from('seeded_videos')
         .select('id, title, caption, city, hashtags')
@@ -148,7 +148,7 @@ function scorePair(
   const pCity = norm(p.city ?? '');
   const cityMatch = pCity && vCity && pCity === vCity;
   const name = norm(p.name ?? '');
-  const addr = norm(p.address_line1 ?? '');
+  const addr = norm((p as any).address_line1 ?? (p as any).address ?? '');
   const mgmt = norm(p.management_company ?? '');
 
   // Strong: multi-token building name OR full address line in haystack
