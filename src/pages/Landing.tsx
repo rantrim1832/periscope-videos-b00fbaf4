@@ -2,10 +2,12 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import {
   Video, Shield, Building2, PlayCircle, MessageSquare, Eye, Lock,
-  MapPin, Users, Play, Star, Quote,
+  MapPin, Play, Star, Quote, Sparkles, AtSign, TrendingUp,
 } from 'lucide-react';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useCuratedTeasers, type CuratedTeaser } from '@/hooks/useCuratedTeasers';
+import { RolePicker } from '@/components/landing/RolePicker';
+import { ShareRow } from '@/components/landing/ShareRow';
 
 // Landing thumbnails — generated apartment scenes so every card reads as
 // a real multifamily interior/exterior/amenity/person, never a random
@@ -231,23 +233,24 @@ const Landing = () => {
   const { teasers: real } = useCuratedTeasers(60);
   const rails = mergeRailsWithReal(RAILS, real);
   const heroStrip = mergeHeroWithReal(HERO_STRIP, real);
+  const heroBackdrop = real[0]?.thumbnail ?? HERO_STRIP[0]?.photo;
 
   return (
     <div className="min-h-dvh bg-background">
       {/* Nav */}
-      <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur">
+      <header className="sticky top-0 z-40 border-b border-white/10 bg-black/70 backdrop-blur supports-[backdrop-filter]:bg-black/50">
         <div className="container flex h-14 md:h-16 items-center justify-between gap-2">
           <Link to="/" className="flex items-center gap-2 min-w-0">
             <div className="bg-gradient-to-br from-primary to-secondary p-1.5 md:p-2 rounded-lg shrink-0">
               <Video className="h-4 w-4 md:h-5 md:w-5 text-primary-foreground" aria-hidden="true" />
             </div>
             <div className="min-w-0">
-              <div className="font-bold text-base md:text-lg leading-none text-primary truncate">Periscope</div>
-              <div className="hidden sm:block text-[10px] uppercase tracking-widest text-muted-foreground">Apartment reviews</div>
+              <div className="font-bold text-base md:text-lg leading-none text-white truncate">Periscope</div>
+              <div className="hidden sm:block text-[10px] uppercase tracking-widest text-white/60">Apartment reviews</div>
             </div>
           </Link>
           <nav className="flex items-center gap-1 md:gap-2 shrink-0">
-            <Button variant="ghost" size="sm" asChild className="px-2 md:px-3">
+            <Button variant="ghost" size="sm" asChild className="px-2 md:px-3 text-white hover:bg-white/10 hover:text-white">
               <Link to="/auth">Sign in</Link>
             </Button>
             <Button variant="hero" size="sm" asChild className="px-3 md:px-4">
@@ -260,43 +263,59 @@ const Landing = () => {
         </div>
       </header>
 
-      {/* Compact hero — headline + CTAs, with a live marquee rail laced
-          directly beneath it so visitors see the videos immediately. */}
-      <section className="relative overflow-hidden border-b border-border/40 bg-gradient-to-b from-primary/[0.10] via-background to-muted/20">
-        <div className="container pt-8 md:pt-14 pb-4 md:pb-6 text-center">
-          <span className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[11px] md:text-xs font-semibold uppercase tracking-wider text-primary">
-            <Eye className="h-3 w-3" /> See it before you sign
-          </span>
-          <h1 className="mt-4 text-[2rem] leading-[1.05] md:text-5xl font-bold tracking-tight text-balance">
-            Apartment <span className="text-primary">video reviews</span>.
-          </h1>
-          <p className="mt-3 text-sm md:text-lg text-muted-foreground max-w-2xl mx-auto">
-            The 6&nbsp;PM gym, the maintenance ticket that took 9 days, the fees they forgot to mention. All on video. All from real residents.
-          </p>
-          <div className="mt-5 flex flex-col sm:flex-row justify-center gap-3">
-            <Button variant="hero" size="lg" asChild className="w-full sm:w-auto">
-              <Link to={AUTH_RENTER}>Create free account</Link>
-            </Button>
-            <Button variant="outline" size="lg" asChild className="w-full sm:w-auto">
-              <Link to="/auth">I already have one</Link>
-            </Button>
+      {/* Cinematic full-bleed hero — HBO/Netflix billboard energy.
+          A real video thumbnail (or the first editorial cover) ken-burns
+          slowly behind a dark wash, over which sits the headline + CTAs
+          and a live-trending marquee. */}
+      <section className="relative isolate overflow-hidden bg-black text-white">
+        <div className="absolute inset-0 -z-10">
+          {heroBackdrop && (
+            <img
+              src={heroBackdrop}
+              alt=""
+              aria-hidden
+              className="ken-burns h-full w-full object-cover opacity-60"
+            />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/60 to-black" />
+          <div className="absolute inset-0 bg-gradient-to-tr from-primary/40 via-transparent to-secondary/20 mix-blend-overlay" />
+        </div>
+        <div className="container pt-16 md:pt-28 pb-10 md:pb-16">
+          <div className="max-w-3xl">
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-3 py-1 text-[11px] md:text-xs font-semibold uppercase tracking-[0.2em] text-white/90 backdrop-blur">
+              <Sparkles className="h-3 w-3" /> Now streaming
+            </span>
+            <h1 className="mt-5 text-4xl sm:text-5xl md:text-7xl font-bold tracking-tight leading-[0.95] text-balance">
+              The apartment they<br className="hidden md:block" /> <span className="bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent">don't want you to see.</span>
+            </h1>
+            <p className="mt-5 text-base md:text-xl text-white/80 max-w-2xl text-pretty">
+              Unfiltered resident videos. The 6&nbsp;PM gym. The 9-day maintenance ticket. The fees they forgot to mention. Real buildings. Real tenants. Zero PR spin.
+            </p>
+            <div className="mt-7 flex flex-col sm:flex-row gap-3">
+              <Button variant="hero" size="lg" asChild className="w-full sm:w-auto text-base">
+                <Link to={AUTH_RENTER}><PlayCircle className="h-5 w-5" /> Start watching free</Link>
+              </Button>
+              <Button size="lg" asChild className="w-full sm:w-auto bg-white/10 text-white hover:bg-white/20 border border-white/20 backdrop-blur">
+                <Link to="/auth">I already have an account</Link>
+              </Button>
+            </div>
+            <p className="mt-3 text-xs text-white/60">
+              Free for renters &middot; No credit card &middot; Every video behind a free account
+            </p>
           </div>
-          <p className="mt-3 text-xs text-muted-foreground">
-            Free for renters. No credit card. Every video is behind a free account.
-          </p>
         </div>
 
         {/* Featured strip — mixed teaser bar right beneath the headline */}
-        <div className="pt-2 pb-8 md:pb-12">
+        <div className="pb-10 md:pb-16">
           <div className="container flex items-center justify-between gap-4 mb-3">
-            <div className="inline-flex items-center gap-2 text-[11px] md:text-xs font-semibold uppercase tracking-wider text-primary">
+            <div className="inline-flex items-center gap-2 text-[11px] md:text-xs font-semibold uppercase tracking-[0.2em] text-white/90">
               <span className="relative flex h-2 w-2">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
               </span>
-              Trending on Periscope
+              Trending tonight
             </div>
-            <Link to={AUTH_RENTER} className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline whitespace-nowrap">
+            <Link to={AUTH_RENTER} className="inline-flex items-center gap-1 text-xs font-semibold text-white/90 hover:text-white whitespace-nowrap">
               <Lock className="h-3 w-3" /> Watch all
             </Link>
           </div>
@@ -311,21 +330,37 @@ const Landing = () => {
         </div>
       </section>
 
+      {/* "Who's on Periscope?" — Netflix-style role picker.
+          FIRST decision the visitor makes. Routes each role to the right
+          onboarding path with a role= tag for downstream personalization. */}
+      <section className="relative overflow-hidden bg-gradient-to-b from-black via-black to-[hsl(198_93%_8%)] text-white">
+        <div className="container py-14 md:py-24">
+          <div className="text-center max-w-2xl mx-auto mb-8 md:mb-12">
+            <span className="text-[11px] md:text-xs font-semibold uppercase tracking-[0.2em] text-primary">
+              Pick your side
+            </span>
+            <h2 className="text-3xl md:text-5xl font-bold tracking-tight mt-3">Who's on Periscope?</h2>
+            <p className="text-white/70 mt-3 text-sm md:text-base">Four ways in. Free either way. We'll take you straight to what you need.</p>
+          </div>
+          <RolePicker />
+        </div>
+      </section>
+
       {/* Streaming-style auto-scrolling rails. Each rail scrolls a different
           direction at a different speed. Everything routes to /auth. */}
-      <section className="border-y border-border/40 bg-muted/20">
+      <section className="border-y border-white/10 bg-black text-white">
         <div className="py-10 md:py-20">
           <div className="container flex items-end justify-between gap-4 mb-6 md:mb-8">
             <div className="min-w-0">
-              <span className="text-[11px] md:text-xs font-semibold uppercase tracking-wider text-primary inline-flex items-center gap-1.5">
+              <span className="text-[11px] md:text-xs font-semibold uppercase tracking-[0.2em] text-primary inline-flex items-center gap-1.5">
                 <span className="relative flex h-2 w-2">
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
                   <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
                 </span>
                 Now streaming
               </span>
-              <h2 className="text-xl md:text-3xl font-bold tracking-tight mt-1">Real videos from real residents</h2>
-              <p className="text-muted-foreground mt-1 md:mt-2 text-sm md:text-base">Every clip is behind a free account. Create one to press play.</p>
+              <h2 className="text-2xl md:text-4xl font-bold tracking-tight mt-1">Real videos. Real residents. Zero PR.</h2>
+              <p className="text-white/70 mt-1 md:mt-2 text-sm md:text-base">Every clip is behind a free account. Create one to press play.</p>
             </div>
             <Button variant="hero" size="sm" asChild className="hidden md:inline-flex">
               <Link to={AUTH_RENTER}>
@@ -346,7 +381,7 @@ const Landing = () => {
                 <PlayCircle className="h-4 w-4" /> Create free account to watch
               </Link>
             </Button>
-            <p className="text-xs text-muted-foreground mt-3">
+            <p className="text-xs text-white/60 mt-3">
               <Lock className="inline h-3 w-3 mr-1 -mt-0.5" />
               Every video, every review, every Truth Score — free with an account.
             </p>
@@ -354,42 +389,77 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Join paths: Renters vs Property managers */}
-      <section className="container py-10 md:py-20">
-        <div className="text-center max-w-2xl mx-auto mb-6 md:mb-10">
-          <h2 className="text-2xl md:text-4xl font-bold tracking-tight">Join Periscope</h2>
-          <p className="text-sm md:text-base text-muted-foreground mt-2 md:mt-3">Two ways in — pick the one that fits you. Free either way.</p>
-        </div>
-        <div className="grid md:grid-cols-2 gap-4 md:gap-6">
-          <div className="rounded-2xl border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-background to-background p-6 md:p-8 flex flex-col">
-            <div className="w-12 h-12 rounded-xl bg-primary/15 text-primary flex items-center justify-center mb-4">
-              <Users className="h-6 w-6" />
+      {/* Creator viral section — apartment influencers, TikTokers, and
+          investigative renters. Big black card with sample handle URL,
+          benefits, and a strong CTA. Built to make creators feel courted. */}
+      <section className="relative overflow-hidden bg-black text-white">
+        <div className="container py-14 md:py-24">
+          <div className="relative rounded-3xl border border-white/10 bg-gradient-to-br from-[hsl(188_94%_18%)] via-black to-[hsl(174_60%_20%)] p-6 md:p-12 overflow-hidden">
+            <div className="absolute -top-24 -right-24 h-72 w-72 rounded-full bg-primary/25 blur-3xl" aria-hidden />
+            <div className="absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-secondary/25 blur-3xl" aria-hidden />
+            <div className="relative grid md:grid-cols-2 gap-8 md:gap-12 items-center">
+              <div>
+                <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em]">
+                  <Video className="h-3 w-3" /> For creators & apartment influencers
+                </span>
+                <h2 className="mt-4 text-3xl md:text-5xl font-bold tracking-tight leading-tight text-balance">
+                  Your handle. Your channel.<br /><span className="text-primary">Your audience.</span>
+                </h2>
+                <p className="mt-4 text-white/80 md:text-lg">
+                  You've been posting apartment tours and horror stories on TikTok. Bring them here, get a verified channel, claim videos we've already embedded, and reach every renter searching your city.
+                </p>
+                <ul className="mt-5 space-y-2 text-sm md:text-base text-white/85">
+                  <li className="flex items-start gap-2"><AtSign className="h-4 w-4 mt-1 text-primary shrink-0" /> Custom <span className="font-mono text-primary">@handle</span> at <span className="text-white/70">joinperiscope.com/@you</span></li>
+                  <li className="flex items-start gap-2"><TrendingUp className="h-4 w-4 mt-1 text-primary shrink-0" /> Claim videos we've already indexed from your channel</li>
+                  <li className="flex items-start gap-2"><Sparkles className="h-4 w-4 mt-1 text-primary shrink-0" /> Featured in city, state, and property rails</li>
+                </ul>
+                <div className="mt-7 flex flex-col sm:flex-row gap-3">
+                  <Button variant="hero" size="lg" asChild className="w-full sm:w-auto text-base">
+                    <Link to="/auth?returnTo=%2Fcreator%2Fapply&role=creator">
+                      <Video className="h-5 w-5" /> Create my channel
+                    </Link>
+                  </Button>
+                  <Button size="lg" asChild className="w-full sm:w-auto bg-white/10 text-white hover:bg-white/20 border border-white/20 backdrop-blur">
+                    <Link to="/creators">See featured creators</Link>
+                  </Button>
+                </div>
+              </div>
+              {/* Fake channel preview card */}
+              <div className="relative">
+                <div className="rounded-2xl border border-white/15 bg-black/60 backdrop-blur p-5 shadow-elevated">
+                  <div className="flex items-center gap-3">
+                    <div className="h-14 w-14 rounded-full bg-gradient-to-br from-primary to-secondary grid place-items-center text-primary-foreground font-bold text-xl">U</div>
+                    <div className="min-w-0">
+                      <div className="font-bold text-lg leading-tight">Urban Living NYC</div>
+                      <div className="text-sm text-white/60">@urban-living-nyc · 128K followers</div>
+                    </div>
+                    <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-primary/20 text-primary px-2 py-1 text-[10px] font-semibold uppercase tracking-wider">Verified</span>
+                  </div>
+                  <div className="mt-4 grid grid-cols-3 gap-1.5">
+                    {[imgHighrise, imgLobby, imgPool, imgBathLeak, imgGym, imgKitchen].map((src, i) => (
+                      <div key={i} className="relative aspect-[9/16] overflow-hidden rounded-md">
+                        <img src={src} alt="" className="h-full w-full object-cover" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+                        <Play className="absolute bottom-1 left-1 h-3 w-3 text-white fill-current" />
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-4 flex items-center justify-between text-xs text-white/70">
+                    <span>142 videos · 3.2M views</span>
+                    <span className="text-primary font-semibold">Follow</span>
+                  </div>
+                </div>
+                <div className="absolute -bottom-3 -right-3 hidden md:block rotate-3 rounded-full bg-primary text-primary-foreground px-3 py-1 text-xs font-bold shadow-elevated">
+                  Live now
+                </div>
+              </div>
             </div>
-            <h3 className="text-xl md:text-2xl font-bold mb-2">Renters — join free</h3>
-            <p className="text-sm md:text-base text-muted-foreground mb-5 md:mb-6 flex-1">
-              Watch real video reviews. Post your own. Compare buildings side by side. See the Truth Score before you tour.
-            </p>
-            <Button variant="hero" size="lg" asChild className="w-full">
-              <Link to={AUTH_RENTER}>Sign up as a renter</Link>
-            </Button>
-          </div>
-          <div className="rounded-2xl border-2 border-secondary/40 bg-gradient-to-br from-secondary/10 via-background to-background p-6 md:p-8 flex flex-col">
-            <div className="w-12 h-12 rounded-xl bg-secondary/15 text-secondary flex items-center justify-center mb-4">
-              <Building2 className="h-6 w-6" />
-            </div>
-            <h3 className="text-xl md:text-2xl font-bold mb-2">Property managers — join free</h3>
-            <p className="text-sm md:text-base text-muted-foreground mb-5 md:mb-6 flex-1">
-              Claim your building. Upload official tours. Respond to residents. Get alerts the moment a new review is posted.
-            </p>
-            <Button variant="outline" size="lg" asChild className="w-full">
-              <Link to={AUTH_MANAGER}>Sign up as a manager</Link>
-            </Button>
           </div>
         </div>
       </section>
 
       {/* Testimonials */}
-      <section className="container py-10 md:py-24">
+      <section className="container py-14 md:py-24">
         <div className="text-center max-w-2xl mx-auto mb-6 md:mb-12">
           <span className="text-[11px] md:text-xs font-semibold uppercase tracking-wider text-primary">Loved by both sides</span>
           <h2 className="text-2xl md:text-4xl font-bold tracking-tight mt-2">Renters and managers agree</h2>
@@ -446,19 +516,27 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Manager CTA */}
-      <section className="border-y border-border/40 bg-muted/30">
-        <div className="container py-10 md:py-20 flex flex-col md:flex-row items-start md:items-center justify-between gap-5 md:gap-6">
-          <div className="max-w-xl">
-            <span className="text-[11px] md:text-xs font-semibold uppercase tracking-wider text-secondary">For property managers</span>
-            <h2 className="text-xl md:text-3xl font-bold mt-1">Claim your building. Respond to residents. Get alerts.</h2>
-            <p className="text-sm md:text-base text-muted-foreground mt-2">Managers claim pages for free, add official photos and videos, and get notified the moment a new review is posted.</p>
+      {/* Final CTA + viral share row */}
+      <section className="relative overflow-hidden bg-black text-white">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-secondary/20" aria-hidden />
+        <div className="container relative py-16 md:py-24 text-center">
+          <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em]">
+            <Eye className="h-3 w-3" /> Help the next renter
+          </span>
+          <h2 className="mt-4 text-3xl md:text-5xl font-bold tracking-tight text-balance">
+            Every share stops someone<br className="hidden md:block" /> from signing a bad lease.
+          </h2>
+          <p className="mt-4 text-white/70 md:text-lg max-w-2xl mx-auto">
+            The more people who know, the more managers get held accountable. Post it, share it, tag a friend touring next weekend.
+          </p>
+          <div className="mt-8">
+            <ShareRow variant="dark" />
           </div>
-          <Button variant="outline" size="lg" asChild className="w-full md:w-auto">
-            <Link to="/auth?returnTo=%2Fmanager">
-              <Building2 className="h-4 w-4" /> Manager tools
-            </Link>
-          </Button>
+          <div className="mt-10">
+            <Button variant="hero" size="lg" asChild>
+              <Link to={AUTH_RENTER}><PlayCircle className="h-5 w-5" /> Create free account</Link>
+            </Button>
+          </div>
         </div>
       </section>
 
