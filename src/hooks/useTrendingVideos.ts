@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
+import { parseVideoMeta } from '@/lib/videoMeta';
+
 export type TrendingVideo = {
   id: string;
   youtubeId: string | null;
@@ -10,6 +12,8 @@ export type TrendingVideo = {
   city: string | null;
   views: number;
   category: string;
+  summary: string | null;
+  angle: string | null;
 };
 
 // Slugs of the viral / funny / hot-take curated categories. Anything tagged
@@ -75,15 +79,18 @@ export function useTrendingVideos({ limit = 12, nearCity = null }: Options = {})
           if (!ytId) return [];
           const catTag = tags.find((t: string) => t.startsWith('cat:'));
           const chTag = tags.find((t: string) => t.startsWith('ch:'));
+          const meta = parseVideoMeta(tags, r.caption);
           return [{
             id: r.id,
             youtubeId: ytId,
             title: r.title,
             thumbnail: `https://i.ytimg.com/vi/${ytId}/hqdefault.jpg`,
-            channel: chTag ? chTag.slice(3) : (r.caption?.split('·')[0]?.trim() || 'YouTube'),
+            channel: meta.channel || (chTag ? chTag.slice(3) : 'YouTube'),
             city: r.city ?? null,
             views: parseViews(r.caption),
             category: catTag ? catTag.slice(4) : 'trending',
+            summary: meta.summary,
+            angle: meta.angle,
           }];
         });
         mapped.sort((a, b) => b.views - a.views);
