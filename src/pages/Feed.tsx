@@ -245,11 +245,12 @@ const Feed = () => {
       .filter(Boolean),
   )].slice(0, 24), [items, stateFilter]);
   const cityOptions = city !== 'All' && !citiesForState.includes(city) ? [city, ...citiesForState] : citiesForState;
-  const filteredRaw = items.filter((i) =>
-    (category === 'All' || i.category === category) &&
-    (stateFilter === 'All' || stateFromLocation(i.location) === stateFilter) &&
-    (city === 'All' || i.location === city),
-  );
+  const filteredRaw = items.filter((i) => {
+    const isGlobalCuratedVideo = i.source === 'imported' && !i.location;
+    return (category === 'All' || i.category === category) &&
+      (isGlobalCuratedVideo || stateFilter === 'All' || stateFromLocation(i.location) === stateFilter) &&
+      (isGlobalCuratedVideo || city === 'All' || i.location === city);
+  });
   const filtered = filteredRaw;
   const activeCount = (category !== 'All' ? 1 : 0) + (city !== 'All' ? 1 : 0) + (stateFilter !== 'All' && stateFilter !== (localState ?? 'All') ? 1 : 0);
   const resetToLocal = () => {
@@ -436,6 +437,8 @@ const FeedCard = ({ item }: { item: FeedItem }) => {
   const { toast } = useToast();
   const [src, setSrc] = useState<string | null>(null);
   const [playing, setPlaying] = useState(false);
+  const isCuratedVideo = item.source === 'imported' && item.propertyId.startsWith('watch/');
+  const itemPath = isCuratedVideo ? `/${item.propertyId}` : `/property/${item.propertyId}`;
 
   const play = async () => {
     if (item.embedUrl) { setPlaying(true); return; }
@@ -446,7 +449,7 @@ const FeedCard = ({ item }: { item: FeedItem }) => {
   };
 
   const share = async () => {
-    const url = `${window.location.origin}/property/${item.propertyId}`;
+    const url = `${window.location.origin}${itemPath}`;
     try {
       if (navigator.share) await navigator.share({ title: item.propertyName, text: item.title, url });
       else { await navigator.clipboard.writeText(url); toast({ title: 'Link copied' }); }
@@ -480,7 +483,9 @@ const FeedCard = ({ item }: { item: FeedItem }) => {
 
         {/* Overlay */}
         <div className="absolute top-3 left-3 flex gap-2">
-          {item.source === 'official'
+          {isCuratedVideo
+            ? <Badge variant="secondary" className="gap-1"><Play className="w-3 h-3" /> YouTube</Badge>
+            : item.source === 'official'
             ? <Badge variant="secondary" className="gap-1"><Building2 className="w-3 h-3" /> Official</Badge>
             : <Badge variant="success" className="gap-1"><ShieldCheck className="w-3 h-3" /> {item.verified ? 'Verified resident' : 'Resident'}</Badge>}
           {item.category && <Badge variant="outline" className="bg-black/40 text-white border-white/30">{item.category}</Badge>}
@@ -488,8 +493,8 @@ const FeedCard = ({ item }: { item: FeedItem }) => {
 
         <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/90 to-transparent p-4 space-y-2">
           <p className="text-white font-semibold">{item.title}</p>
-          <Link to={`/property/${item.propertyId}`} className="flex items-center gap-1 text-white/80 text-sm hover:text-white">
-            <MapPin className="w-4 h-4" /> {item.propertyName} · {item.location}
+          <Link to={itemPath} className="flex items-center gap-1 text-white/80 text-sm hover:text-white">
+            <MapPin className="w-4 h-4" /> {item.propertyName}{item.location ? ` · ${item.location}` : ''}
           </Link>
           {item.creatorId && item.creatorName && (
             <Link to={`/creator/${item.creatorId}`} className="text-white/70 text-xs hover:text-white">
@@ -498,7 +503,11 @@ const FeedCard = ({ item }: { item: FeedItem }) => {
           )}
           <div className="flex gap-2 pt-1">
             <Button size="sm" variant="secondary" onClick={share}><Share2 className="w-4 h-4 mr-1" /> Share</Button>
-            <Button size="sm" variant="hero" asChild><Link to={`/contribute/${item.propertyId}`}><PenLine className="w-4 h-4 mr-1" /> Add a review</Link></Button>
+            <Button size="sm" variant="hero" asChild>
+              <Link to={isCuratedVideo ? '/contribute' : `/contribute/${item.propertyId}`}>
+                <PenLine className="w-4 h-4 mr-1" /> {isCuratedVideo ? 'Add yours' : 'Add a review'}
+              </Link>
+            </Button>
           </div>
         </div>
       </div>

@@ -404,6 +404,11 @@ const StoriesRail = ({ localCity, onChange }: { localCity: LocalCity | null; onC
 };
 
 // Netflix "Top 10" — numbered oversized posters with a giant outlined numeral.
+const feedItemHref = (item: FeedItem) =>
+  item.source === 'imported' && item.propertyId.startsWith('watch/')
+    ? `/${item.propertyId}`
+    : `/property/${item.propertyId}`;
+
 const TrendingRail = ({ items }: { items: FeedItem[] }) => (
   <section>
     <div className="mb-4 flex items-end justify-between gap-4">
@@ -417,7 +422,7 @@ const TrendingRail = ({ items }: { items: FeedItem[] }) => (
     </div>
     <div className="flex gap-2 md:gap-4 overflow-x-auto pb-4 no-scrollbar -mx-4 px-4">
       {items.map((item, i) => (
-        <Link key={item.id} to={`/property/${item.propertyId}`} className="group shrink-0 flex items-end">
+        <Link key={item.id} to={feedItemHref(item)} className="group shrink-0 flex items-end">
           <span
             aria-hidden
             className="text-[6.5rem] md:text-[10rem] leading-[0.8] font-black text-transparent select-none -mr-4 md:-mr-6"
@@ -463,7 +468,7 @@ const PosterRail = ({ title, subtitle, items, accent }: { title: string; subtitl
 };
 
 const PosterCard = ({ item }: { item: FeedItem }) => (
-  <Link to={`/property/${item.propertyId}`} className="group shrink-0 w-40 md:w-56">
+  <Link to={feedItemHref(item)} className="group shrink-0 w-40 md:w-56">
     <div className="relative aspect-[2/3] rounded-xl overflow-hidden bg-muted shadow-card hover:shadow-card-hover hover:-translate-y-1 transition-all duration-300">
       {item.thumbnailUrl ? (
         <img src={item.thumbnailUrl} alt={item.title} loading="lazy" className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.08]" />
@@ -504,7 +509,7 @@ const PhotoMosaic = ({ items }: { items: FeedItem[] }) => {
       </div>
       <div className="grid grid-cols-3 gap-1 md:gap-1.5 rounded-2xl overflow-hidden">
         {featured && (
-          <Link to={`/property/${featured.propertyId}`} className="relative col-span-2 row-span-2 aspect-square bg-muted overflow-hidden group">
+          <Link to={feedItemHref(featured)} className="relative col-span-2 row-span-2 aspect-square bg-muted overflow-hidden group">
             {featured.thumbnailUrl && <img src={featured.thumbnailUrl} alt={featured.title} loading="lazy" className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.06]" />}
             <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-transparent" />
             <div className="absolute bottom-0 inset-x-0 p-4 text-white">
@@ -514,7 +519,7 @@ const PhotoMosaic = ({ items }: { items: FeedItem[] }) => {
           </Link>
         )}
         {rest.map((item) => (
-          <Link key={item.id} to={`/property/${item.propertyId}`} className="relative aspect-square bg-muted overflow-hidden group">
+          <Link key={item.id} to={feedItemHref(item)} className="relative aspect-square bg-muted overflow-hidden group">
             {item.thumbnailUrl && <img src={item.thumbnailUrl} alt={item.title} loading="lazy" className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.08]" />}
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
           </Link>
@@ -592,7 +597,7 @@ const InfiniteFeed = ({ items }: { items: FeedItem[] }) => {
       </div>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-3">
         {visible.map((item) => (
-          <Link key={item.id} to={`/property/${item.propertyId}`} className="group relative aspect-square rounded-xl overflow-hidden bg-muted shadow-card hover:shadow-card-hover transition-all">
+          <Link key={item.id} to={feedItemHref(item)} className="group relative aspect-square rounded-xl overflow-hidden bg-muted shadow-card hover:shadow-card-hover transition-all">
             {item.thumbnailUrl && (
               <img src={item.thumbnailUrl} alt={item.title} loading="lazy" className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.06]" />
             )}
