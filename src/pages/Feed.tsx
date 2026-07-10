@@ -332,8 +332,10 @@ const Feed = () => {
         />
       ) : (
         <>
-          <div className="h-[calc(100dvh-8rem)] md:h-[calc(100dvh-9rem)] overflow-y-auto overflow-x-hidden snap-y snap-mandatory">
-            {filtered.map((item) => <FeedCard key={item.id} item={item} />)}
+          <div className="container px-3 sm:px-4 py-4 md:py-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+              {filtered.map((item) => <FeedTile key={item.id} item={item} />)}
+            </div>
           </div>
           <div className="container px-4 py-6 space-y-6">
             <PromptTileRail
