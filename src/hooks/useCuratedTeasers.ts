@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { publicContentClient } from '@/lib/publicContentClient';
 
 export type CuratedTeaser = {
   id: string;              // seeded_videos.id — used to link to /watch/:id
@@ -31,7 +31,7 @@ export function useCuratedTeasers(limit = 60) {
     let cancelled = false;
     (async () => {
       try {
-        const { data, error } = await supabase
+        const { data, error } = await publicContentClient
           .from('seeded_videos')
           .select('id, title, embed_url, hashtags, city, caption')
           .eq('moderation_status', 'approved')

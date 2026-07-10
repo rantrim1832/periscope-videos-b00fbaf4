@@ -8,6 +8,7 @@ import { parseVideoMeta, youtubeUrlFor, youtubeChannelUrl } from '@/lib/videoMet
 import { ShieldCheck } from 'lucide-react';
 import type { CreatorChannel } from '@/lib/creatorTypes';
 import { InspirationRails } from '@/components/contribute/InspirationRails';
+import { publicContentClient } from '@/lib/publicContentClient';
 
 type CuratedRow = {
   id: string;
@@ -53,7 +54,7 @@ export default function Watch() {
     if (!id) { setStatus('notfound'); return; }
     let cancelled = false;
     (async () => {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await (publicContentClient as any)
         .from('seeded_videos')
         .select('id, title, embed_url, hashtags, city, caption, source')
         .eq('id', id)

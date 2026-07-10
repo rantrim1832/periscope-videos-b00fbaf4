@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { publicContentClient } from '@/lib/publicContentClient';
 
 import { parseVideoMeta } from '@/lib/videoMeta';
 
@@ -64,7 +64,7 @@ export function useTrendingVideos({ limit = 12, nearCity = null }: Options = {})
     (async () => {
       setLoading(true);
       try {
-        let q = supabase
+        let q = publicContentClient
           .from('seeded_videos')
           .select('id, title, embed_url, hashtags, city, caption')
           .eq('moderation_status', 'approved')
