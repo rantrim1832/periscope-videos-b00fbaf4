@@ -332,8 +332,10 @@ const Feed = () => {
         />
       ) : (
         <>
-          <div className="h-[calc(100dvh-8rem)] md:h-[calc(100dvh-9rem)] overflow-y-auto overflow-x-hidden snap-y snap-mandatory">
-            {filtered.map((item) => <FeedCard key={item.id} item={item} />)}
+          <div className="container px-3 sm:px-4 py-4 md:py-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+              {filtered.map((item) => <FeedTile key={item.id} item={item} />)}
+            </div>
           </div>
           <div className="container px-4 py-6 space-y-6">
             <PromptTileRail
@@ -433,7 +435,119 @@ const LocalVideoStart = ({ locationLabel, category }: { locationLabel: string; c
   </main>
 );
 
-const FeedCard = ({ item }: { item: FeedItem }) => {
+function ytIdFromEmbed(url?: string): string | null {
+  if (!url) return null;
+  const m = url.match(/(?:youtube(?:-nocookie)?\.com\/(?:embed\/|watch\?v=)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+  return m ? m[1] : null;
+}
+
+const FeedTile = ({ item }: { item: FeedItem }) => {
+  const { toast } = useToast();
+  const [src, setSrc] = useState<string | null>(null);
+  const [playing, setPlaying] = useState(false);
+  const isCuratedVideo = item.source === 'imported' && item.propertyId.startsWith('watch/');
+  const itemPath = isCuratedVideo ? `/${item.propertyId}` : `/property/${item.propertyId}`;
+  const ytId = ytIdFromEmbed(item.embedUrl);
+  const thumb = item.thumbnailUrl || (ytId ? `https://i.ytimg.com/vi/${ytId}/hqdefault.jpg` : null);
+
+  const play = async () => {
+    if (item.embedUrl) { setPlaying(true); return; }
+    if (item.thumbnailUrl && !item.playbackUrl) return;
+    const p = await getVideoProvider().getPlayback(item.playbackUrl ?? item.id);
+    setSrc(p.hlsUrl);
+    setPlaying(true);
+  };
+
+  const share = async () => {
+    const url = `${window.location.origin}${itemPath}`;
+    try {
+      if (navigator.share) await navigator.share({ title: item.propertyName, text: item.title, url });
+      else { await navigator.clipboard.writeText(url); toast({ title: 'Link copied' }); }
+    } catch { /* cancelled */ }
+  };
+
+  return (
+    <article className="group rounded-xl overflow-hidden bg-card border border-border/60 hover:border-primary/40 transition-colors flex flex-col">
+      <div className="relative aspect-video bg-black overflow-hidden">
+        {playing ? (
+          item.embedUrl ? (
+            <iframe
+              src={item.embedUrl + (item.embedUrl.includes('?') ? '&' : '?') + 'autoplay=1'}
+              title={item.title}
+              className="absolute inset-0 w-full h-full"
+              allow="autoplay; encrypted-media; picture-in-picture; web-share"
+              allowFullScreen
+            />
+          ) : src ? (
+            <VideoPlayer src={src} className="absolute inset-0 w-full h-full object-cover bg-black" />
+          ) : null
+        ) : (
+          <button onClick={play} className="absolute inset-0 w-full h-full group/play">
+            {thumb ? (
+              <img
+                src={thumb}
+                alt={item.title}
+                loading="lazy"
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover/play:scale-105"
+              />
+            ) : (
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/30 to-secondary/30" />
+            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-black/20" />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-14 h-14 rounded-full bg-white/95 flex items-center justify-center shadow-lg transition-transform duration-300 group-hover/play:scale-110">
+                <Play className="w-6 h-6 text-black ml-0.5" fill="currentColor" />
+              </div>
+            </div>
+            <div className="absolute top-2 left-2 flex gap-1.5 flex-wrap">
+              {isCuratedVideo ? (
+                <Badge variant="secondary" className="gap-1 text-[10px] h-5"><Play className="w-3 h-3" /> YouTube</Badge>
+              ) : item.source === 'official' ? (
+                <Badge variant="secondary" className="gap-1 text-[10px] h-5"><Building2 className="w-3 h-3" /> Official</Badge>
+              ) : (
+                <Badge variant="success" className="gap-1 text-[10px] h-5"><ShieldCheck className="w-3 h-3" /> {item.verified ? 'Verified' : 'Resident'}</Badge>
+              )}
+            </div>
+            {item.category && (
+              <div className="absolute top-2 right-2">
+                <Badge variant="outline" className="text-[10px] h-5 bg-black/50 text-white border-white/30">{item.category}</Badge>
+              </div>
+            )}
+          </button>
+        )}
+      </div>
+
+      <div className="p-3 flex-1 flex flex-col gap-2">
+        <Link to={itemPath} className="block">
+          <h3 className="text-sm font-semibold leading-snug line-clamp-2 group-hover:text-primary transition-colors">
+            {item.title}
+          </h3>
+        </Link>
+        <Link to={itemPath} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground line-clamp-1">
+          <MapPin className="w-3 h-3 shrink-0" />
+          <span className="truncate">{item.propertyName}{item.location ? ` · ${item.location}` : ''}</span>
+        </Link>
+        {item.creatorId && item.creatorName && (
+          <Link to={`/creator/${item.creatorId}`} className="text-[11px] text-muted-foreground hover:text-primary truncate">
+            by {item.creatorName}
+          </Link>
+        )}
+        <div className="flex gap-1.5 pt-1 mt-auto">
+          <Button size="sm" variant="outline" className="h-7 px-2 text-xs flex-1" onClick={share}>
+            <Share2 className="w-3 h-3" /> Share
+          </Button>
+          <Button size="sm" variant="hero" className="h-7 px-2 text-xs flex-1" asChild>
+            <Link to={isCuratedVideo ? '/contribute' : `/contribute/${item.propertyId}`}>
+              <PenLine className="w-3 h-3" /> Add
+            </Link>
+          </Button>
+        </div>
+      </div>
+    </article>
+  );
+};
+
+const _UnusedFeedCard = ({ item }: { item: FeedItem }) => {
   const { toast } = useToast();
   const [src, setSrc] = useState<string | null>(null);
   const [playing, setPlaying] = useState(false);
