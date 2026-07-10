@@ -726,9 +726,15 @@ Two failure classes were fixed in the repo:
 - `src/pages/AdminCuratedVideos.tsx`
 - `src/components/admin/CategoryLibraryBrowser.tsx`
 
-**Action for Cursor:** deploy the changed functions and config to the external
-production Supabase project, then re-test the four `/admin/curated` actions:
-bulk seed, AI descriptions, Google reviews, and video/property matching.
+**Important:** the bulk seed button no longer depends on the `youtube-bulk-seed`
+function for the immediate UI path; it now uses the already-public preview path
+plus safe client-side duplicate checks/inserts, so the founder should not see
+the `youtube-bulk-seed` non-2xx toast after this frontend change lands.
+
+**Action for Cursor:** still deploy the changed functions and config to the
+external production Supabase project so the backend utilities stay healthy, then
+re-test the four `/admin/curated` actions: bulk seed, AI descriptions, Google
+reviews, and video/property matching.
 
 ---
 
