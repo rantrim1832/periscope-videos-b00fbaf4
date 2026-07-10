@@ -710,6 +710,32 @@ const AdminCuratedVideos = () => {
 
         <Card className="mb-6">
           <CardHeader>
+            <CardTitle className="flex items-center gap-2"><Sparkles className="w-5 h-5 text-primary" /> AI descriptions</CardTitle>
+            <CardDescription>
+              Writes an original 2-3 sentence summary, an editorial angle, and 3-5 topic tags for each approved YouTube video — indexed by search engines so we own the content around every embed.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex flex-wrap items-end gap-3">
+              <div>
+                <label className="text-xs text-muted-foreground block mb-1">Videos to process (1–100)</label>
+                <Input type="number" min={1} max={100} value={summaryLimit}
+                  onChange={(e) => setSummaryLimit(Math.max(1, Math.min(100, Number(e.target.value) || 20)))}
+                  className="w-28" />
+              </div>
+              <Button onClick={runGenerateSummaries} disabled={generatingSummaries}>
+                {generatingSummaries ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Sparkles className="w-4 h-4 mr-2" />}
+                Generate for videos missing a summary
+              </Button>
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              Uses Lovable AI (Gemini 3.5 Flash). Summaries and tags show on the Watch page, in trending rails, and get indexed by search engines. Safe to re-run — already-summarised videos are skipped.
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="mb-6">
+          <CardHeader>
             <CardTitle className="flex items-center gap-2"><Building2 className="w-5 h-5 text-primary" /> Enrich properties</CardTitle>
             <CardDescription>
               Link seeded YouTube videos to matching properties, and pull cached Google reviews. Both feed into the Truth Score.
