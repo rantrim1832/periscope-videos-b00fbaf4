@@ -12,6 +12,9 @@ import {
 
 type Analytics = {
   totals: Record<string, number>;
+  roles?: Record<string, number>;
+  top_cities?: { city: string; count: number }[];
+  new_by_city?: { city: string; count: number }[];
   signup_series: { date: string; count: number }[];
   recent_users: { id: string; email: string; created_at: string; provider?: string }[];
   top_contributors: { user_id: string; email: string; reviews: number }[];
@@ -61,13 +64,64 @@ const AdminDashboard = () => {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
               <Stat icon={Users} label="Users" value={t.users} delta={`+${t.users_new_7d} this week`} accent="text-primary" />
               <Stat icon={Star} label="Reviews" value={t.reviews} delta={`+${t.reviews_new_7d} this week`} />
-              <Stat icon={Youtube} label="Curated videos" value={t.videos} delta={`+${t.videos_new_7d} this week`} />
-              <Stat icon={Home} label="Properties" value={t.properties} delta={`+${t.properties_new_7d} this week`} />
+              <Stat icon={Youtube} label="Curated videos" value={t.videos} delta={`+${t.videos_new_today ?? 0} today · +${t.videos_new_7d} 7d · +${t.videos_new_30d ?? 0} 30d`} />
+              <Stat icon={Home} label="Properties" value={t.properties} delta={`+${t.properties_new_today ?? 0} today · +${t.properties_new_7d} 7d · +${t.properties_new_30d ?? 0} 30d`} />
               <Stat icon={ShieldCheck} label="Verifications" value={t.verifications} delta={`${t.verifications_pending} pending`} highlight={t.verifications_pending > 0} />
-              <Stat icon={MessageSquare} label="Contact msgs" value={t.contact_messages} delta={`${t.contact_new} new`} highlight={t.contact_new > 0} />
+              <Stat icon={MessageSquare} label="Contact msgs" value={t.contact_messages} delta={`${t.contact_new} new · +${t.contact_new_7d ?? 0} 7d`} highlight={t.contact_new > 0} />
               <Stat icon={Sparkles} label="Topics" value={t.curated_categories} />
               <Stat icon={Video} label="Shorts" value={t.shorts} />
+              <Stat icon={ClipboardCheck} label="Videos pending review" value={t.videos_pending ?? 0} delta={t.videos_pending ? 'Approve on /admin/curated' : 'All caught up'} highlight={(t.videos_pending ?? 0) > 0} />
+              <Stat icon={TrendingUp} label="Video views" value={t.video_views ?? '—'} delta={t.video_views === null || t.video_views === undefined ? 'Tracking table pending' : 'Total plays'} />
             </div>
+
+            {(data.roles || data.top_cities?.length) && (
+              <div className="grid md:grid-cols-2 gap-4 mb-6">
+                {data.roles && (
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm flex items-center gap-2"><Users className="w-4 h-4 text-primary" /> Users by role</CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <ul className="divide-y divide-border">
+                        {Object.entries(data.roles).map(([role, n]) => (
+                          <li key={role} className="py-2 flex items-center justify-between">
+                            <span className="text-sm capitalize">{role.replace('_', ' ')}</span>
+                            <Badge variant="outline" className="text-xs">{n}</Badge>
+                          </li>
+                        ))}
+                        <li className="py-2 flex items-center justify-between text-xs text-muted-foreground">
+                          <span>Renters (users without an explicit role)</span>
+                          <span>{Math.max(0, (t.users ?? 0) - Object.values(data.roles).reduce((a, b) => a + b, 0))}</span>
+                        </li>
+                      </ul>
+                    </CardContent>
+                  </Card>
+                )}
+                {data.top_cities && data.top_cities.length > 0 && (
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm flex items-center gap-2"><Home className="w-4 h-4 text-primary" /> Top cities by properties</CardTitle>
+                      <CardDescription>All-time property count · new in last 30 days</CardDescription>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <ul className="divide-y divide-border">
+                        {data.top_cities.slice(0, 10).map((c) => {
+                          const newCount = data.new_by_city?.find((n) => n.city === c.city)?.count ?? 0;
+                          return (
+                            <li key={c.city} className="py-2 flex items-center justify-between">
+                              <span className="text-sm truncate">{c.city}</span>
+                              <span className="text-xs text-muted-foreground whitespace-nowrap">
+                                {c.count} total{newCount > 0 && <span className="text-primary font-medium"> · +{newCount} new</span>}
+                              </span>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            )}
 
             <Card className="mb-6">
               <CardHeader>
