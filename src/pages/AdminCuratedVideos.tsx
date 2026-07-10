@@ -59,6 +59,7 @@ type AdminActionStatus = {
   title: string;
   detail: string;
   metrics?: { label: string; value: string | number }[];
+  notes?: string[];
   cta?: { label: string; targetId: string };
 };
 
@@ -612,11 +613,41 @@ const AdminCuratedVideos = () => {
     try {
       const { data, error } = await supabase.functions.invoke('fetch-google-reviews', { body: { limit: 25 } });
       if (error) throw error;
+      const processed = Number(data?.propertiesProcessed ?? 0);
+      const totalReviews = Number(data?.totalReviews ?? 0);
+      const statusCounts = (data?.statusCounts ?? {}) as Record<string, number>;
+      const sampleFailures = Array.isArray(data?.sampleFailures) ? data.sampleFailures : [];
+      const metrics = [
+        { label: 'Processed', value: processed },
+        { label: 'Reviews cached', value: totalReviews },
+        { label: 'Google API errors', value: Number(statusCounts.google_api_error ?? 0) },
+        { label: 'No place found', value: Number(statusCounts.no_place_found ?? 0) },
+        { label: 'No reviews returned', value: Number(statusCounts.no_reviews_returned ?? 0) },
+      ];
+      const notes = sampleFailures.slice(0, 4).map((failure: any) => {
+        const label = failure.propertyName || failure.placeId || 'Property';
+        const reason = failure.error || failure.status || 'No review data returned';
+        const query = failure.query ? ` (${failure.query})` : '';
+        return `${label}: ${reason}${query}`;
+      });
+      const detail = totalReviews > 0
+        ? `Processed ${processed} properties and cached ${totalReviews} Google reviews.`
+        : sampleFailures.length > 0
+          ? `Processed ${processed} properties but Google returned no cacheable reviews. See the breakdown below.`
+          : `Processed ${processed} properties but no Google reviews were returned.`;
+      setLastAction({
+        kind: totalReviews > 0 ? 'success' : 'warning',
+        title: totalReviews > 0 ? 'Google reviews pulled' : 'No Google reviews cached',
+        detail,
+        metrics,
+        notes,
+      });
       toast({
-        title: 'Google reviews pulled',
-        description: `Processed ${data?.propertiesProcessed ?? 0} properties · ${data?.totalReviews ?? 0} reviews cached.`,
+        title: totalReviews > 0 ? 'Google reviews pulled' : 'No Google reviews cached',
+        description: detail,
       });
     } catch (e: any) {
+      setLastAction({ kind: 'error', title: 'Google fetch failed', detail: extractErrorMessage(e) });
       toast({ title: 'Google fetch failed', description: extractErrorMessage(e), variant: 'destructive' });
     } finally {
       setFetchingGoogle(false);
@@ -857,6 +888,13 @@ const AdminCuratedVideos = () => {
                           <p className="text-lg font-semibold leading-none">{typeof metric.value === 'number' ? metric.value.toLocaleString() : metric.value}</p>
                           <p className="text-[11px] text-muted-foreground mt-1">{metric.label}</p>
                         </div>
+                      ))}
+                    </div>
+                  )}
+                  {lastAction.notes && lastAction.notes.length > 0 && (
+                    <div className="mt-3 rounded-md border border-border bg-muted/40 p-3 space-y-1">
+                      {lastAction.notes.map((note) => (
+                        <p key={note} className="text-xs text-muted-foreground break-words">{note}</p>
                       ))}
                     </div>
                   )}
