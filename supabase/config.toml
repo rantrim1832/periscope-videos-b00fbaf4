@@ -59,6 +59,19 @@ verify_jwt = false
 [functions.fetch-google-reviews]
 verify_jwt = false
 
+# Creator Channels — validate user + admin role inside the function.
+[functions.youtube-verify-channel]
+verify_jwt = false
+
+[functions.verify-creator-channel]
+verify_jwt = false
+
+[functions.submit-creator-video]
+verify_jwt = false
+
+[functions.approve-creator-submission]
+verify_jwt = false
+
 [functions.generate-video-summary]
 verify_jwt = false
 
