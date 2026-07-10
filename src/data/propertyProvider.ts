@@ -531,7 +531,7 @@ export class CanonicalPropertyProvider implements PropertyDataProvider {
       .select('id, title, embed_url, caption, hashtags, source, city, created_at')
       .eq('moderation_status', 'approved')
       .order('created_at', { ascending: false })
-      .limit(400);
+      .limit(1000);
     const { feedCategoryForSlug } = await import('@/lib/curatedCategories');
     return (data ?? []).map((r: any) => {
       const tags: string[] = Array.isArray(r.hashtags) ? r.hashtags : [];
