@@ -5,6 +5,8 @@ import { ArrowLeft, PlayCircle, Lock, MapPin, ExternalLink, Sparkles, Tag } from
 import { supabase } from '@/integrations/supabase/client';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { parseVideoMeta, youtubeUrlFor, youtubeChannelUrl } from '@/lib/videoMeta';
+import { ShieldCheck } from 'lucide-react';
+import type { CreatorChannel } from '@/lib/creatorTypes';
 
 type CuratedRow = {
   id: string;
@@ -36,6 +38,7 @@ export default function Watch() {
   const { id } = useParams<{ id: string }>();
   const [row, setRow] = useState<CuratedRow | null>(null);
   const [status, setStatus] = useState<'loading' | 'ok' | 'notfound'>('loading');
+  const [creator, setCreator] = useState<CreatorChannel | null>(null);
 
   useEffect(() => {
     if (!id) { setStatus('notfound'); return; }
@@ -51,6 +54,15 @@ export default function Watch() {
       if (error || !data) { setStatus('notfound'); return; }
       setRow(data as CuratedRow);
       setStatus('ok');
+      if ((data as any).creator_id) {
+        const { data: c } = await (supabase as any)
+          .from('creator_channels')
+          .select('*')
+          .eq('id', (data as any).creator_id)
+          .eq('status', 'approved')
+          .maybeSingle();
+        if (!cancelled) setCreator(c ?? null);
+      }
     })();
     return () => { cancelled = true; };
   }, [id]);
@@ -114,7 +126,15 @@ export default function Watch() {
       <section className="container py-6 md:py-10 max-w-4xl">
         <h1 className="text-xl md:text-3xl font-bold tracking-tight text-balance">{row.title}</h1>
         <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
-          <span className="font-medium text-foreground">{channel}</span>
+          {creator ? (
+            <Link to={`/channel/${creator.handle}`} className="inline-flex items-center gap-1.5 font-medium text-foreground hover:text-primary">
+              {creator.avatar_url && <img src={creator.avatar_url} alt="" className="h-5 w-5 rounded-full object-cover" />}
+              {creator.display_name}
+              {creator.verified && <ShieldCheck className="h-3.5 w-3.5 text-primary" />}
+            </Link>
+          ) : (
+            <span className="font-medium text-foreground">{channel}</span>
+          )}
           {row.city && (
             <span className="inline-flex items-center gap-1">
               <MapPin className="h-3.5 w-3.5" />
