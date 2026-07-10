@@ -15,6 +15,7 @@
     "bootstrap:inventory": "tsx scripts/bootstrap-inventory.ts",
     "ingest": "tsx scripts/ingest.ts",
     "setup:check": "tsx scripts/setup-check.ts",
+    "deploy:backend": "bash scripts/deploy-production-backend.sh",
     "test": "vitest run"
   },
   "dependencies": {
