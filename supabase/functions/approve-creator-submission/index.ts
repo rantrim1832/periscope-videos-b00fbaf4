@@ -1,7 +1,7 @@
 // Admin promotes a pending creator_submission into seeded_videos, attributing
 // it to the creator with source_kind='submitted'.
-import { createClient } from 'npm:@supabase/supabase-js@2';
-import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.77.0';
+import { corsHeaders } from '../_shared/auth.ts';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });

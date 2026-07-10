@@ -2,8 +2,8 @@
 // invoking the same YouTube search + insert logic as `youtube-import`.
 // One admin click yields hundreds of embeddable videos across all subjects.
 
-import { createClient } from 'npm:@supabase/supabase-js@2';
-import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.77.0';
+import { corsHeaders } from '../_shared/auth.ts';
 
 const YT_API = 'https://www.googleapis.com/youtube/v3';
 

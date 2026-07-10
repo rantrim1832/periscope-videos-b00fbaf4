@@ -12,8 +12,8 @@
 // Anything below 0.4 is dropped. Rows insert with is_approved = confidence >= 0.8
 // so admins only have to review the middle band.
 
-import { createClient } from 'npm:@supabase/supabase-js@2';
-import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.77.0';
+import { corsHeaders } from '../_shared/auth.ts';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });

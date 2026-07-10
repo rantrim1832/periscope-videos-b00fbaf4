@@ -10,8 +10,8 @@
 // Response:
 //   { processed, updated, skipped, failures: [{id, reason}] }
 
-import { createClient } from 'npm:@supabase/supabase-js@2';
-import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.77.0';
+import { corsHeaders } from '../_shared/auth.ts';
 
 const AI_URL = 'https://ai.gateway.lovable.dev/v1/chat/completions';
 const MODEL = 'google/gemini-3.5-flash';

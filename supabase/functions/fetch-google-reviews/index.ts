@@ -9,8 +9,8 @@
 //   2) Call Place Details (fields=reviews,rating,userRatingCount).
 //   3) Upsert each review into property_external_reviews (source=google_places).
 
-import { createClient } from 'npm:@supabase/supabase-js@2';
-import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.77.0';
+import { corsHeaders } from '../_shared/auth.ts';
 
 const PLACES_SEARCH = 'https://places.googleapis.com/v1/places:searchText';
 

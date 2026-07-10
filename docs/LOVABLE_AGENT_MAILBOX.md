@@ -47,6 +47,20 @@ signups on `joinperiscope.com`. Cursor disabled Turnstile enforcement in
 
 Reply **Lovable Response: published** with timestamp when live.
 
+### If publish fails on `youtube-import` RUNTIME_ERROR (fixed in latest `main`)
+
+Lovable was choking on `npm:@supabase/supabase-js@2/cors` imports in edge
+functions (lineno 0 module load failure). Cursor replaced them with
+`https://esm.sh/@supabase/supabase-js@2.77.0` + `../_shared/auth.ts` across
+all `supabase/functions/*` that used the `npm:` pattern.
+
+**Lovable:** pull latest `main`, **do not** deploy edge functions to Lovable
+Cloud — production backend is external `haciywkzvtgxemncenip` only. Publish
+**frontend only**.
+
+**Founder/Cursor:** after publish, redeploy `youtube-import` on the **external**
+project (Dashboard → Functions → Deploy) so `YOUTUBE_API_KEY` secret is picked up.
+
 ---
 
 ## Current production architecture

@@ -7,8 +7,8 @@
 // Category is stored as the first hashtag prefixed with `cat:` so we don't
 // need a schema migration. Source URL and channel go in follow-up tags.
 
-import { createClient } from 'npm:@supabase/supabase-js@2';
-import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.77.0';
+import { corsHeaders } from '../_shared/auth.ts';
 
 const YT_API = 'https://www.googleapis.com/youtube/v3';
 const GOOGLE_REFERRER = 'https://www.joinperiscope.com/';

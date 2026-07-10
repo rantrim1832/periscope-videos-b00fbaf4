@@ -1,7 +1,7 @@
 // Silent IP-based geolocation. Reads x-forwarded-for from the incoming
 // request, hits ipapi.co (no key, free tier ~1k/day per IP), and returns
 // a small JSON blob. No storage — the browser caches per session.
-import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
+import { corsHeaders } from '../_shared/auth.ts';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });

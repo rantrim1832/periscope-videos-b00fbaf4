@@ -1,8 +1,8 @@
 // Verifies a creator owns their linked YouTube channel by checking that the
 // channel description contains the unique PERISCOPE-VERIFY-XXXXXX code we
 // issued. On success, auto-claims all seeded_videos where channel_id matches.
-import { createClient } from 'npm:@supabase/supabase-js@2';
-import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.77.0';
+import { corsHeaders } from '../_shared/auth.ts';
 
 const YOUTUBE_API_KEY = Deno.env.get('YOUTUBE_API_KEY')!;
 

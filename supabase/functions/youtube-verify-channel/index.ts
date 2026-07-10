@@ -1,8 +1,8 @@
 // Resolve a YouTube channel URL / @handle / raw UC... id to canonical channel
 // data via YouTube Data API. Used by the creator dashboard when a creator
 // links their YouTube channel.
-import { createClient } from 'npm:@supabase/supabase-js@2';
-import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.77.0';
+import { corsHeaders } from '../_shared/auth.ts';
 
 const YOUTUBE_API_KEY = Deno.env.get('YOUTUBE_API_KEY')!;
 
