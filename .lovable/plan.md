@@ -1,94 +1,123 @@
-## What I'm building
 
-Three features + one important constraint you need to know about.
+# Creator Channels for Periscope
 
-### Constraint first (read this)
-Production database is owned by Cursor (external Supabase). I **cannot** create new tables or run migrations from here. That affects two pieces:
-- **Video view tracking** needs a new `video_views` table → I'll write the SQL and drop it in `docs/LOVABLE_AGENT_MAILBOX.md` for Cursor to run. Until then, the dashboard shows views as "pending schema".
-- **Analytics counts** (properties, users, videos, cities) all use existing tables → these work immediately.
+Turn Periscope into a two-sided platform: content creators in the multifamily/apartment industry get their own channel pages, can claim videos we already embedded, submit new YouTube URLs, and eventually upload native video. Verification is self-serve via a code they paste into their YouTube channel description.
 
----
+Per project memory, **Cursor owns the production schema on external Supabase**. All SQL below will be drafted as a migration file + posted to `docs/LOVABLE_AGENT_MAILBOX.md` for Cursor to run. I will not execute `supabase--migration` against production.
 
-### 1. Admin Analytics Dashboard — `/admin/dashboard`
+## Scope of this pass
 
-New page with metric cards + tables, all read-only queries against existing tables:
+1. Creator role, profile, channel page
+2. Claim existing videos (by YouTube channel ID match)
+3. Submit new YouTube URL → goes into curation queue
+4. Native video upload (stored in a new `creator-videos` Supabase Storage bucket)
+5. Code-in-description verification (self-serve via YouTube Data API)
+6. Featured Creators rail on homepage + creator tab in TrendingRail
+7. Admin moderation surface at `/admin/creators`
 
-- **Properties**: total, new today / 7d / 30d
-- **Videos**: total approved, new today / 7d / 30d, pending review count
-- **Users**: total, new 7d/30d, split by role (renter / property_manager / staff / admin) from `user_roles`
-- **Top cities**: property count by city (top 10)
-- **New properties by city** (last 30d)
-- **Contact submissions**: new 7d, unread count
-- **Video views**: placeholder card until `video_views` table exists
+## Schema (for Cursor to run)
 
-Added to admin nav. Uses existing shadcn Card + a small recharts bar for city breakdown.
-
-### 2. Homepage rails — trending & viral
-
-- **Logged-in users** (top of home feed): "🔥 Trending now" horizontal rail pulling top videos from the 4 viral/funny curated categories, sorted by YouTube view count (already stored on `seeded_videos`).
-- **Logged-out visitors** (join teaser section): "See what's going viral" 4-thumbnail strip with view counts. Clicking any thumbnail opens the auth/join modal.
-
-Both rails reuse the existing video card component. No schema changes.
-
-### 3. "Near you" IP-based local rail
-
-- New edge function `geo-locate` reads `x-forwarded-for` → calls `ipapi.co/{ip}/json` (free tier, no key) → returns `{ city, region, country }`.
-- Homepage calls it once on mount, caches in sessionStorage.
-- If result matches a city we have videos for, show "📍 Popular near you" rail above trending. Silent — no permission prompt, no banner.
-- **Privacy note**: I'll add a one-line disclosure to your privacy policy page ("We use your IP address to show locally relevant content"). Required for GDPR if you get any EU traffic; harmless for US-only. Tell me if you want me to skip this line.
-- VPN/no-match users just don't see the rail — graceful fallback.
-
-### 4. Mailbox note to Cursor
-
-Append to `docs/LOVABLE_AGENT_MAILBOX.md`:
 ```sql
-CREATE TABLE public.video_views (
+-- 1. New role
+ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'creator';
+
+-- 2. Creator profiles
+CREATE TABLE public.creator_channels (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  video_id uuid NOT NULL,
-  video_source text NOT NULL, -- 'shorts' | 'seeded_videos' | 'property_videos'
-  viewer_id uuid,             -- nullable for anon
-  ip_hash text,               -- sha256(ip) for dedup, no raw IP stored
-  city text,
-  created_at timestamptz NOT NULL DEFAULT now()
+  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  handle text NOT NULL UNIQUE,           -- URL slug, e.g. "urban-living"
+  display_name text NOT NULL,
+  bio text,
+  avatar_url text,
+  banner_url text,
+  youtube_channel_id text UNIQUE,        -- UC... — used for claims + verification
+  youtube_url text,
+  instagram_url text,
+  tiktok_url text,
+  website_url text,
+  verified boolean NOT NULL DEFAULT false,
+  verification_code text,                -- code they must paste in YT description
+  verification_requested_at timestamptz,
+  verified_at timestamptz,
+  featured boolean NOT NULL DEFAULT false,
+  status text NOT NULL DEFAULT 'pending', -- pending | approved | rejected | suspended
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE(user_id)
 );
-CREATE INDEX idx_video_views_video ON public.video_views(video_id, created_at DESC);
-CREATE INDEX idx_video_views_created ON public.video_views(created_at DESC);
-GRANT SELECT, INSERT ON public.video_views TO authenticated, anon;
-GRANT ALL ON public.video_views TO service_role;
-ALTER TABLE public.video_views ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "anyone can insert views" ON public.video_views FOR INSERT TO anon, authenticated WITH CHECK (true);
-CREATE POLICY "admins read all views" ON public.video_views FOR SELECT TO authenticated
-  USING (public.has_role(auth.uid(), 'admin'));
+-- GRANTs, RLS, indexes, update trigger (see mailbox note for full SQL)
+
+-- 3. Attribution on existing video tables
+ALTER TABLE public.seeded_videos   ADD COLUMN creator_id uuid REFERENCES public.creator_channels(id) ON DELETE SET NULL;
+ALTER TABLE public.property_videos ADD COLUMN creator_id uuid REFERENCES public.creator_channels(id) ON DELETE SET NULL;
+ALTER TABLE public.shorts          ADD COLUMN creator_id uuid REFERENCES public.creator_channels(id) ON DELETE SET NULL;
+-- Optional: source text ('scraped' | 'claimed' | 'submitted' | 'uploaded')
+
+-- 4. Creator submissions queue (before promotion into seeded_videos)
+CREATE TABLE public.creator_submissions (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  creator_id uuid NOT NULL REFERENCES public.creator_channels(id) ON DELETE CASCADE,
+  kind text NOT NULL,                    -- 'youtube_url' | 'native_upload'
+  youtube_url text,
+  storage_path text,                     -- for native uploads
+  title text,
+  description text,
+  hashtags text[],
+  property_id uuid REFERENCES public.properties(id) ON DELETE SET NULL,
+  status text NOT NULL DEFAULT 'pending', -- pending | approved | rejected
+  reviewer_notes text,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
 ```
-Once Cursor runs it, the dashboard view-count cards light up automatically.
 
----
+RLS: creators can CRUD their own channel + submissions; public can read `approved` channels + `verified` creator info; admins full access via `has_role`.
 
-### Files I'll touch
+Storage bucket `creator-videos` (private, signed-URL playback for now).
 
-**New:**
-- `src/pages/AdminDashboard.tsx`
-- `src/components/admin/MetricCard.tsx`
-- `src/components/home/TrendingRail.tsx`
-- `src/components/home/NearYouRail.tsx`
-- `src/components/home/JoinTeaserViral.tsx`
-- `src/hooks/useGeoLocation.ts`
-- `supabase/functions/geo-locate/index.ts`
+## Frontend
 
-**Edited:**
-- `src/App.tsx` (add `/admin/dashboard` route)
-- `src/components/AdminLayout.tsx` or wherever admin nav lives (add link)
-- `src/pages/Index.tsx` or homepage (mount the 3 rails / teaser)
-- `docs/LOVABLE_AGENT_MAILBOX.md` (SQL for Cursor)
-- Privacy policy page (one-line IP disclosure)
+New pages:
+- `/creator/apply` — role request form (creates pending `creator_channels` row)
+- `/creator/dashboard` — edit channel, request verification, submit YouTube URL, upload video, see claimed videos, view submission status
+- `/creator/:handle` — public channel page: banner, bio, socials, verified badge, video grid
+- `/creators` — browse all approved creators
+- `/admin/creators` — moderation: approve/reject applications, mark featured, review submissions
 
-### Answers to your workflow questions
+Updates to existing surfaces:
+- `Watch.tsx` — if video has `creator_id`, show byline "By [Name] →" linking to channel + verified badge
+- `TrendingRail.tsx` — add "Creators" tab showing featured creators
+- Homepage — add `FeaturedCreatorsRail` component
+- Nav — add "For Creators" link routing to `/creator/apply`
 
-**Steps end-to-end:**
-1. Approve videos in `/admin/curated` (Preview → Import)
-2. Optional: attach video to a specific property in `/admin/properties`
-3. Video appears on homepage rails + property page automatically
-4. Google Reviews are a separate pipeline (RentCast scraper → `property_external_reviews`); not tied to video approval
-5. Monitor everything in the new `/admin/dashboard`
+## Verification flow (code-in-description)
 
-**How many videos?** Each YouTube query = ~25 results. Your 4 viral categories × ~5 queries = ~500 candidates per full sweep. Realistic keep-rate ~10–20%, so 50–100 approved per session.
+1. Creator enters their YouTube channel URL in dashboard
+2. We resolve `UC...` id via YouTube Data API (`youtube-verify-channel` edge function) and store on `creator_channels`
+3. We generate a random `PERISCOPE-VERIFY-XXXXXX` code, show it in UI
+4. Creator pastes it into their YouTube channel description
+5. They click "Verify" → edge function calls YouTube `channels.list?part=snippet` and checks description contains the code
+6. On success: set `verified=true`, `verified_at=now()`, auto-claim all existing videos where `channel_id` matches
+
+## Edge functions (new)
+
+- `youtube-verify-channel` — resolves channel URL to `UC...` id via YouTube Data API
+- `verify-creator-channel` — runs the code check + auto-claim
+- `submit-creator-video` — validates YouTube URL, creates submission row, fetches metadata
+- `approve-creator-submission` — admin-only, promotes submission into `seeded_videos` with `creator_id` set
+
+Reuse existing pattern: `verify_jwt=false` in config + `admin.auth.getUser(token)` in-function (matches recent auth fix).
+
+## Handoff to Cursor
+
+I will:
+- Add full SQL + storage bucket instructions to `docs/LOVABLE_AGENT_MAILBOX.md`
+- Ship all frontend code + edge functions so the moment Cursor runs the migration, everything works
+- Guard queries with try/catch so the site keeps working before migration lands
+
+## Out of scope this pass
+
+- Native video transcoding / thumbnails (we'll accept .mp4 up to 500MB and use HTML5 `<video>`)
+- Creator analytics dashboard
+- Monetization / tips
+- Comments / subscriptions

@@ -28,6 +28,7 @@ const PRIMARY_LINKS = [
   { to: "/discover", label: "Discover" },
   { to: "/browse", label: "Browse" },
   { to: "/shorts", label: "Shorts" },
+  { to: "/creators", label: "Creators" },
   { to: "/community", label: "Community" },
 ];
 
@@ -35,6 +36,7 @@ const ADMIN_LINKS = [
   { to: "/admin", label: "Dashboard" },
   { to: "/admin/contact", label: "Contact inbox" },
   { to: "/admin/curated", label: "Curated videos" },
+  { to: "/admin/creators", label: "Creators" },
   { to: "/admin/settings", label: "Settings" },
   { to: "/admin/safety", label: "Safety inbox" },
   { to: "/admin/moderate", label: "Moderation" },

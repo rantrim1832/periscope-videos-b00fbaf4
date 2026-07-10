@@ -687,6 +687,147 @@ frontend only — no schemas, RPCs, providers, env.ts, or Edge Functions touched
 
 ---
 
+## 2026-07-10 — Creator Channels (schema + storage for Cursor)
+
+Turning Periscope into a two-sided platform: apartment-industry content
+creators get their own channel on Periscope, can claim videos we already
+embedded (matched by YouTube channel ID), submit new YouTube URLs, and upload
+native video. Verification is self-serve via a code they paste into their
+YouTube channel description.
+
+All frontend code + edge functions (`youtube-verify-channel`,
+`verify-creator-channel`, `submit-creator-video`,
+`approve-creator-submission`) are already committed. Client code is guarded so
+the site keeps working until the migration lands.
+
+**Cursor: please run the following against production Supabase.**
+
+### 1. Migration
+
+```sql
+-- New role
+ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'creator';
+
+-- Creator channels
+CREATE TABLE IF NOT EXISTS public.creator_channels (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  handle text NOT NULL UNIQUE,
+  display_name text NOT NULL,
+  bio text,
+  avatar_url text,
+  banner_url text,
+  youtube_channel_id text UNIQUE,
+  youtube_url text,
+  instagram_url text,
+  tiktok_url text,
+  website_url text,
+  verified boolean NOT NULL DEFAULT false,
+  verification_code text,
+  verification_requested_at timestamptz,
+  verified_at timestamptz,
+  featured boolean NOT NULL DEFAULT false,
+  status text NOT NULL DEFAULT 'pending',
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE(user_id)
+);
+CREATE INDEX IF NOT EXISTS idx_creator_channels_status ON public.creator_channels(status);
+CREATE INDEX IF NOT EXISTS idx_creator_channels_featured ON public.creator_channels(featured) WHERE featured;
+CREATE INDEX IF NOT EXISTS idx_creator_channels_yt ON public.creator_channels(youtube_channel_id);
+
+GRANT SELECT ON public.creator_channels TO anon;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.creator_channels TO authenticated;
+GRANT ALL ON public.creator_channels TO service_role;
+ALTER TABLE public.creator_channels ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Public can read approved channels"
+  ON public.creator_channels FOR SELECT TO anon, authenticated
+  USING (status = 'approved' OR auth.uid() = user_id OR public.has_role(auth.uid(), 'admin'));
+CREATE POLICY "Users manage their own channel"
+  ON public.creator_channels FOR ALL TO authenticated
+  USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Admins manage all channels"
+  ON public.creator_channels FOR ALL TO authenticated
+  USING (public.has_role(auth.uid(), 'admin')) WITH CHECK (public.has_role(auth.uid(), 'admin'));
+
+CREATE TRIGGER trg_creator_channels_updated
+  BEFORE UPDATE ON public.creator_channels
+  FOR EACH ROW EXECUTE FUNCTION public.update_seeded_videos_updated_at();
+
+-- Attribution on existing video tables
+ALTER TABLE public.seeded_videos    ADD COLUMN IF NOT EXISTS creator_id uuid REFERENCES public.creator_channels(id) ON DELETE SET NULL;
+ALTER TABLE public.property_videos  ADD COLUMN IF NOT EXISTS creator_id uuid REFERENCES public.creator_channels(id) ON DELETE SET NULL;
+ALTER TABLE public.shorts           ADD COLUMN IF NOT EXISTS creator_id uuid REFERENCES public.creator_channels(id) ON DELETE SET NULL;
+ALTER TABLE public.seeded_videos    ADD COLUMN IF NOT EXISTS source_kind text; -- 'scraped'|'claimed'|'submitted'|'uploaded'
+CREATE INDEX IF NOT EXISTS idx_seeded_videos_creator ON public.seeded_videos(creator_id);
+
+-- Submissions queue
+CREATE TABLE IF NOT EXISTS public.creator_submissions (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  creator_id uuid NOT NULL REFERENCES public.creator_channels(id) ON DELETE CASCADE,
+  kind text NOT NULL,
+  youtube_url text,
+  youtube_video_id text,
+  storage_path text,
+  title text,
+  description text,
+  hashtags text[],
+  property_id uuid REFERENCES public.properties(id) ON DELETE SET NULL,
+  status text NOT NULL DEFAULT 'pending',
+  reviewer_notes text,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_creator_submissions_creator ON public.creator_submissions(creator_id);
+CREATE INDEX IF NOT EXISTS idx_creator_submissions_status ON public.creator_submissions(status);
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.creator_submissions TO authenticated;
+GRANT ALL ON public.creator_submissions TO service_role;
+ALTER TABLE public.creator_submissions ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Creators manage own submissions"
+  ON public.creator_submissions FOR ALL TO authenticated
+  USING (creator_id IN (SELECT id FROM public.creator_channels WHERE user_id = auth.uid()))
+  WITH CHECK (creator_id IN (SELECT id FROM public.creator_channels WHERE user_id = auth.uid()));
+CREATE POLICY "Admins manage all submissions"
+  ON public.creator_submissions FOR ALL TO authenticated
+  USING (public.has_role(auth.uid(), 'admin')) WITH CHECK (public.has_role(auth.uid(), 'admin'));
+
+CREATE TRIGGER trg_creator_submissions_updated
+  BEFORE UPDATE ON public.creator_submissions
+  FOR EACH ROW EXECUTE FUNCTION public.update_seeded_videos_updated_at();
+```
+
+### 2. Storage bucket
+
+Create private bucket `creator-videos` (for native uploads). Policies:
+
+```sql
+INSERT INTO storage.buckets (id, name, public) VALUES ('creator-videos', 'creator-videos', false)
+  ON CONFLICT (id) DO NOTHING;
+
+CREATE POLICY "Creators upload own videos"
+  ON storage.objects FOR INSERT TO authenticated
+  WITH CHECK (bucket_id = 'creator-videos' AND (storage.foldername(name))[1] = auth.uid()::text);
+CREATE POLICY "Creators read own videos"
+  ON storage.objects FOR SELECT TO authenticated
+  USING (bucket_id = 'creator-videos' AND ((storage.foldername(name))[1] = auth.uid()::text OR public.has_role(auth.uid(), 'admin')));
+```
+
+### 3. Edge functions to deploy
+
+- `supabase/functions/youtube-verify-channel` — resolves any YouTube channel URL / @handle to `UC...` id (uses `YOUTUBE_API_KEY`, already set).
+- `supabase/functions/verify-creator-channel` — checks the creator's YT description contains `PERISCOPE-VERIFY-XXXXXX` code; on success flips `verified=true` and auto-claims all `seeded_videos` where `channel_id` matches.
+- `supabase/functions/submit-creator-video` — accepts a YouTube URL from a verified creator, inserts a `creator_submissions` row.
+- `supabase/functions/approve-creator-submission` — admin-only; promotes an approved submission into `seeded_videos` with `creator_id` and `source_kind='submitted'` set.
+
+All four use `verify_jwt = false` + in-function `auth.getUser(token)` (matches the recent pattern for admin functions).
+
+**Nothing else is required from Cursor.** Once the migration + bucket land, the `/creators`, `/creator/apply`, `/creator/dashboard`, `/channel/:handle`, and `/admin/creators` routes all light up.
+
+---
+
 ## Lovable → Cursor Action Required: fix curated-video admin edge failures
 
 Founder reported `/admin/curated` still showing **“Bulk seed failed — Edge
