@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams, Navigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, PlayCircle, Lock, MapPin } from 'lucide-react';
+import { ArrowLeft, PlayCircle, Lock, MapPin, ExternalLink, Sparkles, Tag } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { parseVideoMeta, youtubeUrlFor, youtubeChannelUrl } from '@/lib/videoMeta';
 
 type CuratedRow = {
   id: string;
@@ -68,10 +69,8 @@ export default function Watch() {
   const embedSrc = ytId
     ? `https://www.youtube-nocookie.com/embed/${ytId}?rel=0&modestbranding=1&playsinline=1`
     : row.embed_url;
-  const channel =
-    (row.hashtags ?? []).find((t) => typeof t === 'string' && t.startsWith('ch:'))?.slice(3)
-    ?? row.caption?.split('·')[0]?.trim()
-    ?? 'YouTube';
+  const meta = parseVideoMeta(row.hashtags, row.caption);
+  const channel = meta.channel ?? 'YouTube';
 
   return (
     <div className="min-h-screen bg-background">
