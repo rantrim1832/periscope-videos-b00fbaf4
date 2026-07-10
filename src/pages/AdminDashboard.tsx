@@ -425,11 +425,11 @@ async function loadBrowserFallback(reason: string): Promise<Analytics> {
     count('property_videos'),
     count('property_videos', (q) => q.eq('is_approved', true)),
     count('property_videos', (q) => q.eq('is_approved', false)),
-    safe(supabase.from('reviews').select('id, created_at, user_id, property_id, rating').order('created_at', { ascending: false }).limit(10), { data: [] as any[] }),
-    safe(supabase.from('seeded_videos').select('id, created_at, title, source').order('created_at', { ascending: false }).limit(10), { data: [] as any[] }),
-    safe(supabase.from('contact_message').select('id, created_at, subject, sender_email, status').order('created_at', { ascending: false }).limit(10), { data: [] as any[] }),
-    safe(supabase.from('properties').select('id, created_at, name, city, state').order('created_at', { ascending: false }).limit(10), { data: [] as any[] }),
-    safe(supabase.from('properties').select('city, created_at').not('city', 'is', null).limit(20000), { data: [] as any[] }),
+    safe((supabase as any).from('reviews').select('id, created_at, user_id, property_id, rating').order('created_at', { ascending: false }).limit(10), { data: [] as any[] }),
+    safe((supabase as any).from('seeded_videos').select('id, created_at, title, source').order('created_at', { ascending: false }).limit(10), { data: [] as any[] }),
+    safe((supabase as any).from('contact_message').select('id, created_at, subject, sender_email, status').order('created_at', { ascending: false }).limit(10), { data: [] as any[] }),
+    safe((supabase as any).from('properties').select('id, created_at, name, city, state').order('created_at', { ascending: false }).limit(10), { data: [] as any[] }),
+    safe((supabase as any).from('properties').select('city, created_at').not('city', 'is', null).limit(20000), { data: [] as any[] }),
   ]);
 
   const cityAll = new Map<string, number>();
