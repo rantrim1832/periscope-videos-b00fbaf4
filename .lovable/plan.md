@@ -1,54 +1,94 @@
-# Stock state photos, top cities, smart search
+## What I'm building
 
-## 1. State tiles → stock photos
+Three features + one important constraint you need to know about.
 
-Replace the SVG silhouettes in `src/components/StateTile.tsx` with themed stock photos (Unsplash CDN).
+### Constraint first (read this)
+Production database is owned by Cursor (external Supabase). I **cannot** create new tables or run migrations from here. That affects two pieces:
+- **Video view tracking** needs a new `video_views` table → I'll write the SQL and drop it in `docs/LOVABLE_AGENT_MAILBOX.md` for Cursor to run. Until then, the dashboard shows views as "pending schema".
+- **Analytics counts** (properties, users, videos, cities) all use existing tables → these work immediately.
 
-- New `src/data/stateArt.ts` maps each of the 50 states + DC to a **theme** (beach, mountains, desert, city, forest, farm, tropical, bayou, snow, plains) and each theme resolves to a known-stable Unsplash photo ID. ~10 reusable regional photos, ~5–7 states per theme (California→beach, Colorado→mountains, Arizona→desert, Illinois→city skyline, Oregon→forest, Iowa→farm, Florida→tropical, Louisiana→bayou, Alaska→snow, etc.).
-- `StateTile` renders `<img src=... loading="lazy">` filling the tile, with a dark gradient wash so the white state code + name + count stay readable. Removes the SVG path rendering path entirely; keeps the size/highlight props.
-- Silhouette JSON (`src/data/usStates.json`) is no longer referenced by the tile — leaves it in place (harmless) so we don't churn other files.
+---
 
-## 2. Top cities section on Browse
+### 1. Admin Analytics Dashboard — `/admin/dashboard`
 
-Add a **"Top cities"** section above the state grid on `/browse`.
+New page with metric cards + tables, all read-only queries against existing tables:
 
-- New `src/data/topCities.ts` — curated list of 50 major US metros (New York, Los Angeles, Chicago, Houston, Phoenix, Philadelphia, San Antonio, San Diego, Dallas, Austin, Jacksonville, Fort Worth, Columbus, Charlotte, Indianapolis, San Francisco, Seattle, Denver, Boston, Nashville, Portland, Las Vegas, Atlanta, Miami, Minneapolis, D.C., Detroit, Baltimore, Milwaukee, Sacramento, Kansas City, Raleigh, Tampa, Orlando, Cleveland, Pittsburgh, Cincinnati, St. Louis, Louisville, New Orleans, Salt Lake City, Providence, Richmond, Buffalo, Hartford, Oklahoma City, Memphis, Albuquerque, Tucson, Omaha). Each has `{ city, state, image }` using themed Unsplash photos from the same pool.
-- Rendered as a horizontal poster rail using the existing `PromptTileRail` styling patterns (or a simple `overflow-x-auto` grid) with photo covers. Each tile links to `/city/:state/:city`.
-- Count badges are optional and omitted for now (adding a per-city count query would require a new provider method + N queries).
+- **Properties**: total, new today / 7d / 30d
+- **Videos**: total approved, new today / 7d / 30d, pending review count
+- **Users**: total, new 7d/30d, split by role (renter / property_manager / staff / admin) from `user_roles`
+- **Top cities**: property count by city (top 10)
+- **New properties by city** (last 30d)
+- **Contact submissions**: new 7d, unread count
+- **Video views**: placeholder card until `video_views` table exists
 
-## 3. Smart search with autofill + cascading filters
+Added to admin nav. Uses existing shadcn Card + a small recharts bar for city breakdown.
 
-Upgrade `src/pages/Search.tsx` in place; the Header search icon continues to route here.
+### 2. Homepage rails — trending & viral
 
-- **Cascading filters row** above the search input: `State` select (populated from `provider.listStates()`) → when a state is chosen, `City` select (populated from `provider.listCities(state)`). Selecting either narrows the query.
-- **Autofill dropdown** anchored to the text input, opens as user types (≥2 chars), debounced 150ms. Shows up to 12 grouped suggestions:
-  - **Properties** — matched by name / address (from `provider.search(q)` filtered by state/city if set).
-  - **Cities** — matched from the top-cities list + provider's cities.
-  - **States** — matched from the state list.
-- Clicking a property row → `/property/:id`. Clicking a city → `/city/:state/:city`. Clicking a state → sets the state filter. Pressing Enter runs the current text search (existing behavior) scoped by the filters.
-- Uses shadcn `Command` (already installed via cmdk) for the popover list — keyboard nav free.
+- **Logged-in users** (top of home feed): "🔥 Trending now" horizontal rail pulling top videos from the 4 viral/funny curated categories, sorted by YouTube view count (already stored on `seeded_videos`).
+- **Logged-out visitors** (join teaser section): "See what's going viral" 4-thumbnail strip with view counts. Clicking any thumbnail opens the auth/join modal.
 
-Header stays as-is: its search icon still opens `/search`, which now has the full smart experience. No new global command palette in this pass.
+Both rails reuse the existing video card component. No schema changes.
 
-## Files touched
+### 3. "Near you" IP-based local rail
 
-```text
-src/components/StateTile.tsx         # img-based tile
-src/data/stateArt.ts                 # NEW: state → theme → photo
-src/data/topCities.ts                # NEW: 50 curated cities
-src/pages/Browse.tsx                 # Top cities rail above state grid
-src/pages/Search.tsx                 # Filters + autofill popover
+- New edge function `geo-locate` reads `x-forwarded-for` → calls `ipapi.co/{ip}/json` (free tier, no key) → returns `{ city, region, country }`.
+- Homepage calls it once on mount, caches in sessionStorage.
+- If result matches a city we have videos for, show "📍 Popular near you" rail above trending. Silent — no permission prompt, no banner.
+- **Privacy note**: I'll add a one-line disclosure to your privacy policy page ("We use your IP address to show locally relevant content"). Required for GDPR if you get any EU traffic; harmless for US-only. Tell me if you want me to skip this line.
+- VPN/no-match users just don't see the rail — graceful fallback.
+
+### 4. Mailbox note to Cursor
+
+Append to `docs/LOVABLE_AGENT_MAILBOX.md`:
+```sql
+CREATE TABLE public.video_views (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  video_id uuid NOT NULL,
+  video_source text NOT NULL, -- 'shorts' | 'seeded_videos' | 'property_videos'
+  viewer_id uuid,             -- nullable for anon
+  ip_hash text,               -- sha256(ip) for dedup, no raw IP stored
+  city text,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX idx_video_views_video ON public.video_views(video_id, created_at DESC);
+CREATE INDEX idx_video_views_created ON public.video_views(created_at DESC);
+GRANT SELECT, INSERT ON public.video_views TO authenticated, anon;
+GRANT ALL ON public.video_views TO service_role;
+ALTER TABLE public.video_views ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "anyone can insert views" ON public.video_views FOR INSERT TO anon, authenticated WITH CHECK (true);
+CREATE POLICY "admins read all views" ON public.video_views FOR SELECT TO authenticated
+  USING (public.has_role(auth.uid(), 'admin'));
 ```
+Once Cursor runs it, the dashboard view-count cards light up automatically.
 
-## Explicitly out of scope
+---
 
-- No new provider methods (no per-city counts, no server-side FTS).
-- No global cmd-k palette in the Header — only the Search page is upgraded.
-- No changes to auth/routes/schema.
-- Old `usStates.json` silhouette data left in place, unused.
+### Files I'll touch
 
-## Risk / assumptions
+**New:**
+- `src/pages/AdminDashboard.tsx`
+- `src/components/admin/MetricCard.tsx`
+- `src/components/home/TrendingRail.tsx`
+- `src/components/home/NearYouRail.tsx`
+- `src/components/home/JoinTeaserViral.tsx`
+- `src/hooks/useGeoLocation.ts`
+- `supabase/functions/geo-locate/index.ts`
 
-- Unsplash photo IDs are hand-picked from well-known stable photos; if any 404, swapping an ID is a one-line fix.
-- Top-50 city list is editorial — you can trim/reorder later without code changes.
-- Autofill queries reuse existing `provider.search()` — response time depends on the current data source.
+**Edited:**
+- `src/App.tsx` (add `/admin/dashboard` route)
+- `src/components/AdminLayout.tsx` or wherever admin nav lives (add link)
+- `src/pages/Index.tsx` or homepage (mount the 3 rails / teaser)
+- `docs/LOVABLE_AGENT_MAILBOX.md` (SQL for Cursor)
+- Privacy policy page (one-line IP disclosure)
+
+### Answers to your workflow questions
+
+**Steps end-to-end:**
+1. Approve videos in `/admin/curated` (Preview → Import)
+2. Optional: attach video to a specific property in `/admin/properties`
+3. Video appears on homepage rails + property page automatically
+4. Google Reviews are a separate pipeline (RentCast scraper → `property_external_reviews`); not tied to video approval
+5. Monitor everything in the new `/admin/dashboard`
+
+**How many videos?** Each YouTube query = ~25 results. Your 4 viral categories × ~5 queries = ~500 candidates per full sweep. Realistic keep-rate ~10–20%, so 50–100 approved per session.
