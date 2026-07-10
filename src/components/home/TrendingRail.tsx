@@ -73,8 +73,11 @@ function TrendingCard({ v, linkMode, showLock }: { v: TrendingVideo; linkMode: '
       </div>
       <div className="p-2.5">
         <p className="text-sm font-medium leading-snug line-clamp-2">{v.title}</p>
+        {v.angle && (
+          <p className="mt-1 text-[11px] text-foreground/80 line-clamp-2 italic">{v.angle}</p>
+        )}
         <p className="text-[11px] text-muted-foreground truncate mt-1">
-          {v.channel}{v.city ? ` · ${v.city}` : ''}
+          by {v.channel}{v.city ? ` · ${v.city}` : ''}
         </p>
       </div>
     </Link>
