@@ -234,6 +234,8 @@ const AdminCuratedVideos = () => {
   const [linking, setLinking] = useState(false);
   const [fetchingGoogle, setFetchingGoogle] = useState(false);
   const [perQuery, setPerQuery] = useState(15);
+  const [generatingSummaries, setGeneratingSummaries] = useState(false);
+  const [summaryLimit, setSummaryLimit] = useState(20);
 
   const [pasteUrl, setPasteUrl] = useState('');
   const [pasteSlug, setPasteSlug] = useState<string>('');
@@ -474,6 +476,25 @@ const AdminCuratedVideos = () => {
       toast({ title: 'Google fetch failed', description: extractErrorMessage(e), variant: 'destructive' });
     } finally {
       setFetchingGoogle(false);
+    }
+  };
+
+  const runGenerateSummaries = async () => {
+    setGeneratingSummaries(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-video-summary', {
+        body: { limit: summaryLimit, onlyMissing: true },
+      });
+      if (error) throw error;
+      toast({
+        title: 'AI descriptions written',
+        description: `Processed ${data?.processed ?? 0} · updated ${data?.updated ?? 0} · skipped ${data?.skipped ?? 0}.`,
+      });
+      setBrowserRefresh((n) => n + 1);
+    } catch (e: any) {
+      toast({ title: 'Generation failed', description: extractErrorMessage(e), variant: 'destructive' });
+    } finally {
+      setGeneratingSummaries(false);
     }
   };
 
