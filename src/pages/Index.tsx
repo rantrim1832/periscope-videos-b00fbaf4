@@ -165,6 +165,7 @@ const Index = () => {
           <main className="container pt-6 pb-10 space-y-12 md:space-y-16">
             <NearYouRail linkMode="watch" />
             <ViralTrendingRail linkMode="watch" title="Trending now" eyebrow="🔥 Viral apartment videos" />
+            <FeaturedCreatorsRail />
             <PromptTileRail
               eyebrow="Post your own"
               title={localCity ? `What renters in ${localCity.city} are sharing` : 'What renters are sharing'}
