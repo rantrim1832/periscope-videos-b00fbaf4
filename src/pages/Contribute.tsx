@@ -251,6 +251,8 @@ const Contribute = () => {
               )}
             </Card>
 
+            <InspirationRails />
+
             <PromptTileRail
               eyebrow="Ideas for renters"
               title="What renters like you are sharing"
@@ -264,8 +266,6 @@ const Contribute = () => {
               subtitle="Noise, pests, parking, pets, packages, laundry, deposits — the stuff tours skip."
               tiles={RENTER_MORE_TILES}
             />
-
-            <InspirationRails />
           </div>
         ) : isLoading ? (
           <div className="max-w-2xl mx-auto space-y-4">
@@ -288,6 +288,9 @@ const Contribute = () => {
               <p className="text-muted-foreground">for <span className="font-medium text-foreground">{property.name}</span></p>
             </div>
             <ContributeFlow propertyId={property.id} propertyName={property.name} topic={topicKey} />
+            <div className="mt-10">
+              <InspirationRails />
+            </div>
           </>
         )}
       </div>

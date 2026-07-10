@@ -8,6 +8,7 @@ import type { PropertyClass } from '@/domain/types';
 import { FIXTURE_PROPERTIES, findFixture, fixtureFeed } from './fixtures';
 import { useCanonicalData } from '@/lib/demo';
 import { supabase } from '@/integrations/supabase/client';
+import { publicContentClient } from '@/lib/publicContentClient';
 
 export interface LocationCount {
   state?: string;
@@ -526,7 +527,7 @@ export class CanonicalPropertyProvider implements PropertyDataProvider {
    * FEED_CATEGORIES value via `feedCategoryForSlug`.
    */
   private async fetchCuratedFeedItems(): Promise<FeedItem[]> {
-    const { data } = await this.db
+    const { data } = await publicContentClient
       .from('seeded_videos')
       .select('id, title, embed_url, caption, hashtags, source, city, created_at')
       .eq('moderation_status', 'approved')

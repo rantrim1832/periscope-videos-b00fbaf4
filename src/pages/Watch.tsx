@@ -7,6 +7,8 @@ import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { parseVideoMeta, youtubeUrlFor, youtubeChannelUrl } from '@/lib/videoMeta';
 import { ShieldCheck } from 'lucide-react';
 import type { CreatorChannel } from '@/lib/creatorTypes';
+import { InspirationRails } from '@/components/contribute/InspirationRails';
+import { publicContentClient } from '@/lib/publicContentClient';
 
 type CuratedRow = {
   id: string;
@@ -16,7 +18,6 @@ type CuratedRow = {
   city: string | null;
   caption: string | null;
   source: string;
-  creator_id?: string | null;
 };
 
 function extractYouTubeId(embedUrl: string, hashtags: string[] | null): string | null {
@@ -39,14 +40,23 @@ export default function Watch() {
   const [row, setRow] = useState<CuratedRow | null>(null);
   const [status, setStatus] = useState<'loading' | 'ok' | 'notfound'>('loading');
   const [creator, setCreator] = useState<CreatorChannel | null>(null);
+  const [authed, setAuthed] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setAuthed(!!data.session));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setAuthed(!!session);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
   useEffect(() => {
     if (!id) { setStatus('notfound'); return; }
     let cancelled = false;
     (async () => {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await (publicContentClient as any)
         .from('seeded_videos')
-        .select('id, title, embed_url, hashtags, city, caption, source, creator_id')
+        .select('id, title, embed_url, hashtags, city, caption, source')
         .eq('id', id)
         .eq('moderation_status', 'approved')
         .maybeSingle();
@@ -54,15 +64,6 @@ export default function Watch() {
       if (error || !data) { setStatus('notfound'); return; }
       setRow(data as CuratedRow);
       setStatus('ok');
-      if ((data as any).creator_id) {
-        const { data: c } = await (supabase as any)
-          .from('creator_channels')
-          .select('*')
-          .eq('id', (data as any).creator_id)
-          .eq('status', 'approved')
-          .maybeSingle();
-        if (!cancelled) setCreator(c ?? null);
-      }
     })();
     return () => { cancelled = true; };
   }, [id]);
@@ -95,12 +96,25 @@ export default function Watch() {
             Periscope
           </Link>
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" asChild>
-              <Link to="/auth">Sign in</Link>
-            </Button>
-            <Button variant="hero" size="sm" asChild>
-              <Link to="/auth?returnTo=%2Ffeed">Create free account</Link>
-            </Button>
+            {authed ? (
+              <>
+                <Button variant="ghost" size="sm" asChild>
+                  <Link to="/feed">Feed</Link>
+                </Button>
+                <Button variant="hero" size="sm" asChild>
+                  <Link to="/contribute">Add yours</Link>
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button variant="ghost" size="sm" asChild>
+                  <Link to="/auth">Sign in</Link>
+                </Button>
+                <Button variant="hero" size="sm" asChild>
+                  <Link to="/auth?returnTo=%2Ffeed">Create free account</Link>
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </header>
@@ -202,6 +216,10 @@ export default function Watch() {
           )}
         </div>
 
+        <div className="mt-8">
+          <InspirationRails />
+        </div>
+
         {/* Upsell — the whole point of keeping watchers on-site */}
         <div className="mt-8 rounded-2xl border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-background to-background p-6 md:p-8">
           <div className="flex items-start gap-3">
@@ -210,19 +228,22 @@ export default function Watch() {
             </div>
             <div className="min-w-0">
               <h2 className="text-lg md:text-xl font-bold tracking-tight">
-                See the real reviews behind the videos
+                {authed ? 'Add your apartment video next' : 'See the real reviews behind the videos'}
               </h2>
               <p className="text-sm text-muted-foreground mt-1">
-                Periscope collects real resident video reviews for 50+ unit apartment buildings —
-                Truth Scores, deposit stories, maintenance timelines. Free with an account.
+                {authed
+                  ? 'Post the kind of walkthrough, warning, or local detail you wish you had before signing.'
+                  : 'Periscope collects real resident video reviews for 50+ unit apartment buildings — Truth Scores, deposit stories, maintenance timelines. Free with an account.'}
               </p>
               <div className="mt-4 flex flex-col sm:flex-row gap-3">
                 <Button variant="hero" size="lg" asChild>
-                  <Link to="/auth?returnTo=%2Ffeed">Create free account</Link>
+                  <Link to={authed ? '/contribute' : '/auth?returnTo=%2Ffeed'}>
+                    {authed ? 'Add yours' : 'Create free account'}
+                  </Link>
                 </Button>
                 <Button variant="outline" size="lg" asChild>
-                  <Link to="/auth">
-                    <Lock className="h-4 w-4" /> I already have one
+                  <Link to={authed ? '/feed' : '/auth'}>
+                    <Lock className="h-4 w-4" /> {authed ? 'Back to feed' : 'I already have one'}
                   </Link>
                 </Button>
               </div>

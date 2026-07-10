@@ -332,7 +332,10 @@ const Feed = () => {
         />
       ) : (
         <>
-          <div className="container px-4 pt-4 pb-2 space-y-6">
+          <div className="h-[calc(100dvh-8rem)] md:h-[calc(100dvh-9rem)] overflow-y-auto snap-y snap-mandatory">
+            {filtered.map((item) => <FeedCard key={item.id} item={item} />)}
+          </div>
+          <div className="container px-4 py-6 space-y-6">
             <PromptTileRail
               eyebrow="Post your own"
               title="What renters are sharing"
@@ -346,9 +349,6 @@ const Feed = () => {
               subtitle="Noise, pests, parking, pets, packages, laundry, deposits — the stuff tours skip."
               tiles={RENTER_MORE_TILES}
             />
-          </div>
-          <div className="h-[calc(100dvh-8rem)] md:h-[calc(100dvh-9rem)] overflow-y-auto snap-y snap-mandatory">
-            {filtered.map((item) => <FeedCard key={item.id} item={item} />)}
           </div>
         </>
       )}
