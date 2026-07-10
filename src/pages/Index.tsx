@@ -16,6 +16,7 @@ import { getStoredLocalCity, nearestSeededCity, SEEDED_CITIES, setStoredLocalCit
 import { PromptTileRail, type PromptTile } from "@/components/PromptTileRail";
 import { TrendingRail as ViralTrendingRail } from "@/components/home/TrendingRail";
 import { NearYouRail } from "@/components/home/NearYouRail";
+import { FeaturedCreatorsRail } from "@/components/home/FeaturedCreatorsRail";
 
 // Renter contribution tiles surfaced on the home page so every viewer sees
 // the full library of video angles they can record — not just the ones on
