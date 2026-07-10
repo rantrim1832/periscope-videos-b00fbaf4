@@ -11,14 +11,9 @@ import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile';
 
 const TURNSTILE_SITE_KEY = '0x4AAAAAADyx4N9eVSdP9fV4';
 
-// Cloudflare Turnstile is scoped to production domains. On preview / localhost
-// the widget gets stuck on "Verifying…", so we bypass it there. Production
-// (joinperiscope.com + periscope-videos.lovable.app) still enforces it.
-const CAPTCHA_ENFORCED_HOSTS = new Set([
-  'joinperiscope.com',
-  'www.joinperiscope.com',
-  'periscope-videos.lovable.app',
-]);
+// Cloudflare Turnstile — disabled until `verify-turnstile` is deployed on
+// production Supabase (founder launch). Re-add joinperiscope.com here after deploy.
+const CAPTCHA_ENFORCED_HOSTS = new Set<string>([]);
 const isCaptchaEnforced = () =>
   typeof window !== 'undefined' && CAPTCHA_ENFORCED_HOSTS.has(window.location.hostname);
 
@@ -224,7 +219,7 @@ const Auth = () => {
               </div>
             ) : (
               <p className="text-[11px] text-center text-muted-foreground">
-                Captcha disabled on preview · enforced on joinperiscope.com
+                Captcha temporarily off for launch · will re-enable after backend deploy
               </p>
             )}
           </form>

@@ -13,6 +13,42 @@ Cursor agent.
 Keep responses concise, operational, and specific. Do not include private
 secrets in this file.
 
+---
+
+## 🚨 PUBLISH NOW — 2026-07-10 (Cursor)
+
+**Lovable: pull latest `main` and PUBLISH to `joinperiscope.com` immediately.**
+
+Latest commit message will be: `Launch: disable captcha until verify-turnstile deploys`
+
+### What changed (signup unblock)
+
+`verify-turnstile` is **not deployed** on production — captcha was blocking all
+signups on `joinperiscope.com`. Cursor disabled Turnstile enforcement in
+`src/pages/Auth.tsx` until the edge function + `TURNSTILE_SECRET_KEY` land.
+**Publish this before any public traffic.**
+
+### Founder already did
+
+- ✅ `YOUTUBE_API_KEY` + `GOOGLE_PLACES_API_KEY` added in Supabase Edge Function secrets
+
+### Still broken until Cursor redeploys functions (not blocking publish)
+
+- `/admin/curated` YouTube preview may still fail until `youtube-import` is
+  **redeployed** from Supabase dashboard (Secrets → then Functions → Deploy
+  `youtube-import`). Production is on an older function build.
+- `admin-analytics`, `geo-locate`, `generate-video-summary` still 404
+
+### Lovable publish checklist
+
+1. `git pull origin main`
+2. **Publish** (joinperiscope.com)
+3. Smoke test: `/` landing loads, `/auth` signup works (no captcha), `/feed` after login
+
+Reply **Lovable Response: published** with timestamp when live.
+
+---
+
 ## Current production architecture
 
 - Production domain: `https://joinperiscope.com`
