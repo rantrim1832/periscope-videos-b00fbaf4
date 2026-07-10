@@ -59,6 +59,11 @@ const Legal = lazy(() => import("./pages/Legal"));
 const ManagerStart = lazy(() => import("./pages/ManagerStart"));
 const Landing = lazy(() => import("./pages/Landing"));
 const Watch = lazy(() => import("./pages/Watch"));
+const CreatorApply = lazy(() => import("./pages/CreatorApply"));
+const CreatorDashboard = lazy(() => import("./pages/CreatorDashboard"));
+const CreatorChannelPage = lazy(() => import("./pages/CreatorChannel"));
+const Creators = lazy(() => import("./pages/Creators"));
+const AdminCreators = lazy(() => import("./pages/AdminCreators"));
 
 // Router-level home switch: signed-out visitors get the marketing landing page;
 // signed-in visitors get the authenticated Index (which internally routes
@@ -109,6 +114,11 @@ const App = () => (
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/watch/:id" element={<Watch />} />
+                <Route path="/creators" element={<Creators />} />
+                <Route path="/channel/:handle" element={<CreatorChannelPage />} />
+                <Route path="/creator/apply" element={<ProtectedRoute><CreatorApply /></ProtectedRoute>} />
+                <Route path="/creator/dashboard" element={<ProtectedRoute><CreatorDashboard /></ProtectedRoute>} />
+                <Route path="/admin/creators" element={<AdminRoute><AdminCreators /></AdminRoute>} />
 
                 {/* Gated routes — hard auth wall */}
                 <Route path="/browse" element={<ProtectedRoute><Browse /></ProtectedRoute>} />

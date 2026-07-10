@@ -14,6 +14,7 @@ type CuratedRow = {
   city: string | null;
   caption: string | null;
   source: string;
+  creator_id?: string | null;
 };
 
 function extractYouTubeId(embedUrl: string, hashtags: string[] | null): string | null {
@@ -40,9 +41,9 @@ export default function Watch() {
     if (!id) { setStatus('notfound'); return; }
     let cancelled = false;
     (async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('seeded_videos')
-        .select('id, title, embed_url, hashtags, city, caption, source')
+        .select('id, title, embed_url, hashtags, city, caption, source, creator_id')
         .eq('id', id)
         .eq('moderation_status', 'approved')
         .maybeSingle();
