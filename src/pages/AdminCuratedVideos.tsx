@@ -678,6 +678,9 @@ const AdminCuratedVideos = () => {
       for (let i = 0; i < 40; i++) {
         const { data, error } = await supabase.functions.invoke('generate-video-summary', {
           body: { limit: summaryLimit, onlyMissing: true },
+          headers: {
+            Authorization: `Bearer ${sessionData.session.access_token}`,
+          },
         });
         if (error) throw error;
         lastData = data;
