@@ -7,6 +7,15 @@ import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 
 const YT_API = 'https://www.googleapis.com/youtube/v3';
 
+function getYouTubeApiKey(): string | null {
+  return (
+    Deno.env.get('YOUTUBE_API_KEY') ||
+    Deno.env.get('GOOGLE_API_KEY') ||
+    Deno.env.get('GOOGLE_PLACES_API_KEY') ||
+    null
+  );
+}
+
 // Periscope covers large multifamily apartment BUILDINGS. Exclude Airbnb /
 // short-term rentals and NYC-style "houses called apartments" (brownstones,
 // townhouses, single-family) so seeded content stays on-brand.
@@ -23,8 +32,13 @@ Deno.serve(async (req) => {
 
     const supaUrl = Deno.env.get('SUPABASE_URL')!;
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const ytKey = Deno.env.get('YOUTUBE_API_KEY');
-    if (!ytKey) return json({ error: 'YOUTUBE_API_KEY not configured' }, 500);
+    const ytKey = getYouTubeApiKey();
+    if (!ytKey) {
+      return json({
+        error: 'YouTube API key not configured on the production backend',
+        detail: 'Set YOUTUBE_API_KEY for the deployed backend function and redeploy youtube-bulk-seed.',
+      }, 500);
+    }
 
     const admin = createClient(supaUrl, serviceKey);
     const token = authHeader.replace('Bearer ', '');

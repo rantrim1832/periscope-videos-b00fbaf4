@@ -13,6 +13,15 @@ import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 const YT_API = 'https://www.googleapis.com/youtube/v3';
 const GOOGLE_REFERRER = 'https://www.joinperiscope.com/';
 
+function getYouTubeApiKey(): string | null {
+  return (
+    Deno.env.get('YOUTUBE_API_KEY') ||
+    Deno.env.get('GOOGLE_API_KEY') ||
+    Deno.env.get('GOOGLE_PLACES_API_KEY') ||
+    null
+  );
+}
+
 // Periscope covers large multifamily apartment BUILDINGS. Airbnb/short-term
 // rentals aren't apartments, and NYC listings often use "apartment" to mean a
 // house / brownstone / townhouse. Filter both at query time and in results.
@@ -42,8 +51,13 @@ Deno.serve(async (req) => {
 
     const supaUrl = Deno.env.get('SUPABASE_URL')!;
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const ytKey = Deno.env.get('YOUTUBE_API_KEY');
-    if (!ytKey) return json({ error: 'YOUTUBE_API_KEY not configured' }, 500);
+    const ytKey = getYouTubeApiKey();
+    if (!ytKey) {
+      return json({
+        error: 'YouTube API key not configured on the production backend',
+        detail: 'Set YOUTUBE_API_KEY for the deployed backend function and redeploy youtube-import.',
+      }, 500);
+    }
 
     const admin = createClient(supaUrl, serviceKey);
     const body = (await req.json()) as ImportBody;

@@ -31,6 +31,7 @@ export type PreviewResult = {
   totalFound: number;
   alreadyImported: number;
   candidates: PreviewCandidate[];
+  error?: string;
 };
 
 type VideoRow = {
@@ -324,6 +325,8 @@ export function CategoryLibraryBrowser({
                                     </div>
                                   ) : !preview ? (
                                     <p className="text-xs text-destructive">Preview failed. Try again.</p>
+                                  ) : preview.error ? (
+                                    <p className="text-xs text-destructive">{preview.error}</p>
                                   ) : preview.candidates.length === 0 ? (
                                     <p className="text-xs text-muted-foreground italic">No videos returned by YouTube for this query.</p>
                                   ) : (
