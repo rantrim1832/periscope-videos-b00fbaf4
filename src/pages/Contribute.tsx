@@ -12,6 +12,7 @@ import { getPropertyProvider } from '@/data/propertyProvider';
 import { supabase } from '@/integrations/supabase/client';
 import { ContributeFlow } from '@/components/contribute/ContributeFlow';
 import { PromptTileRail, type PromptTile } from '@/components/PromptTileRail';
+import { InspirationRails } from '@/components/contribute/InspirationRails';
 import { getContributionTopic } from '@/domain/contributionTopics';
 import { CreatePropertyDialog } from '@/components/CreatePropertyDialog';
 
@@ -263,6 +264,8 @@ const Contribute = () => {
               subtitle="Noise, pests, parking, pets, packages, laundry, deposits — the stuff tours skip."
               tiles={RENTER_MORE_TILES}
             />
+
+            <InspirationRails />
           </div>
         ) : isLoading ? (
           <div className="max-w-2xl mx-auto space-y-4">
